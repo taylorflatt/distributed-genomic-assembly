@@ -1,0 +1,63 @@
+﻿@model IEnumerable<Genome.Models.GenomeModel>
+
+@{
+    ViewBag.Title = "Index";
+}
+
+<h2>Index</h2>
+
+<p>
+    @Html.ActionLink("Create New", "Create")
+</p>
+<table class="table">
+    <tr>
+        <th>
+            @Html.DisplayNameFor(model => model.MasurcaKMerValue)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.MasurcaThreadNum)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.MasurcaJellyfishHashSize)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.MasurcaLinkingMates)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.MasurcaLimitJumpCoverage)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.MasurcaSoapAssembly)
+        </th>
+        <th></th>
+    </tr>
+
+@foreach (var item in Model) {
+    <tr>
+        <td>
+            @Html.DisplayFor(modelItem => item.MasurcaKMerValue)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.MasurcaThreadNum)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.MasurcaJellyfishHashSize)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.MasurcaLinkingMates)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.MasurcaLimitJumpCoverage)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.MasurcaSoapAssembly)
+        </td>
+        <td>
+            @Html.ActionLink("Edit", "Edit", new { id=item.uuid }) |
+            @Html.ActionLink("Details", "Details", new { id=item.uuid }) |
+            @Html.ActionLink("Delete", "Delete", new { id=item.uuid })
+        </td>
+    </tr>
+}
+
+</table>
