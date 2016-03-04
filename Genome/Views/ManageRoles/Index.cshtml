@@ -1,19 +1,70 @@
-﻿@model IEnumerable<Microsoft.AspNet.Identity.EntityFramework.IdentityRole>
-@{
+﻿@{
     ViewBag.Title = "Index";
 }
 
-<h2>Roles Listing </h2>
-
-@Html.ActionLink("Create New Role", "Create") | @Html.ActionLink("Manage User Role", "ManageUserRoles")
+<h2>Manage User Roles</h2>
 <hr />
-<div>
-    @foreach (var role in Model)
-    {
-        <p>
-            <strong>@role.Name | </strong>
-            <span onclick="return confirm('Are you sure to delete?')"><a href="/ManageRoles/Delete?RoleName=@role.Name" class="delLink" style="color:red;">Delete</a></span> |
-            @Html.ActionLink("Edit", "Edit", new { roleName = @role.Name })
-        </p>
-    }
+
+<div style="background-color:yellow; color: maroon; text-decoration: solid; font-size: 24px; font-weight: 400;">
+    @Html.ViewBag.UserSelectError
+    @Html.ViewBag.RoleSelectError
 </div>
+
+<h3>Role Add to User</h3>
+
+@using (Html.BeginForm("AddUserToRole", "ManageRoles"))
+{
+    @Html.AntiForgeryToken()
+    @Html.ValidationSummary(true)
+
+    
+    <p>
+        Username : @Html.TextBox("UserName")
+        @*Username: @Html.DropDownList("UserName", (IEnumerable<SelectListItem>)ViewBag.UserNames, "Select ...")*@
+        Role Name: @Html.DropDownList("RoleName", (IEnumerable<SelectListItem>)ViewBag.Roles, "Select ...")
+
+    </p>
+
+    <input type="submit" value="Save" />
+}
+<hr />
+<h3>Get Roles for a User</h3>
+@using (Html.BeginForm("GetRoles", "ManageRoles"))
+{
+    @Html.AntiForgeryToken()
+    <p>
+        Username : @Html.TextBox("UserName")
+    </p>
+
+    <input type="submit" value="Get Roles for this User" />
+}
+
+@if (ViewBag.RolesForThisUser != null)
+{
+    <div style="background-color:yellow;">
+        <h3>Roles for this user </h3>
+        <ol>
+            @foreach (string s in ViewBag.RolesForThisUser)
+            {
+                <li>@s</li>
+            }
+        </ol>
+    </div>
+}
+
+<hr />
+<h3>Delete A User from a Role</h3>
+
+@using (Html.BeginForm("DeleteRoleForUser", "ManageRoles"))
+{
+    @Html.AntiForgeryToken()
+    @Html.ValidationSummary(true)
+
+    <p>
+        Username : @Html.TextBox("UserName")
+        Role Name: @Html.DropDownList("RoleName", (IEnumerable<SelectListItem>)ViewBag.Roles, "Select ...")
+
+    </p>
+
+    <input type="submit" value="Delete this user from Role" />
+}

@@ -267,10 +267,8 @@
     <Content Include="Views\GenomeJob\Edit.cshtml" />
     <Content Include="Views\GenomeJob\Index.cshtml" />
     <Content Include="Views\Home\UserViewModel.cshtml" />
-    <Content Include="Views\ManageRoles\Create.cshtml" />
     <Content Include="Views\ManageRoles\Edit.cshtml" />
     <Content Include="Views\ManageRoles\Index.cshtml" />
-    <Content Include="Views\ManageRoles\ManageUserRoles.cshtml" />
     <Content Include="Views\Shared\AuthorizeFailed.cshtml" />
     <Content Include="Views\Account\UnverifiedUser.cshtml" />
   </ItemGroup>
