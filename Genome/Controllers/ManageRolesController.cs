@@ -37,7 +37,38 @@ namespace Genome.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult AddUserToRole(string UserName, string RoleName)
+        public ActionResult ManageUsersRoles(string UserName, string RoleName, string command)
+        {
+            if (command == "Add User To Role")
+                AddUserToRole(UserName, RoleName);
+
+            else if (command == "Get User Role")
+                GetRoles(UserName);
+
+            else if (command == "Remove User from Role")
+                DeleteRoleForUser(UserName, RoleName);
+
+            else if (command == "Delete User")
+                DeleteUser(UserName);
+
+            // Populate the roles for a dropdown.
+            var list = context.Roles.OrderBy(r => r.Name).ToList().Select(rr => new SelectListItem { Value = rr.Name.ToString(), Text = rr.Name }).ToList();
+            ViewBag.Roles = list;
+
+            return View("Index");
+        }
+
+        //NEED TO CONFIRM FUNCTIONALITY
+        private void DeleteUser(string UserName)
+        {
+            RoleChangeValidation(UserName);
+
+            ApplicationUser user = context.Users.FirstOrDefault(u => u.UserName.Equals(UserName, StringComparison.CurrentCultureIgnoreCase));
+
+            UserManager.Delete(user);
+        }
+
+        private void AddUserToRole(string UserName, string RoleName)
         {
             //Make sure valid information is entered/selected.
             RoleChangeValidation(RoleName, UserName);
@@ -47,7 +78,13 @@ namespace Genome.Controllers
 
             if (user != null)
             {
-                if (UserManager.GetRoles(user.Id).Contains("Admin"))
+                if (UserManager.GetRoles(user.Id).Contains(RoleName))
+                {
+                    ViewBag.RoleSelectError = "The user already has that role assigned.";
+                    return;
+                }
+
+                else if (UserManager.GetRoles(user.Id).Contains("Admin"))
                     UserManager.RemoveFromRoles(user.Id, "Admin");
 
                 else if (UserManager.GetRoles(user.Id).Contains("Verified"))
@@ -67,13 +104,9 @@ namespace Genome.Controllers
             // prepopulat roles for the view dropdown
             var list = context.Roles.OrderBy(r => r.Name).ToList().Select(rr => new SelectListItem { Value = rr.Name.ToString(), Text = rr.Name }).ToList();
             ViewBag.Roles = list;
-
-            return View("Index");
         }
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult GetRoles(string UserName)
+        private void GetRoles(string UserName)
         {
             //Make sure valid information is entered/selected.
             RoleChangeValidation(UserName);
@@ -81,26 +114,30 @@ namespace Genome.Controllers
             if (!string.IsNullOrWhiteSpace(UserName))
             {
                 ApplicationUser user = context.Users.FirstOrDefault(u => u.UserName.Equals(UserName, StringComparison.CurrentCultureIgnoreCase));
+
                 if (user != null)
-                    ViewBag.RolesForThisUser = UserManager.GetRoles(user.Id);
+                {
+                    if(UserManager.GetRoles(user.Id).Count <= 0)
+                        ViewBag.RolesForThisUser = "This user currently has no roles assigned.";
+
+                    else
+                        ViewBag.RolesForThisUser = (string) UserManager.GetRoles(user.Id).ElementAt(0);
+                }
 
                 else
                     ViewBag.RoleSelectError = "That user is not in the database.";
 
                 // Populate the roles for a dropdown.
                 var list = context.Roles.OrderBy(r => r.Name).ToList().Select(rr => new SelectListItem { Value = rr.Name.ToString(), Text = rr.Name }).ToList();
+
                 ViewBag.Roles = list;
             }
 
             else
                 ViewBag.RoleSelectError = "That user is not in the database.";
-
-            return View("Index");
         }
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult DeleteRoleForUser(string UserName, string RoleName)
+        private void DeleteRoleForUser(string UserName, string RoleName)
         {
             //Make sure valid information is entered/selected.
             RoleChangeValidation(UserName, RoleName);
@@ -108,7 +145,7 @@ namespace Genome.Controllers
             ApplicationUser user = context.Users.FirstOrDefault(u => u.UserName.Equals(UserName, StringComparison.CurrentCultureIgnoreCase));
 
             if(user == null)
-                ViewBag.RoleSelectError = "That user is not in the database.";
+                ViewBag.UserSelectError = "That user is not in the database.";
 
             else if (UserManager.IsInRole(user.Id, RoleName))
             {
@@ -122,8 +159,6 @@ namespace Genome.Controllers
             // Populate the roles for a dropdown.
             var list = context.Roles.OrderBy(r => r.Name).ToList().Select(rr => new SelectListItem { Value = rr.Name.ToString(), Text = rr.Name }).ToList();
             ViewBag.Roles = list;
-
-            return View("Index");
         }
 
         private void RoleChangeValidation(string UserName, string RoleName = "null")
