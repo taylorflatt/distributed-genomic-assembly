@@ -1,0 +1,9 @@
+﻿   @{ 
+    ViewBag.Title = "UnverifiedUser";
+}
+
+<h2>Welcome, @HttpContext.Current.User.Identity.Name!</h2>
+
+<p>You are currently an <u>unverified user</u> and must be approved by an administrator <strong>prior</strong> to receiving access to the website.</p>
+
+<p> If you believe you are receiving this message in error, then please <a href="mailto:test@test.com">contact an administrator</a>.</p>

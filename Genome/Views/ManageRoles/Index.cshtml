@@ -1,0 +1,44 @@
+﻿@{
+    ViewBag.Title = "Index";
+}
+
+<h2>Manage User Roles</h2>
+<hr />
+
+<div style="background-color:yellow; color: maroon; text-decoration: solid; font-size: 24px; font-weight: 400;">
+    @Html.ViewBag.UserSelectError
+    @Html.ViewBag.RoleSelectError
+    @Html.ViewBag.ResultMessage
+</div>
+
+<h3>Change User Role</h3>
+
+@using (Html.BeginForm("ManageUsersRoles", "ManageRoles"))
+{
+    @Html.AntiForgeryToken()
+    @Html.ValidationSummary(true)
+
+    <p>
+        Username : @Html.TextBox("UserName")
+        @*Username: @Html.DropDownList("UserName", (IEnumerable<SelectListItem>)ViewBag.UserNames, "Select ...")*@
+        Role Name: @Html.DropDownList("RoleName", (IEnumerable<SelectListItem>)ViewBag.Roles, "Select ...")
+
+    </p>
+
+    //<input type="submit" value="Add" />
+
+    <input type="submit" name="command" value="Add User To Role" />
+    <input type="submit" name="command" value="Get User Role" />
+    <input type="submit" name="command" value="Remove User from Role" />
+    <input type="submit" name="command" value="Delete User" style="color:red; margin-left: 100px;" onclick="return confirm('Are you sure you want to delete this user? This action is IRREVERSIBLE!');"/>
+}
+
+    @if (ViewBag.RolesForThisUser != null)
+    {
+        <div style="background-color:yellow;">
+            <h3>Roles for this user </h3>
+            <ul>
+                <li>@ViewBag.RolesForThisUser</li>
+            </ul>
+        </div>
+    }
