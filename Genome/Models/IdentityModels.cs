@@ -9,6 +9,8 @@ namespace Genome.Models
     // You can add profile data for the user by adding more properties to your ApplicationUser class, please visit http://go.microsoft.com/fwlink/?LinkID=317594 to learn more.
     public class ApplicationUser : IdentityUser
     {
+        public int DawgTag { get; set; }
+
         public async Task<ClaimsIdentity> GenerateUserIdentityAsync(UserManager<ApplicationUser> manager)
         {
             // Note the authenticationType must match the one defined in CookieAuthenticationOptions.AuthenticationType
@@ -18,16 +20,25 @@ namespace Genome.Models
         }
     }
 
-    public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
+    public class GenomeJobDbContext : IdentityDbContext<ApplicationUser>
     {
-        public ApplicationDbContext()
+        public GenomeJobDbContext()
             : base("DefaultConnection", throwIfV1Schema: false)
         {
         }
 
-        public static ApplicationDbContext Create()
+        //public static ApplicationDbContext Create()
+        //{
+        //    return new ApplicationDbContext();
+        //}
+
+
+        public static GenomeJobDbContext Create()
         {
-            return new ApplicationDbContext();
+            return new GenomeJobDbContext();
         }
+        public System.Data.Entity.DbSet<Genome.Models.GenomeModel> GenomeModels { get; set; }
+
+        //public System.Data.Entity.DbSet<Genome.Models.ApplicationUser> ApplicationUsers { get; set; }
     }
 }
