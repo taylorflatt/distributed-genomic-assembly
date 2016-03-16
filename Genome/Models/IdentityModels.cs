@@ -37,6 +37,7 @@ namespace Genome.Models
         {
             return new GenomeJobDbContext();
         }
+
         public System.Data.Entity.DbSet<Genome.Models.GenomeModel> GenomeModels { get; set; }
 
         //public System.Data.Entity.DbSet<Genome.Models.ApplicationUser> ApplicationUsers { get; set; }
