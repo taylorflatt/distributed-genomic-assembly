@@ -64,9 +64,9 @@ namespace Genome.Controllers
 
             ApplicationUser user = context.Users.FirstOrDefault(u => u.UserName.Equals(UserName, StringComparison.CurrentCultureIgnoreCase));
 
-            var db = UserContext.Users.Where(u => u.UserName.Equals(UserName)).FirstOrDefault();
-            db.Users.Delete(db);
-            db.SaveChanges();
+            //var db = UserContext.Users.Where(u => u.UserName.Equals(UserName)).FirstOrDefault();
+            //db.Users.Delete(db);
+            //db.SaveChanges();
 
             UserManager.Delete(user);
         }

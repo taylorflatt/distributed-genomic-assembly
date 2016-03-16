@@ -1,0 +1,122 @@
+﻿@model Genome.Models.GenomeModel
+
+@{
+    ViewBag.Title = "Details";
+}
+
+<h2>Details</h2>
+
+<div>
+    <h4>GenomeModel</h4>
+    <hr />
+    <dl class="dl-horizontal">
+        <dt>
+            @Html.DisplayNameFor(model => model.Primers)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Primers)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.JumpReads)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.JumpReads)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.PEReads)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.PEReads)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.PairedEndLength)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.PairedEndLength)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.JumpLength)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.JumpLength)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.CreatedBy)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.CreatedBy)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.MasurcaKMerValue)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.MasurcaKMerValue)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.MasurcaThreadNum)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.MasurcaThreadNum)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.MasurcaJellyfishHashSize)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.MasurcaJellyfishHashSize)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.MasurcaLinkingMates)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.MasurcaLinkingMates)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.MasurcaLimitJumpCoverage)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.MasurcaLimitJumpCoverage)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.MasurcaCAParameters)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.MasurcaCAParameters)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.HomoTrim)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.HomoTrim)
+        </dd>
+
+    </dl>
+</div>
+<p>
+    @Html.ActionLink("Edit", "Edit", new { id = Model.uuid }) |
+    @Html.ActionLink("Back to List", "Index")
+</p>
