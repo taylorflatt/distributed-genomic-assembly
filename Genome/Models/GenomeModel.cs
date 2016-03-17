@@ -1,25 +1,13 @@
-﻿using MVC.Wizard.ViewModels;
-using MVC.Wizard.Web.ViewModels;
-using System;
+﻿using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace Genome.Models
 {
-    public class GenomeModel : MVC.Wizard.ViewModels.WizardViewModel
+    [Serializable]
+    public class GenomeModel
     {
-        public int id { get; set; }
-
-        private const int numberOfSteps = 5;
-
-        public GenomeModel()
-            : base(numberOfSteps)
-        {
-            Step1 = new GenomeAssemblyStep1();
-            Step2 = new GenomeAssemblyStep2();
-            Step3 = new GenomeAssemblyStep3();
-            Step4 = new GenomeAssemblyStep4();
-            Step5 = new GenomeAssemblyStep5();
-        }
+        [Key]
+        public int uuid { get; set; }
 
         [Display(Name = "Start Page")]
         public GenomeAssemblyStep1 Step1 { get; set; }
@@ -35,16 +23,18 @@ namespace Genome.Models
 
         [Display(Name = "Send Data")]
         public GenomeAssemblyStep5 Step5 { get; set; }
-
     }
 
     // Instructions
+    [Serializable]
     public class GenomeAssemblyStep1
     {
-
+        [Required]
+        public bool AcceptInstructions { get; set; }
     }
 
     // Initial Data
+    [Serializable]
     public class GenomeAssemblyStep2
     {
         [Required]
@@ -72,6 +62,7 @@ namespace Genome.Models
     }
 
     // Masuca Assembly
+    [Serializable]
     public class GenomeAssemblyStep3
     {
         // Masurca specific parameters
@@ -109,6 +100,7 @@ namespace Genome.Models
     }
 
     // Confirm Data
+    [Serializable]
     public class GenomeAssemblyStep4
     {
         [Required]
@@ -116,9 +108,11 @@ namespace Genome.Models
     }
 
     // Send data (ssh).
+    [Serializable]
     public class GenomeAssemblyStep5
     {
         public string CreatedBy { get; set; }
         public DateTime CreatedDate { get; set; }
+        public string JobStatus { get; set; }
     }
 }

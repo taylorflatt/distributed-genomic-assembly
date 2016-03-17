@@ -13,7 +13,7 @@ namespace Genome.Controllers
     [AuthorizedLogin(Roles = Helpers.CustomRoles.Administrator)]
     public class ManageRolesController : Controller
     {
-        private GenomeJobDbContext context = new GenomeJobDbContext();
+        private GenomeAssemblyDbContext context = new GenomeAssemblyDbContext();
         private ApplicationUser userContext = new ApplicationUser();
         private ApplicationUserManager _userManager;
 

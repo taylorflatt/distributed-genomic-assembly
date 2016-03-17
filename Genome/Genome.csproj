@@ -210,6 +210,8 @@
     <Compile Include="Models\GenomeModel.cs" />
     <Compile Include="Models\IdentityModels.cs" />
     <Compile Include="Models\ManageViewModels.cs" />
+    <Compile Include="Models\WizardValidationResult.cs" />
+    <Compile Include="Models\WizardViewModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Startup.cs" />
     <Compile Include="ViewModels\SampleWizardViewModel.cs" />
@@ -287,6 +289,7 @@
     <Content Include="Views\SampleWizard\Sample.cshtml" />
     <Content Include="Views\GenomeAssembly\Details.cshtml" />
     <Content Include="Views\GenomeAssembly\Index.cshtml" />
+    <Content Include="Views\Shared\Confirmation.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

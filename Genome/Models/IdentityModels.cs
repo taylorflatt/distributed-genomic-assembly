@@ -20,22 +20,16 @@ namespace Genome.Models
         }
     }
 
-    public class GenomeJobDbContext : IdentityDbContext<ApplicationUser>
+    public class GenomeAssemblyDbContext : IdentityDbContext<ApplicationUser>
     {
-        public GenomeJobDbContext()
+        public GenomeAssemblyDbContext()
             : base("DefaultConnection", throwIfV1Schema: false)
         {
         }
 
-        //public static ApplicationDbContext Create()
-        //{
-        //    return new ApplicationDbContext();
-        //}
-
-
-        public static GenomeJobDbContext Create()
+        public static GenomeAssemblyDbContext Create()
         {
-            return new GenomeJobDbContext();
+            return new GenomeAssemblyDbContext();
         }
 
         public System.Data.Entity.DbSet<Genome.Models.GenomeModel> GenomeModels { get; set; }
