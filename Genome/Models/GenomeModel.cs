@@ -9,34 +9,24 @@ namespace Genome.Models
         [Key]
         public int uuid { get; set; }
 
-        [Display(Name = "Start Page")]
-        public GenomeAssemblyStep1 Step1 { get; set; }
+        //[Display(Name = "Start Page")]
+        //public GenomeAssemblyStep1 Step1 { get; set; }
 
-        [Display(Name = "Initial Data")]
-        public GenomeAssemblyStep2 Step2 { get; set; }
+        //[Display(Name = "Initial Data")]
+        //public GenomeAssemblyStep2 Step2 { get; set; }
 
-        [Display(Name = "Masurca Assembler")]
-        public GenomeAssemblyStep3 Step3 { get; set; }
+        //[Display(Name = "Masurca Assembler")]
+        //public GenomeAssemblyStep3 Step3 { get; set; }
 
-        [Display(Name = "Confirm Data")]
-        public GenomeAssemblyStep4 Step4 { get; set; }
+        //[Display(Name = "Confirm Data")]
+        //public GenomeAssemblyStep4 Step4 { get; set; }
 
-        [Display(Name = "Send Data")]
-        public GenomeAssemblyStep5 Step5 { get; set; }
-    }
+        //[Display(Name = "Send Data")]
+        //public GenomeAssemblyStep5 Step5 { get; set; }
 
-    // Instructions
-    [Serializable]
-    public class GenomeAssemblyStep1
-    {
         [Required]
         public bool AcceptInstructions { get; set; }
-    }
 
-    // Initial Data
-    [Serializable]
-    public class GenomeAssemblyStep2
-    {
         [Required]
         [Display(Name = "Sequenced Data Location")]
         public string DataSource { get; set; }
@@ -59,12 +49,6 @@ namespace Genome.Models
         [Display(Name = "Jump Length")]
         public int JumpLength { get; set; }
 
-    }
-
-    // Masuca Assembly
-    [Serializable]
-    public class GenomeAssemblyStep3
-    {
         // Masurca specific parameters
         [Required]
         [Display(Name = "Masurca K-Mer Value")]
@@ -97,22 +81,49 @@ namespace Genome.Models
         [Display(Name = "Homoplymer Trim")]
         public bool HomoTrim { get; set; }
 
-    }
-
-    // Confirm Data
-    [Serializable]
-    public class GenomeAssemblyStep4
-    {
         [Required]
         public bool Agreed { get; set; }
-    }
 
-    // Send data (ssh).
-    [Serializable]
-    public class GenomeAssemblyStep5
-    {
         public string CreatedBy { get; set; }
         public DateTime CreatedDate { get; set; }
         public string JobStatus { get; set; }
     }
+
+    //// Instructions
+    //[Serializable]
+    //public class GenomeAssemblyStep1
+    //{
+
+    //}
+
+    //// Initial Data
+    //[Serializable]
+    //public class GenomeAssemblyStep2
+    //{
+
+
+    //}
+
+    //// Masuca Assembly
+    //[Serializable]
+    //public class GenomeAssemblyStep3
+    //{
+ 
+    //}
+
+    ////Change the steps 4 and 5 to something more static so when we add more assemblers it will be easier to add them to the prog.
+
+    //// Confirm Data
+    //[Serializable]
+    //public class GenomeAssemblyStep4
+    //{
+
+    //}
+
+    //// Send data (ssh).
+    //[Serializable]
+    //public class GenomeAssemblyStep5
+    //{
+
+    //}
 }
