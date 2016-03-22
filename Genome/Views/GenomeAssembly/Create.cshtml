@@ -4,7 +4,9 @@
     ViewBag.Title = "Create";
 }
 
-<h2>Create</h2>
+<script src="~/Scripts/jquery-1.10.2.min.js"></script>
+
+<h2>Create a Job</h2>
 
 @using (Html.BeginForm()) 
 {
@@ -14,6 +16,21 @@
         <h4>GenomeModel</h4>
         <hr />
         @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+        <!-- Introduction (STEP 1)-->
+        <h3>
+            Start
+        </h3>
+        <hr />
+
+        <p>
+            Here is a paragraph that explains what using this means and that by accepting this you accept responsibilities for 
+            its misuse and so on. Here is a paragraph that explains what using this means and that by accepting this you accept responsibilities for
+            its misuse and so on. Here is a paragraph that explains what using this means and that by accepting this you accept responsibilities for
+            its misuse and so on. Here is a paragraph that explains what using this means and that by accepting this you accept responsibilities for
+            its misuse and so on. Here is a paragraph that explains what using this means and that by accepting this you accept responsibilities for
+            its misuse and so on. Here is a paragraph that explains what using this means and that by accepting this you accept responsibilities for
+            its misuse and so on.
+        </p>
         <div class="form-group">
             @Html.LabelFor(model => model.AcceptInstructions, htmlAttributes: new { @class = "control-label col-md-2" })
             <div class="col-md-10">
@@ -24,8 +41,20 @@
             </div>
         </div>
 
+        <!-- END INTRODUCTION (STEP 1)-->
+
+        <!-- Initial Data (STEP 2)-->
+        <h3>
+            Initial Data
+        </h3>
+        <hr />
+        <!-- Here we might want to also include checkboxes for the different assemblers that they want so we can show/hide. -->
         <div class="form-group">
-            @Html.LabelFor(model => model.DataSource, htmlAttributes: new { @class = "control-label col-md-2" })
+
+            <label class="control-label col-md-2">
+                Data Location (URL): 
+            </label>
+
             <div class="col-md-10">
                 @Html.EditorFor(model => model.DataSource, new { htmlAttributes = new { @class = "form-control" } })
                 @Html.ValidationMessageFor(model => model.DataSource, "", new { @class = "text-danger" })
@@ -33,7 +62,9 @@
         </div>
 
         <div class="form-group">
-            @Html.LabelFor(model => model.Primers, htmlAttributes: new { @class = "control-label col-md-2" })
+            <label class="control-label col-md-2">
+                Primers Removed: 
+            </label>
             <div class="col-md-10">
                 <div class="checkbox">
                     @Html.EditorFor(model => model.Primers)
@@ -42,15 +73,37 @@
             </div>
         </div>
 
-        <div class="form-group">
-            @Html.LabelFor(model => model.JumpReads, htmlAttributes: new { @class = "control-label col-md-2" })
-            <div class="col-md-10">
-                <div class="checkbox">
-                    @Html.EditorFor(model => model.JumpReads)
-                    @Html.ValidationMessageFor(model => model.JumpReads, "", new { @class = "text-danger" })
-                </div>
-            </div>
-        </div>
+        @*
+            Upon checking the box, we will show the PE-reads length box for them to enter the data. Otherwise we leave the data null 
+            and handle that in the config creator. (If model.PEReads == "" then pe_length = 0) for instance.
+        *@
+
+        <script>
+            $(function ()
+            {
+                // Hide Paired-end reads if checkbox is left unchecked.
+                $("#PEReads").click(function (){
+                    if ($(this).is(':checked')){
+                        $("#PELength").show();
+                    }
+
+                    else{
+                        $("#PELength").hide();
+                    }
+                });
+
+                // Hide Jump Reads box if checkbox is left unchecked.
+                $("#JumpReads").click(function () {
+                    if ($(this).is(':checked')) {
+                        $("#JumpLength").show();
+                    }
+
+                    else {
+                        $("#JumpLength").hide();
+                    }
+                });
+            });
+        </script>
 
         <div class="form-group">
             @Html.LabelFor(model => model.PEReads, htmlAttributes: new { @class = "control-label col-md-2" })
@@ -62,7 +115,7 @@
             </div>
         </div>
 
-        <div class="form-group">
+        <div class="form-group" id="PELength" hidden="hidden">
             @Html.LabelFor(model => model.PairedEndLength, htmlAttributes: new { @class = "control-label col-md-2" })
             <div class="col-md-10">
                 @Html.EditorFor(model => model.PairedEndLength, new { htmlAttributes = new { @class = "form-control" } })
@@ -70,7 +123,21 @@
             </div>
         </div>
 
+        @*
+            Upon checking the box, we show the jump-length text box for them to enter the data. Otherwise we leave the data null 
+            and handle that in the config creator. (If model.jumpreads == "" then jump_reads = 0) for instance.
+        *@
         <div class="form-group">
+            @Html.LabelFor(model => model.JumpReads, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                <div class="checkbox">
+                    @Html.EditorFor(model => model.JumpReads)
+                    @Html.ValidationMessageFor(model => model.JumpReads, "", new { @class = "text-danger" })
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group" id="JumpLength" hidden="hidden">
             @Html.LabelFor(model => model.JumpLength, htmlAttributes: new { @class = "control-label col-md-2" })
             <div class="col-md-10">
                 @Html.EditorFor(model => model.JumpLength, new { htmlAttributes = new { @class = "form-control" } })
@@ -78,29 +145,14 @@
             </div>
         </div>
 
-        <div class="form-group">
-            @Html.LabelFor(model => model.MasurcaKMerValue, htmlAttributes: new { @class = "control-label col-md-2" })
-            <div class="col-md-10">
-                @Html.EditorFor(model => model.MasurcaKMerValue, new { htmlAttributes = new { @class = "form-control" } })
-                @Html.ValidationMessageFor(model => model.MasurcaKMerValue, "", new { @class = "text-danger" })
-            </div>
-        </div>
+        <!-- END INITIAL DATA (STEP 2)-->
 
-        <div class="form-group">
-            @Html.LabelFor(model => model.MasurcaThreadNum, htmlAttributes: new { @class = "control-label col-md-2" })
-            <div class="col-md-10">
-                @Html.EditorFor(model => model.MasurcaThreadNum, new { htmlAttributes = new { @class = "form-control" } })
-                @Html.ValidationMessageFor(model => model.MasurcaThreadNum, "", new { @class = "text-danger" })
-            </div>
-        </div>
 
-        <div class="form-group">
-            @Html.LabelFor(model => model.MasurcaJellyfishHashSize, htmlAttributes: new { @class = "control-label col-md-2" })
-            <div class="col-md-10">
-                @Html.EditorFor(model => model.MasurcaJellyfishHashSize, new { htmlAttributes = new { @class = "form-control" } })
-                @Html.ValidationMessageFor(model => model.MasurcaJellyfishHashSize, "", new { @class = "text-danger" })
-            </div>
-        </div>
+        <!-- Masurca Data (STEP 3)-->
+        <h3>
+            Masurca Data
+        </h3>
+        <hr />
 
         <div class="form-group">
             @Html.LabelFor(model => model.MasurcaLinkingMates, htmlAttributes: new { @class = "control-label col-md-2" })
@@ -143,6 +195,43 @@
         </div>
 
         <div class="form-group">
+            @Html.LabelFor(model => model.MasurcaKMerValue, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.EditorFor(model => model.MasurcaKMerValue, new { htmlAttributes = new { @class = "form-control" } })
+                @Html.ValidationMessageFor(model => model.MasurcaKMerValue, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.MasurcaThreadNum, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.EditorFor(model => model.MasurcaThreadNum, new { htmlAttributes = new { @class = "form-control" } })
+                @Html.ValidationMessageFor(model => model.MasurcaThreadNum, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.MasurcaJellyfishHashSize, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.EditorFor(model => model.MasurcaJellyfishHashSize, new { htmlAttributes = new { @class = "form-control" } })
+                @Html.ValidationMessageFor(model => model.MasurcaJellyfishHashSize, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <!-- END MASURCA DATA (STEP 3)-->
+
+        <!-- Confirm Data (STEP 4)-->
+        <h3>
+            Confirm Data
+        </h3>
+        <hr />
+
+        <p>
+            By Agreeing here, you accept that all the information above is correct to the best of your knowledge. Any data incorrectly 
+            entered by the user is their responsiblity. By Agreeing here, you accept that all the information above is correct to the best of your knowledge. Any data incorrectly entered by the user is their responsiblity.
+        </p>
+
+        <div class="form-group">
             @Html.LabelFor(model => model.Agreed, htmlAttributes: new { @class = "control-label col-md-2" })
             <div class="col-md-10">
                 <div class="checkbox">
@@ -152,6 +241,7 @@
             </div>
         </div>
 
+        <!-- END CONFIRM DATA (STEP 4)-->
 
         <div class="form-group">
             <div class="col-md-offset-2 col-md-10">

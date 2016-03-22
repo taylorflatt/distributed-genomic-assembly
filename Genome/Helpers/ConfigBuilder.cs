@@ -63,7 +63,7 @@ namespace Genome.Helpers
         {
             string path = @"~/AssemberConfigs/Job" + genomeModel.uuid + "/";
             Directory.CreateDirectory(path);
-            string fileName = "init_config_" + genomeModel.uuid +".txt";
+            string fileName = "init_config_" + genomeModel.uuid + ".txt";
             string fullPath = path + fileName;
 
             if (!File.Exists(fullPath))
@@ -78,10 +78,10 @@ namespace Genome.Helpers
                     tw.WriteLine("wget " + url.ToString());
                     // Error check wget to make sure it completed.
 
-                // If(wget.ExitStatus == 0) { We stop the wgets and write to a file saying there is an error. }
+                    // If(wget.ExitStatus == 0) { We stop the wgets and write to a file saying there is an error. }
                     // Here we would check the wget error code to see if the download completed successfully (0) or it didn't.
 
-                    
+
                 }
 
 
@@ -91,4 +91,5 @@ namespace Genome.Helpers
                 //tw.WriteLine("The very first line!");
             }
         }
+    }
 }

@@ -7,13 +7,11 @@ using System.Net;
 using System.Web;
 using System.Web.Mvc;
 using Genome.Models;
-using MVC.Wizard.Controllers;
-using MVC.Wizard.Web.ViewModels;
 using Genome.Helpers;
 
 namespace Genome.Controllers
 {
-    public class GenomeAssemblyController : WizardController
+    public class GenomeAssemblyController : Controller
     {
         private GenomeAssemblyDbContext db = new GenomeAssemblyDbContext();
 
@@ -233,10 +231,9 @@ namespace Genome.Controllers
                     Console.WriteLine(e.Message);
                 }
 
-                //return RedirectToAction("Confirmation");
+                return RedirectToAction("Confirmation");
             }
-
-            SSHConfig ssh = new SSHConfig("login-0-0.research.siu.edu", "", "");
+            // SSHConfig ssh = new SSHConfig("login-0-0.research.siu.edu", "", "");
             return View(genomeModel);
             //return View();
         }

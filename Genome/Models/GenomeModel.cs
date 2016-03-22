@@ -25,6 +25,7 @@ namespace Genome.Models
         //public GenomeAssemblyStep5 Step5 { get; set; }
 
         [Required]
+        [Display(Name = "Accept")]
         public bool AcceptInstructions { get; set; }
 
         [Required]

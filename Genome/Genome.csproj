@@ -50,10 +50,6 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="MVC.Wizard.Core, Version=1.1.0.0, Culture=neutral, PublicKeyToken=d967ac793f5d2360, processorArchitecture=MSIL">
-      <HintPath>..\packages\MVC.Wizard.1.3.1\lib\MVC.Wizard.Core.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="Renci.SshNet, Version=2014.4.6.0, Culture=neutral, PublicKeyToken=1cee9f8bde3db106, processorArchitecture=MSIL">
       <HintPath>..\packages\SSH.NET.2014.4.6-beta2\lib\net40\Renci.SshNet.dll</HintPath>
       <Private>True</Private>
@@ -193,7 +189,6 @@
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\ManageController.cs" />
     <Compile Include="Controllers\ManageRolesController.cs" />
-    <Compile Include="Controllers\SampleWizardController.cs" />
     <Compile Include="CustomFilters\AuthorizedLoginAttribute.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
@@ -210,12 +205,8 @@
     <Compile Include="Models\GenomeModel.cs" />
     <Compile Include="Models\IdentityModels.cs" />
     <Compile Include="Models\ManageViewModels.cs" />
-    <Compile Include="Models\WizardValidationResult.cs" />
-    <Compile Include="Models\WizardViewModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Startup.cs" />
-    <Compile Include="ViewModels\SampleWizardViewModel.cs" />
-    <Compile Include="Models\WizardStep.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Content\bootstrap.css" />
@@ -246,8 +237,6 @@
     <Content Include="Scripts\modernizr-2.6.2.js" />
     <Content Include="Scripts\respond.js" />
     <Content Include="Scripts\respond.min.js" />
-    <Content Include="Scripts\wizard.js" />
-    <Content Include="Scripts\wizard.min.js" />
     <Content Include="Scripts\_references.js" />
     <Content Include="Web.config" />
     <Content Include="Web.Debug.config">
@@ -288,7 +277,6 @@
     <Content Include="Views\ManageRoles\Index.cshtml" />
     <Content Include="Views\Shared\AuthorizeFailed.cshtml" />
     <Content Include="Views\Account\UnverifiedUser.cshtml" />
-    <Content Include="Views\SampleWizard\Sample.cshtml" />
     <Content Include="Views\GenomeAssembly\Details.cshtml" />
     <Content Include="Views\GenomeAssembly\Index.cshtml" />
     <Content Include="Views\Shared\Confirmation.cshtml" />
