@@ -9,6 +9,7 @@ using System.Web.Mvc;
 using Genome.Models;
 using MVC.Wizard.Controllers;
 using MVC.Wizard.Web.ViewModels;
+using Genome.Helpers;
 
 namespace Genome.Controllers
 {
@@ -211,9 +212,33 @@ namespace Genome.Controllers
         }
 
         [HttpPost]
-        public ActionResult Create()
+        public ActionResult Create(GenomeModel genomeModel)
         {
-            return View();
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    genomeModel.CreatedBy = User.Identity.Name;
+                    genomeModel.CreatedDate = DateTime.Now;
+                    genomeModel.JobStatus = "Pending";
+
+                    db.GenomeModels.Add(genomeModel);
+                    db.SaveChanges();
+
+                    // ssh
+                    //SSHConfig ssh = new SSHConfig("", "pw", "login-0-0.research.siu.edu");
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message);
+                }
+
+                //return RedirectToAction("Confirmation");
+            }
+
+            SSHConfig ssh = new SSHConfig("login-0-0.research.siu.edu", "", "");
+            return View(genomeModel);
+            //return View();
         }
 
 
