@@ -1,13 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Data;
 using System.Data.Entity;
-using System.Linq;
 using System.Net;
-using System.Web;
 using System.Web.Mvc;
 using Genome.Models;
-using Genome.Helpers;
 
 namespace Genome.Controllers
 {
@@ -15,12 +10,13 @@ namespace Genome.Controllers
     {
         private GenomeAssemblyDbContext db = new GenomeAssemblyDbContext();
 
-        public ActionResult Create(int? id)
+        public ActionResult Create()
         {
             return View();
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public ActionResult Create(GenomeModel genomeModel)
         {
             if (ModelState.IsValid)

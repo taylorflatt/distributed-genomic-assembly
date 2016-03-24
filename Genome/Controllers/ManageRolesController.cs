@@ -7,10 +7,11 @@ using Genome.Models;
 using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.Owin;
 using Genome.CustomFilters;
+using System.Threading.Tasks;
 
 namespace Genome.Controllers
 {
-    [AuthorizedLogin(Roles = Helpers.CustomRoles.Administrator)]
+    //[AuthorizedLogin(Roles = Helpers.CustomRoles.Administrator)]
     public class ManageRolesController : Controller
     {
         private GenomeAssemblyDbContext context = new GenomeAssemblyDbContext();
@@ -36,7 +37,7 @@ namespace Genome.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult ManageUsersRoles(string UserName, string RoleName, string command)
+        public async Task<ActionResult> ManageUsersRoles(string UserName, string RoleName, string command)
         {
             if (command == "Add User To Role")
                 AddUserToRole(UserName, RoleName);
@@ -48,7 +49,7 @@ namespace Genome.Controllers
                 DeleteRoleForUser(UserName, RoleName);
 
             else if (command == "Delete User")
-                DeleteUser(UserName);
+                await DeleteUser(UserName);
 
             // Populate the roles for a dropdown.
             var list = context.Roles.OrderBy(r => r.Name).ToList().Select(rr => new SelectListItem { Value = rr.Name.ToString(), Text = rr.Name }).ToList();
@@ -57,18 +58,41 @@ namespace Genome.Controllers
             return View("Index");
         }
 
-        //NEED TO CONFIRM FUNCTIONALITY
-        private void DeleteUser(string UserName)
+        private async Task DeleteUser(string UserName)
         {
-            RoleChangeValidation(UserName);
+            try
+            {
+                var user = await UserManager.FindByNameAsync(UserName);
+                var logins = user.Logins;
 
-            ApplicationUser user = context.Users.FirstOrDefault(u => u.UserName.Equals(UserName, StringComparison.CurrentCultureIgnoreCase));
+                // Remove the logins if any.
+                foreach (var login in logins.ToList())
+                {
+                    await _userManager.RemoveLoginAsync(login.UserId, new UserLoginInfo(login.LoginProvider, login.ProviderKey));
+                }
 
-            //var db = UserContext.Users.Where(u => u.UserName.Equals(UserName)).FirstOrDefault();
-            //db.Users.Delete(db);
-            //db.SaveChanges();
+                var rolesForUser = await UserManager.GetRolesAsync(user.Id);
 
-            UserManager.Delete(user);
+                // Remove the user roles if any.
+                if (rolesForUser.Count() > 0)
+                {
+                    foreach (var role in rolesForUser.ToList())
+                    {
+                        var result = await UserManager.RemoveFromRoleAsync(user.Id, role);
+                    }
+                }
+
+                // Finally remove the user.
+                await UserManager.DeleteAsync(user);
+
+                ViewBag.ResultMessage = "User successfully removed.";
+            }
+
+            catch(Exception e)
+            {
+                ViewBag.DeleteError = "The user was unable to be removed from the system. Error Message: " + e.Message;
+            }
+
         }
 
         private void AddUserToRole(string UserName, string RoleName)
@@ -81,14 +105,20 @@ namespace Genome.Controllers
 
             if (user != null && !RoleName.Equals(""))
             {
+                if(UserManager.GetRoles(user.Id).Contains("Admin"))
+                {
+                    ViewBag.UserSelectError = "An admin cannot change roles to prevent being locked out. They must be deleted!";
+                    return;
+                }
+
                 if (UserManager.GetRoles(user.Id).Contains(RoleName))
                 {
                     ViewBag.RoleSelectError = "The user already has that role assigned.";
                     return;
                 }
 
-                else if (UserManager.GetRoles(user.Id).Contains("Admin"))
-                    UserManager.RemoveFromRoles(user.Id, "Admin");
+                //else if (UserManager.GetRoles(user.Id).Contains("Admin"))
+                //    UserManager.RemoveFromRoles(user.Id, "Admin");
 
                 else if (UserManager.GetRoles(user.Id).Contains("Verified"))
                     UserManager.RemoveFromRoles(user.Id, "Verified");
@@ -158,8 +188,16 @@ namespace Genome.Controllers
 
             else if (UserManager.IsInRole(user.Id, RoleName))
             {
-                UserManager.RemoveFromRole(user.Id, RoleName);
-                ViewBag.ResultMessage = "Role removed from this user successfully !";
+                // Don't let them be removed from the admin role to prevent lockout.
+                
+                if (UserManager.GetRoles(user.Id).Contains("Admin"))
+                    ViewBag.ResultMessage = "This user is an admin and cannot be removed from the role. The user must be deleted instead.";
+
+                else
+                {
+                    UserManager.RemoveFromRole(user.Id, RoleName);
+                    ViewBag.ResultMessage = "Role removed from this user successfully !";
+                }
             }
 
             else

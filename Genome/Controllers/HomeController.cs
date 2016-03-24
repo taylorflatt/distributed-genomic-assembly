@@ -8,7 +8,7 @@ using Genome.CustomFilters;
 
 namespace Genome.Controllers
 {
-    [AuthorizedLogin(Roles = Helpers.CustomRoles.Administrator + "," + Helpers.CustomRoles.Verified)]
+    //[AuthorizedLogin(Roles = Helpers.CustomRoles.Administrator + "," + Helpers.CustomRoles.Verified)]
     public class HomeController : Controller
     {
         public ActionResult Index()

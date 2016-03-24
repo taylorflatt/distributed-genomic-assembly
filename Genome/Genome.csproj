@@ -61,6 +61,8 @@
       <HintPath>..\packages\Microsoft.AspNet.WebApi.Client.5.2.3\lib\net45\System.Net.Http.Formatting.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Security" />
     <Reference Include="System.Web.DynamicData" />
     <Reference Include="System.Web.Entity" />
     <Reference Include="System.Web.ApplicationServices" />
@@ -196,9 +198,9 @@
     <Compile Include="Helpers\ConfigBuilder.cs" />
     <Compile Include="Helpers\CustomRoles.cs" />
     <Compile Include="Helpers\SSHConfig.cs" />
-    <Compile Include="Migrations\201602291657079_InitialCreate.cs" />
-    <Compile Include="Migrations\201602291657079_InitialCreate.Designer.cs">
-      <DependentUpon>201602291657079_InitialCreate.cs</DependentUpon>
+    <Compile Include="Migrations\201603232258563_init.cs" />
+    <Compile Include="Migrations\201603232258563_init.Designer.cs">
+      <DependentUpon>201603232258563_init.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\AccountViewModels.cs" />
@@ -296,8 +298,8 @@
     <Content Include="Scripts\jquery-1.10.2.min.map" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Migrations\201602291657079_InitialCreate.resx">
-      <DependentUpon>201602291657079_InitialCreate.cs</DependentUpon>
+    <EmbeddedResource Include="Migrations\201603232258563_init.resx">
+      <DependentUpon>201603232258563_init.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>
