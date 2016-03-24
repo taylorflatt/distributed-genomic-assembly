@@ -51,15 +51,43 @@
             <!-- Here we might want to also include checkboxes for the different assemblers that they want so we can show/hide. -->
             <div class="form-group">
 
-                <label class="control-label col-md-2">
-                    Data Location (URL): 
-                </label>
-
                 <div class="col-md-10">
-                    @Html.EditorFor(model => model.DataSource, new { htmlAttributes = new { @class = "form-control" } })
-                    @Html.ValidationMessageFor(model => model.DataSource, "", new { @class = "text-danger" })
+
+                    <label class="control-label col-md-2">
+                        Data Location (URL):
+                    </label>
+
+                    <!-- Problem here when we have appendRow and concatURLs in the same script code block. Remove the latter and it is fine. -->
+                    <script type="text/javascript">
+                        var x=1
+
+                        function appendURLBox(){
+                            $('#addUrlBtn').append("<br ><input type='text' id='url_"+ ++x +"' value=''>");
+                        }
+
+                        function concatURLs(){
+                            for(var i = 0; i <= x; i++ )
+                            {
+                                var textboxValue = document.getElementById("url_" + i).value;
+                                @Model.DataSource = @Model.DataSource + "," + textBoxValue;
+                            }
+                        }
+                    </script>
+
+                    <!-- Dynamically create list of URL textboxes here -->
+                    <div class="col-md-10">
+                        @Html.TextBoxFor(model => model.DataSource, new { htmlAttributes = new { @class = "form-control", id="url_0" } })
+                        @Html.ValidationMessageFor(model => model.DataSource, "", new { @class = "text-danger" })
+                    </div>
+
+                    <div id="addUrlBtn">
+                        <button type="button" onclick="appendURLBox()" value="Add Row">Add URL</button>
+                    </div>
+
+                    <!-- End dynamically created list of URL textboxes -->
+
+                    </div>
                 </div>
-            </div>
 
             <div class="form-group">
                 <label class="control-label col-md-2">
@@ -164,7 +192,7 @@
             </div>
 
             <div class="form-group">
-                <input type="button" value="Next" class="btn btn-default" id="AcceptedInstructions" onclick="Step2MoveForward();" />
+                <input type="button" value="Next" class="btn btn-default" id="AcceptedInstructions" onclick="concatURLs();Step2MoveForward();" />
             </div>
         </div>
             <!-- END INITIAL DATA (STEP 2)-->
@@ -176,6 +204,30 @@
                 Masurca Data
             </h3>
             <hr />
+
+            <div class="form-group">
+                @Html.LabelFor(model => model.MasurcaPEMean, htmlAttributes: new { @class = "control-label col-md-2" })
+                <div class="col-md-10">
+                    @Html.EditorFor(model => model.MasurcaPEMean, new { htmlAttributes = new { @class = "form-control" } })
+                    @Html.ValidationMessageFor(model => model.MasurcaPEMean, "", new { @class = "text-danger" })
+                </div>
+            </div>
+
+            <div class="form-group">
+                @Html.LabelFor(model => model.MasurcaPEStdev, htmlAttributes: new { @class = "control-label col-md-2" })
+                <div class="col-md-10">
+                    @Html.EditorFor(model => model.MasurcaPEStdev, new { htmlAttributes = new { @class = "form-control" } })
+                    @Html.ValidationMessageFor(model => model.MasurcaPEStdev, "", new { @class = "text-danger" })
+                </div>
+            </div>
+
+            <div class="form-group">
+                @Html.LabelFor(model => model.MasurcaGraphKMerValue, htmlAttributes: new { @class = "control-label col-md-2" })
+                <div class="col-md-10">
+                    @Html.EditorFor(model => model.MasurcaGraphKMerValue, new { htmlAttributes = new { @class = "form-control" } })
+                    @Html.ValidationMessageFor(model => model.MasurcaGraphKMerValue, "", new { @class = "text-danger" })
+                </div>
+            </div>
 
             <div class="form-group">
                 @Html.LabelFor(model => model.MasurcaLinkingMates, htmlAttributes: new { @class = "control-label col-md-2" })
@@ -208,24 +260,13 @@
             </div>
 
             <div class="form-group">
-                @Html.LabelFor(model => model.HomoTrim, htmlAttributes: new { @class = "control-label col-md-2" })
+                @Html.LabelFor(model => model.MasurcaKMerErrorCount, htmlAttributes: new { @class = "control-label col-md-2" })
                 <div class="col-md-10">
-                    <div class="checkbox">
-                        @Html.EditorFor(model => model.HomoTrim)
-                        @Html.ValidationMessageFor(model => model.HomoTrim, "", new { @class = "text-danger" })
-                    </div>
+                    @Html.EditorFor(model => model.MasurcaKMerErrorCount, new { htmlAttributes = new { @class = "form-control" } })
+                    @Html.ValidationMessageFor(model => model.MasurcaKMerErrorCount, "", new { @class = "text-danger" })
                 </div>
             </div>
 
-            <div class="form-group">
-                @Html.LabelFor(model => model.MasurcaKMerValue, htmlAttributes: new { @class = "control-label col-md-2" })
-                <div class="col-md-10">
-                    @Html.EditorFor(model => model.MasurcaKMerValue, new { htmlAttributes = new { @class = "form-control" } })
-                    @Html.ValidationMessageFor(model => model.MasurcaKMerValue, "", new { @class = "text-danger" })
-                </div>
-            </div>
-
-            <!-- Returns a model error if nothing is entered -->
             <div class="form-group">
                 @Html.LabelFor(model => model.MasurcaThreadNum, htmlAttributes: new { @class = "control-label col-md-2" })
                 <div class="col-md-10">
@@ -234,12 +275,21 @@
                 </div>
             </div>
 
-            <!-- Returns a model error if nothing is entered -->
             <div class="form-group">
                 @Html.LabelFor(model => model.MasurcaJellyfishHashSize, htmlAttributes: new { @class = "control-label col-md-2" })
                 <div class="col-md-10">
                     @Html.EditorFor(model => model.MasurcaJellyfishHashSize, new { htmlAttributes = new { @class = "form-control" } })
                     @Html.ValidationMessageFor(model => model.MasurcaJellyfishHashSize, "", new { @class = "text-danger" })
+                </div>
+            </div>
+
+            <div class="form-group">
+                @Html.LabelFor(model => model.HomoTrim, htmlAttributes: new { @class = "control-label col-md-2" })
+                <div class="col-md-10">
+                    <div class="checkbox">
+                        @Html.EditorFor(model => model.HomoTrim)
+                        @Html.ValidationMessageFor(model => model.HomoTrim, "", new { @class = "text-danger" })
+                    </div>
                 </div>
             </div>
 
@@ -301,6 +351,7 @@
 
         </div>
 }
+
 
 <div>
     @Html.ActionLink("Back to List", "Index")

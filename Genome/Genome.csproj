@@ -198,21 +198,17 @@
     <Compile Include="Helpers\ConfigBuilder.cs" />
     <Compile Include="Helpers\CustomRoles.cs" />
     <Compile Include="Helpers\SSHConfig.cs" />
-    <Compile Include="Migrations\201603232258563_init.cs" />
-    <Compile Include="Migrations\201603232258563_init.Designer.cs">
-      <DependentUpon>201603232258563_init.cs</DependentUpon>
+    <Compile Include="Migrations\201603241902265_Refactor.cs" />
+    <Compile Include="Migrations\201603241902265_Refactor.Designer.cs">
+      <DependentUpon>201603241902265_Refactor.cs</DependentUpon>
     </Compile>
-    <Compile Include="Migrations\201603240045080_RemoveRequired.cs" />
-    <Compile Include="Migrations\201603240045080_RemoveRequired.Designer.cs">
-      <DependentUpon>201603240045080_RemoveRequired.cs</DependentUpon>
+    <Compile Include="Migrations\201603241957415_temp.cs" />
+    <Compile Include="Migrations\201603241957415_temp.Designer.cs">
+      <DependentUpon>201603241957415_temp.cs</DependentUpon>
     </Compile>
-    <Compile Include="Migrations\201603240049147_RemoveRequired1.cs" />
-    <Compile Include="Migrations\201603240049147_RemoveRequired1.Designer.cs">
-      <DependentUpon>201603240049147_RemoveRequired1.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\201603240206136_new.cs" />
-    <Compile Include="Migrations\201603240206136_new.Designer.cs">
-      <DependentUpon>201603240206136_new.cs</DependentUpon>
+    <Compile Include="Migrations\201603242006027_temp1.cs" />
+    <Compile Include="Migrations\201603242006027_temp1.Designer.cs">
+      <DependentUpon>201603242006027_temp1.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\AccountViewModels.cs" />
@@ -295,6 +291,8 @@
     <Content Include="Views\GenomeAssembly\Index.cshtml" />
     <Content Include="Views\Shared\Confirmation.cshtml" />
     <Content Include="Views\GenomeAssembly\Create.cshtml" />
+    <Content Include="Views\GenomeAssembly\Create - Copy.cshtml" />
+    <Content Include="Views\GenomeAssembly\View.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
@@ -310,17 +308,14 @@
     <Content Include="Scripts\jquery-1.10.2.min.map" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Migrations\201603232258563_init.resx">
-      <DependentUpon>201603232258563_init.cs</DependentUpon>
+    <EmbeddedResource Include="Migrations\201603241902265_Refactor.resx">
+      <DependentUpon>201603241902265_Refactor.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\201603240045080_RemoveRequired.resx">
-      <DependentUpon>201603240045080_RemoveRequired.cs</DependentUpon>
+    <EmbeddedResource Include="Migrations\201603241957415_temp.resx">
+      <DependentUpon>201603241957415_temp.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\201603240049147_RemoveRequired1.resx">
-      <DependentUpon>201603240049147_RemoveRequired1.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\201603240206136_new.resx">
-      <DependentUpon>201603240206136_new.cs</DependentUpon>
+    <EmbeddedResource Include="Migrations\201603242006027_temp1.resx">
+      <DependentUpon>201603242006027_temp1.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>

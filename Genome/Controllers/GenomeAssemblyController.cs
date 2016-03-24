@@ -12,7 +12,7 @@ namespace Genome.Controllers
 
         public ActionResult Create()
         {
-            return View();
+            return View(new GenomeModel());
         }
 
         [HttpPost]
@@ -22,12 +22,30 @@ namespace Genome.Controllers
             if (ModelState.IsValid)
             {
                 try
-               { 
+               {
                     // Example if they leave things blank.
                     if(genomeModel.JumpLength == null)
                     {
                         // Set to a default length
                     }
+
+                    if (genomeModel.PairedEndLength == null)
+                    {
+                        // Set to a default size
+                    }
+
+                    if (genomeModel.MasurcaJellyfishHashSize == null)
+                    {
+                        // Set to a default size
+                    }
+
+                    if(genomeModel.MasurcaGraphKMerValue == null)
+                        // null means set to auto in the script. so GRAPH_KMER_SIZE = auto.
+
+                    if(genomeModel.MasurcaThreadNum == null)
+                        genomeModel.MasurcaThreadNum = 20;
+
+
 
                     genomeModel.CreatedBy = User.Identity.Name;
                     genomeModel.CreatedDate = DateTime.Now;
@@ -39,6 +57,7 @@ namespace Genome.Controllers
                     // ssh
                     //SSHConfig ssh = new SSHConfig("", "pw", "login-0-0.research.siu.edu");
                 }
+
                 catch (Exception e)
                 {
                     Console.WriteLine(e.Message);
