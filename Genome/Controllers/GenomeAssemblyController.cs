@@ -22,7 +22,13 @@ namespace Genome.Controllers
             if (ModelState.IsValid)
             {
                 try
-                {
+               { 
+                    // Example if they leave things blank.
+                    if(genomeModel.JumpLength == null)
+                    {
+                        // Set to a default length
+                    }
+
                     genomeModel.CreatedBy = User.Identity.Name;
                     genomeModel.CreatedDate = DateTime.Now;
                     genomeModel.JobStatus = "Pending";
@@ -44,8 +50,6 @@ namespace Genome.Controllers
             return View(genomeModel);
             //return View();
         }
-
-
 
         // GET: GenomeAssembly/Details/5
         public ActionResult Details(int? id)
@@ -82,7 +86,7 @@ namespace Genome.Controllers
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit([Bind(Include = "uuid,Primers,JumpReads,PEReads,PairedEndLength,JumpLength,CreatedBy,MasurcaKMerValue,MasurcaThreadNum,MasurcaJellyfishHashSize,MasurcaLinkingMates,MasurcaLimitJumpCoverage,MasurcaCAParameters,HomoTrim")] GenomeModel genomeModel)
+        public ActionResult Edit(GenomeModel genomeModel)
         {
             if (ModelState.IsValid)
             {

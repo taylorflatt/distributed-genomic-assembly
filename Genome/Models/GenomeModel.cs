@@ -23,21 +23,21 @@ namespace Genome.Models
         public bool PEReads { get; set; }
 
         [Display(Name = "Paired End Length")]
-        public int PairedEndLength { get; set; }
+        public int? PairedEndLength { get; set; }
 
         [Display(Name = "Jump Length")]
-        public int JumpLength { get; set; }
+        public int? JumpLength { get; set; }
 
         // Masurca specific parameters
         [Required]
         [Display(Name = "Masurca K-Mer Value")]
-        public int MasurcaKMerValue { get; set; }
+        public int? MasurcaKMerValue { get; set; }
 
         [Display(Name = "Masurca CPU Thread Count")]
-        public int MasurcaThreadNum { get; set; }
+        public int? MasurcaThreadNum { get; set; }
 
         [Display(Name = "Masurca Jellyfish hash size (10x size of genome)")]
-        public int MasurcaJellyfishHashSize { get; set; }
+        public int? MasurcaJellyfishHashSize { get; set; }
 
         // Set this to 1 for Illumina-only assemblies and to 0 if you have 1x or more long (Sanger, 454) reads, you can also set this to 0 for large data sets with high jumping clone coverage, e.g. >50x
         [Display(Name = "Illumina Data Only?")]
