@@ -19,8 +19,8 @@
     <MvcBuildViews>false</MvcBuildViews>
     <UseIISExpress>true</UseIISExpress>
     <IISExpressSSLPort />
-    <IISExpressAnonymousAuthentication />
-    <IISExpressWindowsAuthentication />
+    <IISExpressAnonymousAuthentication>enabled</IISExpressAnonymousAuthentication>
+    <IISExpressWindowsAuthentication>enabled</IISExpressWindowsAuthentication>
     <IISExpressUseClassicPipelineMode />
     <UseGlobalApplicationHostFile />
     <NuGetPackageImportStamp>
@@ -198,17 +198,9 @@
     <Compile Include="Helpers\ConfigBuilder.cs" />
     <Compile Include="Helpers\CustomRoles.cs" />
     <Compile Include="Helpers\SSHConfig.cs" />
-    <Compile Include="Migrations\201603241902265_Refactor.cs" />
-    <Compile Include="Migrations\201603241902265_Refactor.Designer.cs">
-      <DependentUpon>201603241902265_Refactor.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\201603241957415_temp.cs" />
-    <Compile Include="Migrations\201603241957415_temp.Designer.cs">
-      <DependentUpon>201603241957415_temp.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\201603242006027_temp1.cs" />
-    <Compile Include="Migrations\201603242006027_temp1.Designer.cs">
-      <DependentUpon>201603242006027_temp1.cs</DependentUpon>
+    <Compile Include="Migrations\201603242123224_init.cs" />
+    <Compile Include="Migrations\201603242123224_init.Designer.cs">
+      <DependentUpon>201603242123224_init.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\AccountViewModels.cs" />
@@ -229,6 +221,7 @@
     <Content Include="Scripts\bootstrap.js" />
     <Content Include="Scripts\bootstrap.min.js" />
     <None Include="Scripts\jquery-1.10.2.intellisense.js" />
+    <Content Include="Scripts\GenomeCreate.js" />
     <Content Include="Scripts\jquery-1.10.2.js" />
     <Content Include="Scripts\jquery-1.10.2.min.js" />
     <None Include="Scripts\jquery.validate-vsdoc.js" />
@@ -308,14 +301,8 @@
     <Content Include="Scripts\jquery-1.10.2.min.map" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Migrations\201603241902265_Refactor.resx">
-      <DependentUpon>201603241902265_Refactor.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\201603241957415_temp.resx">
-      <DependentUpon>201603241957415_temp.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\201603242006027_temp1.resx">
-      <DependentUpon>201603242006027_temp1.cs</DependentUpon>
+    <EmbeddedResource Include="Migrations\201603242123224_init.resx">
+      <DependentUpon>201603242123224_init.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>

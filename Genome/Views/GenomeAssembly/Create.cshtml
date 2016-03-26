@@ -5,6 +5,7 @@
 }
 
 <script src="~/Scripts/jquery-1.10.2.min.js"></script>
+<script src="~/Scripts/GenomeCreate.js"></script>
 
 <h2>Create a Job</h2>
 
@@ -27,13 +28,13 @@
                 Here is a paragraph that explains what using this means and that by accepting this you accept responsibilities for its misuse and so on. Here is a paragraph that explains what using this means and that by accepting this you accept responsibilities for its misuse and so on. Here is a paragraph that explains what using this means and that by accepting this you accept responsibilities for its misuse and so on. Here is a paragraph that explains what using this means and that by accepting this you accept responsibilities for its misuse and so on. Here is a paragraph that explains what using this means and that by accepting this you accept responsibilities for its misuse and so on. Here is a paragraph that explains what using this means and that by accepting this you accept responsibilities for its misuse and so on.
             </p>
 
-            <script>
+            @*<script>
                 function Step1MoveForward()
                 {
                     document.getElementById('Step1').style.display = "none"
                     document.getElementById('Step2').style.display = "block"
                 }
-            </script>
+            </script>*@
 
             <div class="form-group">
                 <input type="button" value="Accept" class="btn btn-default" id="AcceptedInstructions" onclick="Step1MoveForward();" required />
@@ -57,33 +58,34 @@
                         Data Location (URL):
                     </label>
 
-                    <!-- Problem here when we have appendRow and concatURLs in the same script code block. Remove the latter and it is fine. -->
-                    <script type="text/javascript">
-                        var x=1
-
-                        function appendURLBox(){
-                            $('#addUrlBtn').append("<br ><input type='text' id='url_"+ ++x +"' value=''>");
-                        }
-
-                        function concatURLs(){
-                            for(var i = 0; i <= x; i++ )
-                            {
-                                var textboxValue = document.getElementById("url_" + i).value;
-                                @Model.DataSource = @Model.DataSource + "," + textBoxValue;
-                            }
-                        }
-                    </script>
-
                     <!-- Dynamically create list of URL textboxes here -->
                     <div class="col-md-10">
                         @Html.TextBoxFor(model => model.DataSource, new { htmlAttributes = new { @class = "form-control", id="url_0" } })
                         @Html.ValidationMessageFor(model => model.DataSource, "", new { @class = "text-danger" })
                     </div>
 
-                    <div id="addUrlBtn">
-                        <button type="button" onclick="appendURLBox()" value="Add Row">Add URL</button>
-                    </div>
+                    <!-- Problem here when we have appendRow and concatURLs in the same script code block. Remove the latter and it is fine. -->
+                    @*<script>
+                        //var x=1;
 
+                        function appendURLBox(){
+                            var x=1;
+                            $('#addUrlBtn').append("<br ><input type='text' id='url_"+ ++x +"' value=''>");
+                        }
+
+                        function concatURLs(){
+                            var x=1;
+                            for(var i = 0; i <= x; i++ )
+                            {
+                                var textboxValue = document.getElementById("url_" + i).value;
+                                @Model.DataSource = @Model.DataSource + "," + textBoxValue;
+                            }
+                        }
+                    </script>*@
+
+                    <div id="addUrlBtn">
+                        <button type="button" id="UrlBtn" onclick="appendURLBox()" value="Add Row">Add URL</button>
+                    </div>
                     <!-- End dynamically created list of URL textboxes -->
 
                     </div>
@@ -106,7 +108,7 @@
                 and handle that in the config creator. (If model.PEReads == "" then pe_length = 0) for instance.
             *@
 
-            <script>
+            @*<script>
                 $(function ()
                 {
                     // Hide Paired-end reads if checkbox is left unchecked.
@@ -131,7 +133,7 @@
                         }
                     });
                 });
-            </script>
+            </script>*@
 
             <div class="form-group">
                 @Html.LabelFor(model => model.PEReads, htmlAttributes: new { @class = "control-label col-md-2" })
@@ -174,7 +176,7 @@
                 </div>
             </div>
 
-            <script>
+            @*<script>
                 function Step2MoveBack(){
                     document.getElementById('Step2').style.display = "none"
                     document.getElementById('Step1').style.display = "block"
@@ -185,14 +187,14 @@
                     document.getElementById('Step2').style.display = "none"
                     document.getElementById('Step3').style.display = "block"
                 }
-            </script>
+            </script>*@
 
             <div class="form-group">
                 <input type="button" value="Previous" class="btn btn-default" id="PreviousStep" onclick="Step2MoveBack();" />
             </div>
 
             <div class="form-group">
-                <input type="button" value="Next" class="btn btn-default" id="AcceptedInstructions" onclick="concatURLs();Step2MoveForward();" />
+                <input type="button" value="Next" class="btn btn-default" id="AcceptedInstructions" onclick="concatURLs();Step2MoveForward();" /> @*Step2MoveForward();*@
             </div>
         </div>
             <!-- END INITIAL DATA (STEP 2)-->
@@ -293,7 +295,7 @@
                 </div>
             </div>
 
-            <script>
+            @*<script>
                 function Step3MoveBack(){
                     document.getElementById('Step3').style.display = "none"
                     document.getElementById('Step2').style.display = "block"
@@ -303,7 +305,7 @@
                     document.getElementById('Step3').style.display = "none"
                     document.getElementById('Step4').style.display = "block"
                 }
-            </script>
+            </script>*@
 
             <div class="form-group">
                 <input type="button" value="Previous" class="btn btn-default" id="PreviousStep" onclick="Step3MoveBack();" />
