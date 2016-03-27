@@ -9,10 +9,10 @@
 
 <h2>Create a Job</h2>
 
-@using (Html.BeginForm()) 
+@using (Html.BeginForm())
 {
     @Html.AntiForgeryToken()
-    
+
     <div class="form-horizontal">
         <h4>GenomeModel</h4>
         <hr />
@@ -58,17 +58,21 @@
                         @Html.TextBoxFor(model => model.DataSource, new { htmlAttributes = new { @class = "form-control", @id = "url_0" } })
                         @Html.ValidationMessageFor(model => model.DataSource, "", new { @class = "text-danger" })
                     </div>
-                    <div id="DataSourceErrorMsg">
-                        @* Error message for data source if any. *@
-                    </div>
 
                     <div id="addUrlBtn">
-                        <button type="button" id="UrlBtn" onclick="appendURLBox()" value="Add Row">Add URL</button>
+                        <button type="button" id="UrlBtn" onclick="addURLBox()" value="Add Row">Add URL</button>
+                    </div>
+
+                    <div id="removeUrlBtn">
+                        <button type="button" id="UrlBtn" onclick="removeURLBox()" value="Remove Row">Remove URL</button>
                     </div>
                     <!-- End dynamically created list of URL textboxes -->
 
+                    <div id="DataSourceErrorMsg">
+                        @* Error message for data source if any. *@
                     </div>
                 </div>
+            </div>
 
             <div class="form-group">
                 <label class="control-label col-md-2">
@@ -125,7 +129,7 @@
             <div class="form-group" id="JumpLength" hidden="hidden">
                 @Html.LabelFor(model => model.JumpLength, htmlAttributes: new { @class = "control-label col-md-2" })
                 <div class="col-md-10">
-                    @Html.EditorFor(model => model.JumpLength, new { htmlAttributes = new { @class = "form-control", @id="JumpLengthInput" } })
+                    @Html.EditorFor(model => model.JumpLength, new { htmlAttributes = new { @class = "form-control", @id = "JumpLengthInput" } })
                     @Html.ValidationMessageFor(model => model.JumpLength, "", new { @class = "text-danger" })
                 </div>
                 <div id="JumpLengthErrorMsg">
@@ -173,6 +177,9 @@
                     @Html.EditorFor(model => model.MasurcaGraphKMerValue, new { htmlAttributes = new { @class = "form-control" } })
                     @Html.ValidationMessageFor(model => model.MasurcaGraphKMerValue, "", new { @class = "text-danger" })
                 </div>
+                <div id="GraphKmerErrorMsg">
+                    @* Graph KMer Size Error if any here. *@
+                </div>
             </div>
 
             <div class="form-group">
@@ -211,6 +218,9 @@
                     @Html.EditorFor(model => model.MasurcaKMerErrorCount, new { htmlAttributes = new { @class = "form-control" } })
                     @Html.ValidationMessageFor(model => model.MasurcaKMerErrorCount, "", new { @class = "text-danger" })
                 </div>
+                <div id="KMerCountThresholdErrorMsg">
+                    @* Graph KMer Size Error if any here. *@
+                </div>
             </div>
 
             <div class="form-group">
@@ -218,6 +228,9 @@
                 <div class="col-md-10">
                     @Html.EditorFor(model => model.MasurcaThreadNum, new { htmlAttributes = new { @class = "form-control" } })
                     @Html.ValidationMessageFor(model => model.MasurcaThreadNum, "", new { @class = "text-danger" })
+                </div>
+                <div id="ThreadNumErrorMsg">
+                    @* Graph KMer Size Error if any here. *@
                 </div>
             </div>
 
@@ -293,6 +306,10 @@
             </div>
 
             <div class="form-group">
+                <input type="button" value="Previous" class="btn btn-default" id="PreviousStep" onclick="Step4MoveBack();" />
+            </div>
+
+            <div class="form-group">
                 <div class="col-md-offset-2 col-md-10">
                     <input type="submit" value="Create" class="btn btn-default" onclick="concatURLs();" />
                 </div>
@@ -305,8 +322,3 @@
 
         </div>
 }
-
-
-<div>
-    @Html.ActionLink("Back to List", "Index")
-</div>

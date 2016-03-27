@@ -22,6 +22,9 @@ namespace Genome.Controllers
         {
             if (ModelState.IsValid)
             {
+                // TODO: Consider the JELLYFISH SIZE. Rec size is est_genome_size  * estimated coverage.
+                // Should that be a field that we include in the model so we can calculate a safe size or just
+                // have them do it? I think just have them do it with a tooltip and make it a required field.
                 try
                {
                     // Example if they leave things blank.

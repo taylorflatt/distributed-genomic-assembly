@@ -13,6 +13,26 @@ function Step2MoveBack(){
 function Step2MoveForward() {
     var invalidData = 0;
 
+    if (document.getElementById("DataSource") == "")
+    {
+        document.getElementById("DataSourceErrorMsg").innerHTML = "You need to enter a data source!"
+        invalidData++;
+    }
+
+    // Only if there are more text boxes entered.
+    else if (x > 1)
+    {
+        for (var i = 2; i <= x; i++)
+        {
+            if (document.getElementById("url_" + i).value == "")
+            {
+                document.getElementById("DataSourceErrorMsg").innerHTML = "You need to enter a data source!"
+                invalidData++;
+            }
+        }
+    }
+
+
     // Paired-end read validation is only done if paired-end reads is checked.
     if (document.getElementById("PEReads").checked)
     {
@@ -59,18 +79,64 @@ function Step2MoveForward() {
     }
 }
 
-function Step3MoveBack(){
+function Step3MoveBack() {
+
     document.getElementById('Step3').style.display = "none";
     document.getElementById('Step2').style.display = "block";
 }
 
 function Step3MoveForward() {
-    document.getElementById('Step3').style.display = "none";
-    document.getElementById('Step4').style.display = "block";
+    var invalidData = 0;
+    var graphKmerValue = document.getElementById("MasurcaGraphKMerValue").value;
+    var kmerValueThreshold = document.getElementById("MasurcaKMerErrorCount").value;
+    var cpuThreadNum = document.getElementById("MasurcaThreadNum").value;
+
+    if (graphKmerValue != "" && (graphKmerValue < 25 || graphKmerValue > 101))
+    {
+        document.getElementById("GraphKmerErrorMsg").innerHTML = "The value you entered was invalid. You may only enter numbers from 25 and 101. Leave blank for auto."
+        invalidData++;
+    }
+
+    if (kmerValueThreshold != "" && (kmerValueThreshold != 1 || kmerValueThreshold != 2))
+    {
+        document.getElementById("KMerCountThresholdErrorMsg").innerHTML = "The value you entered was invalid. You may only enter numbers between 1 and 2. Leave blank for auto."
+        invalidData++;
+    }
+
+    if (cpuThreadNum != "" && (cpuThreadNum < 1 || cpuThreadNum > 20))
+    {
+        document.getElementById("ThreadNumErrorMsg").innerHTML = "The value you entered was invalid. You may only enter numbers between 1 and 20."
+        invalidData++;
+    }
+
+    if (invalidData == 0)
+    {
+        document.getElementById('Step3').style.display = "none";
+        document.getElementById('Step4').style.display = "block";
+    }
+
+    else
+    {
+        document.getElementById("WizardErrors").innerHTML = "Please correct the errors before proceeding!"
+    }
 }
 
-function appendURLBox(){
-    $('#addUrlBtn').append("<br ><input type='text' id='url_"+ ++x +"' value=''>");
+function Step4MoveBackward() {
+    document.getElementById('Step4').style.display = "none";
+    document.getElementById('Step3').style.display = "block";
+}
+
+function addURLBox(){
+    $('#addUrlBtn').append("<br id='br_" + ++x + "'><input type='text' id='url_" + x + "' value=''>");
+}
+
+function removeURLBox() {
+    if (x > 1)
+    {
+        $("#br_" + x).remove();
+        $("#url_" + x).remove();
+        x--;
+    }
 }
 
 // This function needs tweeked. It will return valid for something like www.google.comd

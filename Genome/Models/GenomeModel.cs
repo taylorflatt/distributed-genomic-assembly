@@ -60,6 +60,7 @@ namespace Genome.Models
         public int? MasurcaPEStdev { get; set; }
 
         [Display(Name = "Masurca Graph K-Mer Value")]
+        [Range(25, 101)]
         public int? MasurcaGraphKMerValue { get; set; }
 
         // Set this to 1 for Illumina-only assemblies and to 0 if you have 1x or more long (Sanger, 454) reads, you can also set this to 0 for large data sets with high jumping clone coverage, e.g. >50x
@@ -74,13 +75,16 @@ namespace Genome.Models
         public bool MasurcaCAParameters { get; set; }
 
         [Display(Name = "K-Mer count Threshold")]
+        [Range(1, 2)]
         public int? MasurcaKMerErrorCount { get; set; }
 
         [Display(Name = "Masurca CPU Thread Count")]
+        [Range(1,20)]
         public int? MasurcaThreadNum { get; set; }
 
+        [Required]
         [Display(Name = "Masurca Jellyfish hash size (10x size of genome)")]
-        public int? MasurcaJellyfishHashSize { get; set; }
+        public int MasurcaJellyfishHashSize { get; set; }
 
         // Must return 1 for true, or 0 for false
         [Display(Name = "Homoplymer Trim")]
