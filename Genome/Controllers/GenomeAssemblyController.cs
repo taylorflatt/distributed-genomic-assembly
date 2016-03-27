@@ -3,7 +3,6 @@ using System.Data.Entity;
 using System.Net;
 using System.Web.Mvc;
 using Genome.Models;
-using Genome.Helpers;
 
 namespace Genome.Controllers
 {
@@ -27,24 +26,25 @@ namespace Genome.Controllers
                 // have them do it? I think just have them do it with a tooltip and make it a required field.
                 try
                {
-                    // Example if they leave things blank.
-                    if(genomeModel.JumpLength == null)
-                    {
-                        // Set to a default length
-                    }
+                    // If they don't have jump reads.
+                    if (genomeModel.JumpReads == false)
+                        genomeModel.JumpLength = 0;
 
-                    if (genomeModel.PairedEndLength == null)
-                    {
-                        // Set to a default size
-                    }
+                    // If they don't have paired-end reads.
+                    if(genomeModel.PEReads == false)
+                        genomeModel.PairedEndLength = 0;
 
-                    if (genomeModel.MasurcaJellyfishHashSize == null)
-                    {
-                        // Set to a default size
-                    }
+                    if(genomeModel.MasurcaPEMean == null)
+                        // Set Mean default value.
+
+                    if(genomeModel.MasurcaPEStdev == null)
+                        // Set std dev default value.
 
                     if(genomeModel.MasurcaGraphKMerValue == null)
-                        // null means set to auto in the script. so GRAPH_KMER_SIZE = auto.
+                        // Set graph kmer default value.
+
+                    if(genomeModel.MasurcaKMerErrorCount == null)
+                        // Set masurca kmer error threshold value.
 
                     if(genomeModel.MasurcaThreadNum == null)
                         genomeModel.MasurcaThreadNum = 20;
@@ -57,7 +57,7 @@ namespace Genome.Controllers
                     db.GenomeModels.Add(genomeModel);
                     db.SaveChanges();
 
-                    SSHConfig ssh = new SSHConfig("Big Dog IP", genomeModel.SSHUser, genomeModel.SSHPass);
+                    //SSHConfig ssh = new SSHConfig("login-0-0.research.siu.edu", genomeModel.SSHUser, genomeModel.SSHPass);
                 }
 
                 catch (Exception e)
@@ -65,11 +65,10 @@ namespace Genome.Controllers
                     Console.WriteLine(e.Message);
                 }
 
-                return RedirectToAction("Confirmation");
+                return RedirectToAction("Details", new { id = genomeModel.uuid });
             }
-            // SSHConfig ssh = new SSHConfig("login-0-0.research.siu.edu", "", "");
+
             return View(genomeModel);
-            //return View();
         }
 
         // GET: GenomeAssembly/Details/5

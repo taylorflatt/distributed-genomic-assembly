@@ -1,7 +1,7 @@
 ﻿@model Genome.Models.GenomeModel
 
 @{
-    ViewBag.Title = "Details";
+    ViewBag.Title = "Job Details";
 }
 
 <h2>Details</h2>
@@ -11,19 +11,19 @@
     <hr />
     <dl class="dl-horizontal">
         <dt>
+            @Html.DisplayNameFor(model => model.DataSource)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.DataSource)
+        </dd>
+
+        <dt>
             @Html.DisplayNameFor(model => model.Primers)
         </dt>
 
         <dd>
             @Html.DisplayFor(model => model.Primers)
-        </dd>
-
-        <dt>
-            @Html.DisplayNameFor(model => model.JumpReads)
-        </dt>
-
-        <dd>
-            @Html.DisplayFor(model => model.JumpReads)
         </dd>
 
         <dt>
@@ -43,6 +43,14 @@
         </dd>
 
         <dt>
+            @Html.DisplayNameFor(model => model.JumpReads)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.JumpReads)
+        </dd>
+
+        <dt>
             @Html.DisplayNameFor(model => model.JumpLength)
         </dt>
 
@@ -51,35 +59,27 @@
         </dd>
 
         <dt>
-            @Html.DisplayNameFor(model => model.CreatedBy)
+            @Html.DisplayNameFor(model => model.MasurcaPEMean)
         </dt>
 
         <dd>
-            @Html.DisplayFor(model => model.CreatedBy)
+            @Html.DisplayFor(model => model.MasurcaPEMean)
         </dd>
 
         <dt>
-            @Html.DisplayNameFor(model => model.MasurcaKMerValue)
+            @Html.DisplayNameFor(model => model.MasurcaPEStdev)
         </dt>
 
         <dd>
-            @Html.DisplayFor(model => model.MasurcaKMerValue)
+            @Html.DisplayFor(model => model.MasurcaPEStdev)
         </dd>
 
         <dt>
-            @Html.DisplayNameFor(model => model.MasurcaThreadNum)
+            @Html.DisplayNameFor(model => model.MasurcaGraphKMerValue)
         </dt>
 
         <dd>
-            @Html.DisplayFor(model => model.MasurcaThreadNum)
-        </dd>
-
-        <dt>
-            @Html.DisplayNameFor(model => model.MasurcaJellyfishHashSize)
-        </dt>
-
-        <dd>
-            @Html.DisplayFor(model => model.MasurcaJellyfishHashSize)
+            @Html.DisplayFor(model => model.MasurcaGraphKMerValue)
         </dd>
 
         <dt>
@@ -107,6 +107,30 @@
         </dd>
 
         <dt>
+            @Html.DisplayNameFor(model => model.MasurcaKMerErrorCount)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.MasurcaKMerErrorCount)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.MasurcaThreadNum)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.MasurcaThreadNum)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.MasurcaJellyfishHashSize)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.MasurcaJellyfishHashSize)
+        </dd>
+
+        <dt>
             @Html.DisplayNameFor(model => model.HomoTrim)
         </dt>
 
@@ -114,9 +138,37 @@
             @Html.DisplayFor(model => model.HomoTrim)
         </dd>
 
+        <dt>
+            @Html.DisplayNameFor(model => model.Agreed)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Agreed)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.CreatedBy)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.CreatedBy)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.CreatedDate)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.CreatedDate)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.JobStatus)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.JobStatus)
+        </dd>
+
     </dl>
 </div>
-<p>
-    @Html.ActionLink("Edit", "Edit", new { id = Model.uuid }) |
-    @Html.ActionLink("Back to List", "Index")
-</p>

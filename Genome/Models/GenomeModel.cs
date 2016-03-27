@@ -97,10 +97,15 @@ namespace Genome.Models
         [Required]
         [Display(Name = "I Agree")]
         public bool Agreed { get; set; }
+
+        [Display(Name = "Created By")]
         public string CreatedBy { get; set; }
 
         [DisplayFormat(ApplyFormatInEditMode = true, DataFormatString = "{0:MM/dd/yy HH:mm}")]
+        [Display(Name = "Created Date")]
         public DateTime CreatedDate { get; set; }
+
+        [Display(Name = "Current Status")]
         public string JobStatus { get; set; }
     }
 }

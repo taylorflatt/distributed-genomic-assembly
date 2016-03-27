@@ -12,11 +12,13 @@ function Step2MoveBack(){
 
 function Step2MoveForward() {
     var invalidData = 0;
+    var invalidURL = 0; // Determine if we still have an invalid URL.
 
-    if (document.getElementById("DataSource") == "")
+    if (document.getElementById("DataSource").value == "")
     {
-        document.getElementById("DataSourceErrorMsg").innerHTML = "You need to enter a data source!"
+        document.getElementById("DataSourceErrorMsg").innerHTML = "You need to enter a data source!";
         invalidData++;
+        invalidURL++;
     }
 
     // Only if there are more text boxes entered.
@@ -26,9 +28,16 @@ function Step2MoveForward() {
         {
             if (document.getElementById("url_" + i).value == "")
             {
-                document.getElementById("DataSourceErrorMsg").innerHTML = "You need to enter a data source!"
+                document.getElementById("DataSourceErrorMsg").innerHTML = "You need to enter a data source!";
                 invalidData++;
+                invalidURL++;
             }
+        }
+
+        if (invalidURL == 0)
+        {
+            document.getElementById("DataSourceErrorMsg").innerHTML = "";
+            invalidURL = 0;
         }
     }
 
@@ -38,34 +47,60 @@ function Step2MoveForward() {
     {
         var input = document.getElementById("PELengthInput").value;
 
-        // Make sure the value of the box is between 0 and 100. (TEST - MAY REMOVE) (WORKS)
-        if(input < 0 || input > 100)
+        if (input == "")
         {
-            document.getElementById("PELengthErrorMsg").innerHTML = "The value you entered was invalid. You may only enter numbers from 0-100!"
+            document.getElementById("PELengthErrorMsg").innerHTML = "The value you entered was invalid. You must enter a number from 0-100!";
             invalidData++;
+        }
+
+        // Make sure the value of the box is between 0 and 100. (TEST - MAY REMOVE) (WORKS)
+        else if(input < 0 || input > 100)
+        {
+            document.getElementById("PELengthErrorMsg").innerHTML = "The value you entered was invalid. You may only enter numbers from 0-100!";
+            invalidData++;
+        }
+
+        else
+        {
+            // We can remove the error if they have corrected it but not ALL errors.
+            document.getElementById("PELengthErrorMsg").innerHTML = "";
         }
     }
 
     // Jump read validation is only done if Jump reads is checked.
     if (document.getElementById("JumpReads").checked)
     {
-        var input = document.getElementById("JumpLengthInput");
+        var input = document.getElementById("JumpLengthInput").value;
+
+        if (input == "")
+        {
+            document.getElementById("JumpLengthErrorMsg").innerHTML = "The value you entered was invalid. You must enter a number from 0-100!";
+            invalidData++;
+        }
 
         // Make sure the value of the box is between 0 and 100. (TEST - MAY REMOVE) (WORKS)
-        if (input < 0 || input > 100)
+        else if (input < 0 || input > 100)
         {
-            document.getElementById("JumpLengthErrorMsg").innerHTML = "The value you entered was invalid. You may only enter numbers from 0-100!"
+            document.getElementById("JumpLengthErrorMsg").innerHTML = "The value you entered was invalid. You may only enter numbers from 0-100!";
             invalidData++;
+        }
+
+        else
+        {
+            // We can remove the error if they have corrected it but not ALL errors.
+            document.getElementById("JumpLengthErrorMsg").innerHTML = "";
         }
     }
 
 
     if (invalidData == 0)
     {
-        // Reset the error warnings.
-        document.getElementById("PELengthErrorMsg").innerHTML = ""
-        document.getElementById("JumpLengthErrorMsg").innerHTML = ""
-        document.getElementById("WizardErrors").innerHTML = ""
+        // Reset the error warnings (Potentially unnecessary, just precautionary).
+        document.getElementById("DataSourceErrorMsg").innerHTML = "";
+        document.getElementById("PELengthErrorMsg").innerHTML = "";
+        document.getElementById("JumpLengthErrorMsg").innerHTML = "";
+        document.getElementById("WizardErrors").innerHTML = "";
+        document.getElementById("DataSourceErrorMsg").innerHTML = "";
 
         // Move to the next step.
         document.getElementById('Step2').style.display = "none";
@@ -75,7 +110,7 @@ function Step2MoveForward() {
     else
     {
         // Write an error message at the top of the page indicating that one or more fields are incorrect.
-        document.getElementById("WizardErrors").innerHTML = "Please correct the errors before proceeding!"
+        document.getElementById("WizardErrors").innerHTML = "Please correct the errors before proceeding!";
     }
 }
 
@@ -93,31 +128,36 @@ function Step3MoveForward() {
 
     if (graphKmerValue != "" && (graphKmerValue < 25 || graphKmerValue > 101))
     {
-        document.getElementById("GraphKmerErrorMsg").innerHTML = "The value you entered was invalid. You may only enter numbers from 25 and 101. Leave blank for auto."
+        document.getElementById("GraphKmerErrorMsg").innerHTML = "The value you entered was invalid. You may only enter numbers from 25 and 101. Leave blank for auto.";
         invalidData++;
     }
 
     if (kmerValueThreshold != "" && (kmerValueThreshold != 1 || kmerValueThreshold != 2))
     {
-        document.getElementById("KMerCountThresholdErrorMsg").innerHTML = "The value you entered was invalid. You may only enter numbers between 1 and 2. Leave blank for auto."
+        document.getElementById("KMerCountThresholdErrorMsg").innerHTML = "The value you entered was invalid. You may only enter numbers between 1 and 2. Leave blank for auto.";
         invalidData++;
     }
 
     if (cpuThreadNum != "" && (cpuThreadNum < 1 || cpuThreadNum > 20))
     {
-        document.getElementById("ThreadNumErrorMsg").innerHTML = "The value you entered was invalid. You may only enter numbers between 1 and 20."
+        document.getElementById("ThreadNumErrorMsg").innerHTML = "The value you entered was invalid. You may only enter numbers between 1 and 20.";
         invalidData++;
     }
 
     if (invalidData == 0)
     {
+        document.getElementById("GraphKmerErrorMsg").innerHTML = "";
+        document.getElementById("KMerCountThresholdErrorMsg").innerHTML = "";
+        document.getElementById("ThreadNumErrorMsg").innerHTML = "";
+        document.getElementById("WizardErrors").innerHTML = "";
+
         document.getElementById('Step3').style.display = "none";
         document.getElementById('Step4').style.display = "block";
     }
 
     else
     {
-        document.getElementById("WizardErrors").innerHTML = "Please correct the errors before proceeding!"
+        document.getElementById("WizardErrors").innerHTML = "Please correct the errors before proceeding!";
     }
 }
 
@@ -159,8 +199,10 @@ function concatURLs() {
 $(function ()
 {
     // Hide Paired-end reads if checkbox is left unchecked.
-    $("#PEReads").click(function (){
-        if ($(this).is(':checked')){
+    $("#PEReads").click(function ()
+    {
+        if ($(this).is(':checked'))
+        {
             $("#PELength").show();
         }
 
@@ -170,8 +212,10 @@ $(function ()
     });
 
     // Hide Jump Reads box if checkbox is left unchecked.
-    $("#JumpReads").click(function () {
-        if ($(this).is(':checked')) {
+    $("#JumpReads").click(function ()
+    {
+        if ($(this).is(':checked'))
+        {
             $("#JumpLength").show();
         }
 

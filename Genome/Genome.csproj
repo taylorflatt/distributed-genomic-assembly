@@ -198,14 +198,6 @@
     <Compile Include="Helpers\ConfigBuilder.cs" />
     <Compile Include="Helpers\CustomRoles.cs" />
     <Compile Include="Helpers\SSHConfig.cs" />
-    <Compile Include="Migrations\201603270155463_test.cs" />
-    <Compile Include="Migrations\201603270155463_test.Designer.cs">
-      <DependentUpon>201603270155463_test.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\201603270542210_temp.cs" />
-    <Compile Include="Migrations\201603270542210_temp.Designer.cs">
-      <DependentUpon>201603270542210_temp.cs</DependentUpon>
-    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\AccountViewModels.cs" />
     <Compile Include="Models\GenomeModel.cs" />
@@ -224,7 +216,6 @@
     <Content Include="Content\Site.css" />
     <Content Include="Scripts\bootstrap.js" />
     <Content Include="Scripts\bootstrap.min.js" />
-    <Content Include="ClassDiagram1.cd" />
     <None Include="Scripts\jquery-1.10.2.intellisense.js" />
     <Content Include="Scripts\GenomeCreate.js" />
     <Content Include="Scripts\jquery-1.10.2.js" />
@@ -285,10 +276,9 @@
     <Content Include="Views\ManageRoles\Index.cshtml" />
     <Content Include="Views\Shared\AuthorizeFailed.cshtml" />
     <Content Include="Views\Account\UnverifiedUser.cshtml" />
-    <Content Include="Views\GenomeAssembly\Details.cshtml" />
     <Content Include="Views\GenomeAssembly\Index.cshtml" />
-    <Content Include="Views\Shared\Confirmation.cshtml" />
     <Content Include="Views\GenomeAssembly\Create.cshtml" />
+    <Content Include="Views\GenomeAssembly\Details.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
@@ -302,14 +292,6 @@
     <Content Include="packages.config" />
     <None Include="Project_Readme.html" />
     <Content Include="Scripts\jquery-1.10.2.min.map" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Migrations\201603270155463_test.resx">
-      <DependentUpon>201603270155463_test.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\201603270542210_temp.resx">
-      <DependentUpon>201603270542210_temp.cs</DependentUpon>
-    </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
