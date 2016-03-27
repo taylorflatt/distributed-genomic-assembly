@@ -198,18 +198,6 @@
     <Compile Include="Helpers\ConfigBuilder.cs" />
     <Compile Include="Helpers\CustomRoles.cs" />
     <Compile Include="Helpers\SSHConfig.cs" />
-    <Compile Include="Migrations\201603241902265_Refactor.cs" />
-    <Compile Include="Migrations\201603241902265_Refactor.Designer.cs">
-      <DependentUpon>201603241902265_Refactor.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\201603241957415_temp.cs" />
-    <Compile Include="Migrations\201603241957415_temp.Designer.cs">
-      <DependentUpon>201603241957415_temp.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\201603242006027_temp1.cs" />
-    <Compile Include="Migrations\201603242006027_temp1.Designer.cs">
-      <DependentUpon>201603242006027_temp1.cs</DependentUpon>
-    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\AccountViewModels.cs" />
     <Compile Include="Models\GenomeModel.cs" />
@@ -291,8 +279,6 @@
     <Content Include="Views\GenomeAssembly\Index.cshtml" />
     <Content Include="Views\Shared\Confirmation.cshtml" />
     <Content Include="Views\GenomeAssembly\Create.cshtml" />
-    <Content Include="Views\GenomeAssembly\Create - Copy.cshtml" />
-    <Content Include="Views\GenomeAssembly\View.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
@@ -306,17 +292,6 @@
     <Content Include="packages.config" />
     <None Include="Project_Readme.html" />
     <Content Include="Scripts\jquery-1.10.2.min.map" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Migrations\201603241902265_Refactor.resx">
-      <DependentUpon>201603241902265_Refactor.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\201603241957415_temp.resx">
-      <DependentUpon>201603241957415_temp.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\201603242006027_temp1.resx">
-      <DependentUpon>201603242006027_temp1.cs</DependentUpon>
-    </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
