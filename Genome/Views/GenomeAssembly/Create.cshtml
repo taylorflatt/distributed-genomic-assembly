@@ -1,0 +1,324 @@
+﻿@model Genome.Models.GenomeModel
+
+@{
+    ViewBag.Title = "Create";
+}
+
+<script src="~/Scripts/jquery-1.10.2.min.js"></script>
+<script src="~/Scripts/GenomeCreate.js"></script>
+
+<h2>Create a Job</h2>
+
+@using (Html.BeginForm())
+{
+    @Html.AntiForgeryToken()
+
+    <div class="form-horizontal">
+        <h4>GenomeModel</h4>
+        <hr />
+        <div id="WizardErrors">
+            @* Print wizard errors here if any. *@
+        </div>
+        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+        <!-- Introduction (STEP 1)-->
+        <div id="Step1">
+            <h3>
+                Start
+            </h3>
+            <hr />
+
+            <p>
+                Here is a paragraph that explains what using this means and that by accepting this you accept responsibilities for its misuse and so on. Here is a paragraph that explains what using this means and that by accepting this you accept responsibilities for its misuse and so on. Here is a paragraph that explains what using this means and that by accepting this you accept responsibilities for its misuse and so on. Here is a paragraph that explains what using this means and that by accepting this you accept responsibilities for its misuse and so on. Here is a paragraph that explains what using this means and that by accepting this you accept responsibilities for its misuse and so on. Here is a paragraph that explains what using this means and that by accepting this you accept responsibilities for its misuse and so on.
+            </p>
+
+            <div class="form-group">
+                <input type="button" value="Accept" class="btn btn-default" id="AcceptedInstructions" onclick="Step1MoveForward();" required />
+            </div>
+        </div>
+
+        <!-- END INTRODUCTION (STEP 1)-->
+
+        <!-- Initial Data (STEP 2)-->
+        <div id="Step2" hidden="hidden">
+            <h3>
+                Initial Data
+            </h3>
+            <hr />
+            <!-- Here we might want to also include checkboxes for the different assemblers that they want so we can show/hide. -->
+            <div class="form-group">
+
+                <div class="col-md-10">
+
+                    <label class="control-label col-md-2">
+                        Data Location (URL):
+                    </label>
+
+                    <!-- Dynamically create list of URL textboxes here -->
+                    <div class="col-md-10">
+                        @Html.TextBoxFor(model => model.DataSource, new { htmlAttributes = new { @class = "form-control", @id = "url_0" } })
+                        @Html.ValidationMessageFor(model => model.DataSource, "", new { @class = "text-danger" })
+                    </div>
+
+                    <div id="addUrlBtn">
+                        <button type="button" id="UrlBtn" onclick="addURLBox()" value="Add Row">Add URL</button>
+                    </div>
+
+                    <div id="removeUrlBtn">
+                        <button type="button" id="UrlBtn" onclick="removeURLBox()" value="Remove Row">Remove URL</button>
+                    </div>
+                    <!-- End dynamically created list of URL textboxes -->
+
+                    <div id="DataSourceErrorMsg">
+                        @* Error message for data source if any. *@
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="control-label col-md-2">
+                    Primers Removed: 
+                </label>
+                <div class="col-md-10">
+                    <div class="checkbox">
+                        @Html.EditorFor(model => model.Primers)
+                        @Html.ValidationMessageFor(model => model.Primers, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+            </div>
+
+            @*
+                Upon checking the box, we will show the PE-reads length box for them to enter the data. Otherwise we leave the data null 
+                and handle that in the config creator. (If model.PEReads == "" then pe_length = 0) for instance.
+            *@
+
+            <div class="form-group">
+                @Html.LabelFor(model => model.PEReads, htmlAttributes: new { @class = "control-label col-md-2" })
+                <div class="col-md-10">
+                    <div class="checkbox">
+                        @Html.EditorFor(model => model.PEReads, "", new { @id = "PEReads" })
+                        @Html.ValidationMessageFor(model => model.PEReads, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group" id="PELength" hidden="hidden">
+                @Html.LabelFor(model => model.PairedEndLength, htmlAttributes: new { @class = "control-label col-md-2" })
+                <div class="col-md-10">
+                    @Html.EditorFor(model => model.PairedEndLength, new { htmlAttributes = new { @class = "form-control", @id = "PELengthInput" } })
+                    @Html.ValidationMessageFor(model => model.PairedEndLength, "", new { @class = "text-danger" })
+                    <div id="PELengthErrorMsg">
+                        @* Error message goes here if any *@
+                    </div>
+                </div>
+            </div>
+
+            @*
+                Upon checking the box, we show the jump-length text box for them to enter the data. Otherwise we leave the data null 
+                and handle that in the config creator. (If model.jumpreads == "" then jump_reads = 0) for instance.
+            *@
+            <div class="form-group">
+                @Html.LabelFor(model => model.JumpReads, htmlAttributes: new { @class = "control-label col-md-2" })
+                <div class="col-md-10">
+                    <div class="checkbox">
+                        @Html.EditorFor(model => model.JumpReads, "", new { @id = "JumpReads" })
+                        @Html.ValidationMessageFor(model => model.JumpReads, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group" id="JumpLength" hidden="hidden">
+                @Html.LabelFor(model => model.JumpLength, htmlAttributes: new { @class = "control-label col-md-2" })
+                <div class="col-md-10">
+                    @Html.EditorFor(model => model.JumpLength, new { htmlAttributes = new { @class = "form-control", @id = "JumpLengthInput" } })
+                    @Html.ValidationMessageFor(model => model.JumpLength, "", new { @class = "text-danger" })
+                </div>
+                <div id="JumpLengthErrorMsg">
+                    @* Error message goes here if any *@
+                </div>
+            </div>
+
+            <div class="form-group">
+                <input type="button" value="Previous" class="btn btn-default" id="PreviousStep" onclick="Step2MoveBack();" />
+            </div>
+
+            <div class="form-group">
+                <input type="button" value="Next" class="btn btn-default" id="AcceptedInstructions" onclick="Step2MoveForward();" /> 
+            </div>
+        </div>
+            <!-- END INITIAL DATA (STEP 2)-->
+
+
+        <!-- Masurca Data (STEP 3)-->
+        <div id="Step3" hidden="hidden">
+            <h3>
+                Masurca Data
+            </h3>
+            <hr />
+
+            <div class="form-group">
+                @Html.LabelFor(model => model.MasurcaPEMean, htmlAttributes: new { @class = "control-label col-md-2" })
+                <div class="col-md-10">
+                    @Html.EditorFor(model => model.MasurcaPEMean, new { htmlAttributes = new { @class = "form-control" } })
+                    @Html.ValidationMessageFor(model => model.MasurcaPEMean, "", new { @class = "text-danger" })
+                </div>
+            </div>
+
+            <div class="form-group">
+                @Html.LabelFor(model => model.MasurcaPEStdev, htmlAttributes: new { @class = "control-label col-md-2" })
+                <div class="col-md-10">
+                    @Html.EditorFor(model => model.MasurcaPEStdev, new { htmlAttributes = new { @class = "form-control" } })
+                    @Html.ValidationMessageFor(model => model.MasurcaPEStdev, "", new { @class = "text-danger" })
+                </div>
+            </div>
+
+            <div class="form-group">
+                @Html.LabelFor(model => model.MasurcaGraphKMerValue, htmlAttributes: new { @class = "control-label col-md-2" })
+                <div class="col-md-10">
+                    @Html.EditorFor(model => model.MasurcaGraphKMerValue, new { htmlAttributes = new { @class = "form-control" } })
+                    @Html.ValidationMessageFor(model => model.MasurcaGraphKMerValue, "", new { @class = "text-danger" })
+                </div>
+                <div id="GraphKmerErrorMsg">
+                    @* Graph KMer Size Error if any here. *@
+                </div>
+            </div>
+
+            <div class="form-group">
+                @Html.LabelFor(model => model.MasurcaLinkingMates, htmlAttributes: new { @class = "control-label col-md-2" })
+                <div class="col-md-10">
+                    <div class="checkbox">
+                        @Html.EditorFor(model => model.MasurcaLinkingMates)
+                        @Html.ValidationMessageFor(model => model.MasurcaLinkingMates, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                @Html.LabelFor(model => model.MasurcaLimitJumpCoverage, htmlAttributes: new { @class = "control-label col-md-2" })
+                <div class="col-md-10">
+                    <div class="checkbox">
+                        @Html.EditorFor(model => model.MasurcaLimitJumpCoverage)
+                        @Html.ValidationMessageFor(model => model.MasurcaLimitJumpCoverage, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                @Html.LabelFor(model => model.MasurcaCAParameters, htmlAttributes: new { @class = "control-label col-md-2" })
+                <div class="col-md-10">
+                    <div class="checkbox">
+                        @Html.EditorFor(model => model.MasurcaCAParameters)
+                        @Html.ValidationMessageFor(model => model.MasurcaCAParameters, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                @Html.LabelFor(model => model.MasurcaKMerErrorCount, htmlAttributes: new { @class = "control-label col-md-2" })
+                <div class="col-md-10">
+                    @Html.EditorFor(model => model.MasurcaKMerErrorCount, new { htmlAttributes = new { @class = "form-control" } })
+                    @Html.ValidationMessageFor(model => model.MasurcaKMerErrorCount, "", new { @class = "text-danger" })
+                </div>
+                <div id="KMerCountThresholdErrorMsg">
+                    @* Graph KMer Size Error if any here. *@
+                </div>
+            </div>
+
+            <div class="form-group">
+                @Html.LabelFor(model => model.MasurcaThreadNum, htmlAttributes: new { @class = "control-label col-md-2" })
+                <div class="col-md-10">
+                    @Html.EditorFor(model => model.MasurcaThreadNum, new { htmlAttributes = new { @class = "form-control" } })
+                    @Html.ValidationMessageFor(model => model.MasurcaThreadNum, "", new { @class = "text-danger" })
+                </div>
+                <div id="ThreadNumErrorMsg">
+                    @* Graph KMer Size Error if any here. *@
+                </div>
+            </div>
+
+            <div class="form-group">
+                @Html.LabelFor(model => model.MasurcaJellyfishHashSize, htmlAttributes: new { @class = "control-label col-md-2" })
+                <div class="col-md-10">
+                    @Html.EditorFor(model => model.MasurcaJellyfishHashSize, new { htmlAttributes = new { @class = "form-control" } })
+                    @Html.ValidationMessageFor(model => model.MasurcaJellyfishHashSize, "", new { @class = "text-danger" })
+                </div>
+            </div>
+
+            <div class="form-group">
+                @Html.LabelFor(model => model.HomoTrim, htmlAttributes: new { @class = "control-label col-md-2" })
+                <div class="col-md-10">
+                    <div class="checkbox">
+                        @Html.EditorFor(model => model.HomoTrim)
+                        @Html.ValidationMessageFor(model => model.HomoTrim, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <input type="button" value="Previous" class="btn btn-default" id="PreviousStep" onclick="Step3MoveBack();" />
+            </div>
+
+            <div class="form-group">
+                <input type="button" value="Next" class="btn btn-default" id="AcceptedInstructions" onclick="Step3MoveForward();" />
+            </div>
+
+        </div>
+
+            <!-- END MASURCA DATA (STEP 3)-->
+            <!-- Confirm Data (STEP 4)-->
+        <div id="Step4" hidden="hidden">
+            <h3>
+                Confirm Data
+            </h3>
+            <hr />
+
+            <div class="form-group">
+                @Html.LabelFor(model => model.SSHUser, htmlAttributes: new { @class = "control-label col-md-2" })
+                <div class="col-md-10">
+                    <div class="checkbox">
+                        @Html.EditorFor(model => model.SSHUser)
+                        @Html.ValidationMessageFor(model => model.SSHUser, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                @Html.LabelFor(model => model.SSHPass, htmlAttributes: new { @class = "control-label col-md-2" })
+                <div class="col-md-10">
+                    <div class="checkbox">
+                        @Html.PasswordFor(model => model.SSHPass)
+                        @Html.ValidationMessageFor(model => model.SSHPass, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+            </div>
+
+            <p>
+                By Agreeing here, you accept that all the information above is correct to the best of your knowledge. Any data incorrectly
+                entered by the user is their responsiblity. By Agreeing here, you accept that all the information above is correct to the best of your knowledge. Any data incorrectly entered by the user is their responsiblity.
+            </p>
+
+            <div class="form-group">
+                @Html.LabelFor(model => model.Agreed, htmlAttributes: new { @class = "control-label col-md-2" })
+                <div class="col-md-10">
+                    <div class="checkbox">
+                        @Html.EditorFor(model => model.Agreed)
+                        @Html.ValidationMessageFor(model => model.Agreed, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <input type="button" value="Previous" class="btn btn-default" id="PreviousStep" onclick="Step4MoveBack();" />
+            </div>
+
+            <div class="form-group">
+                <div class="col-md-offset-2 col-md-10">
+                    <input type="submit" value="Create" class="btn btn-default" onclick="concatURLs();" />
+                </div>
+            </div>
+
+        </div>
+
+            <!-- END CONFIRM DATA (STEP 4)-->
+
+
+        </div>
+}

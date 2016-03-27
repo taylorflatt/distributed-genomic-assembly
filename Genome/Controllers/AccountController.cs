@@ -155,6 +155,9 @@ namespace Genome.Controllers
                 var user = new ApplicationUser { UserName = model.Email, Email = model.Email, DawgTag = model.DawgTag};
                 var result = await UserManager.CreateAsync(user, model.Password);
 
+                //Maybe add some validation on the dawg tag to make sure it is unique.
+
+
                 if (result.Succeeded)
                 {
                     await SignInManager.SignInAsync(user, isPersistent:false, rememberBrowser:false);

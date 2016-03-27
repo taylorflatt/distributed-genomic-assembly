@@ -3,6 +3,7 @@ using System.Web;
 using Genome.Models;
 using Microsoft.AspNet.Identity.Owin;
 using Microsoft.AspNet.Identity;
+using System;
 
 namespace Genome.CustomFilters
 {
@@ -39,54 +40,82 @@ namespace Genome.CustomFilters
             //Get the current user.
             ApplicationUserManager UserManager = HttpContext.Current.GetOwinContext().GetUserManager<ApplicationUserManager>();
 
-            //Get the current user's role(s).
-            var roles = UserManager.GetRoles(HttpContext.Current.User.Identity.GetUserId());
-
-            //If the user is logged in then Navigate to Auth Failed View depending on their role.
-            if (filterContext.HttpContext.User.Identity.IsAuthenticated)
+            try
             {
-                //If they are unverified (newly registered), redirect them to a custom page.
-                if (roles.Contains("Unverified"))
+                //Get the current user's role(s).
+                var roles = UserManager.GetRoles(HttpContext.Current.User.Identity.GetUserId());
+
+                //If the user is logged in then Navigate to Auth Failed View depending on their role.
+                if (filterContext.HttpContext.User.Identity.IsAuthenticated)
+                {
+                    //If they are unverified (newly registered), redirect them to a custom page.
+                    if (roles.Contains("Unverified"))
+                    {
+                        var context = filterContext.HttpContext;
+                        string redirectTo = "~/Account/UnverifiedUser";
+
+                        if (!string.IsNullOrEmpty(context.Request.RawUrl))
+                        {
+                            redirectTo = string.Format("~/Account/UnverifiedUser",
+                                HttpUtility.UrlEncode(context.Request.RawUrl));
+                        }
+                    }
+
+                    //If they are verified, redirect them to a custom page.
+                    else
+                    {
+                        var vr = new ViewResult();
+                        vr.ViewName = View;
+
+                        ViewDataDictionary dict = new ViewDataDictionary();
+                        dict.Add("Message", "Sorry you are not Authorized to Perform this Action");
+
+                        vr.ViewData = dict;
+
+                        var result = vr;
+
+                        filterContext.Result = result;
+                    }
+                }
+
+                //If the user is not logged in (and therefore not authorized), redirect them to the login page.
+                else
                 {
                     var context = filterContext.HttpContext;
-                    string redirectTo = "~/Account/UnverifiedUser";
+                    string redirectTo = "~/Account/Login";
 
                     if (!string.IsNullOrEmpty(context.Request.RawUrl))
                     {
-                        redirectTo = string.Format("~/Account/UnverifiedUser",
+                        redirectTo = string.Format("~/Account/Login?ReturnUrl={0}",
+                            HttpUtility.UrlEncode(context.Request.RawUrl));
+                    }
+                }
+            }
+            //Role Unverified does not exist.
+            //UserId not found.
+            catch (InvalidOperationException e)
+            {
+                // Redirect to a login page.
+                if(e.Message.Equals("UserId not found."))
+                {
+                    var context = filterContext.HttpContext;
+                    string redirectTo = "~/Account/Login";
+
+                    if (!string.IsNullOrEmpty(context.Request.RawUrl))
+                    {
+                        redirectTo = string.Format("~/Account/Login?ReturnUrl={0}",
                             HttpUtility.UrlEncode(context.Request.RawUrl));
                     }
                 }
 
-                //If they are verified, redirect them to a custom page.
-                else
+                // Need to create the unverified role.
+                else if(e.Message.Equals("Role Unverified does not exist."))
                 {
-                    var vr = new ViewResult();
-                    vr.ViewName = View;
-
-                    ViewDataDictionary dict = new ViewDataDictionary();
-                    dict.Add("Message", "Sorry you are not Authorized to Perform this Action");
-
-                    vr.ViewData = dict;
-
-                    var result = vr;
-
-                    filterContext.Result = result;
+                    // Empty
                 }
+
             }
 
-            //If the user is not logged in (and therefore not authorized), redirect them to the login page.
-            else
-            {
-                var context = filterContext.HttpContext;
-                string redirectTo = "~/Account/Login";
-
-                if (!string.IsNullOrEmpty(context.Request.RawUrl))
-                {
-                    redirectTo = string.Format("~/Account/Login?ReturnUrl={0}",
-                        HttpUtility.UrlEncode(context.Request.RawUrl));
-                }
-            }
         }
     }
 }

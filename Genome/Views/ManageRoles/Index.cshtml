@@ -8,10 +8,13 @@
 <div style="background-color:yellow; color: maroon; text-decoration: solid; font-size: 24px; font-weight: 400;">
     @Html.ViewBag.UserSelectError
     @Html.ViewBag.RoleSelectError
+    @Html.ViewBag.DeleteError
     @Html.ViewBag.ResultMessage
 </div>
 
-<h3>Change User Role</h3>
+<p>
+    <em>Note: When adding a user to the admin role, they cannot be removed - only deleted from the role to prevent being locked from the system.</em>
+</p>
 
 @using (Html.BeginForm("ManageUsersRoles", "ManageRoles"))
 {

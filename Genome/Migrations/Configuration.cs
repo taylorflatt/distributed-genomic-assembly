@@ -1,20 +1,18 @@
 namespace Genome.Migrations
 {
-    using Microsoft.AspNet.Identity.EntityFramework;
     using System;
     using System.Data.Entity;
     using System.Data.Entity.Migrations;
     using System.Linq;
 
-    internal sealed class Configuration : DbMigrationsConfiguration<Genome.Models.GenomeJobDbContext>
+    internal sealed class Configuration : DbMigrationsConfiguration<Genome.Models.GenomeAssemblyDbContext>
     {
         public Configuration()
         {
-            AutomaticMigrationsEnabled = true;
-            ContextKey = "Genome.Models.ApplicationDbContext";
+            AutomaticMigrationsEnabled = false;
         }
 
-        protected override void Seed(Genome.Models.GenomeJobDbContext context)
+        protected override void Seed(Genome.Models.GenomeAssemblyDbContext context)
         {
             //  This method will be called after migrating to the latest version.
 
@@ -28,9 +26,6 @@ namespace Genome.Migrations
             //      new Person { FullName = "Rowan Miller" }
             //    );
             //
-
-            //context.Roles.Add(new Microsoft.AspNet.Identity.EntityFramework.IdentityRole { Name = "admin" });
-            //context.SaveChanges();
         }
     }
 }
