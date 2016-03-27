@@ -1,6 +1,6 @@
-Taylor Flatt, Marty Grawe, Ryan Sample, Michelle Zhu, PhD, Matt Geisler, PhD
+<em>Taylor Flatt, Marty Grawe, Ryan Sample, Michelle Zhu, PhD, Matt Geisler, PhD
 Department of Computer Science and the Department of Plant Biology
-A Parallel Genome Assembly and Analysis System using Big Dog Cluster at SIUC
+A Parallel Genome Assembly and Analysis System using Big Dog Cluster at SIUC</em>
 
 The goal of this project is to create a High Performance Computing (HPC) infrastructure for large-scale genome data analysis. The parallelized computational pipeline includes multiple genome assemblers, user web interface, SQL database and statistical and graphical output to support fast and convenient genome analysis for biologists. Various computing and memory intensive tasks can be integrated and executed in an automated way to reduce human interference. There are three major objectives in this project. 
 
