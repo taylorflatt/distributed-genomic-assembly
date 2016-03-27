@@ -16,6 +16,9 @@
     <div class="form-horizontal">
         <h4>GenomeModel</h4>
         <hr />
+        <div id="WizardErrors">
+            @* Print wizard errors here if any. *@
+        </div>
         @Html.ValidationSummary(true, "", new { @class = "text-danger" })
         <!-- Introduction (STEP 1)-->
         <div id="Step1">
@@ -52,8 +55,11 @@
 
                     <!-- Dynamically create list of URL textboxes here -->
                     <div class="col-md-10">
-                        @Html.TextBoxFor(model => model.DataSource, new { htmlAttributes = new { @class = "form-control", id="url_0" } })
+                        @Html.TextBoxFor(model => model.DataSource, new { htmlAttributes = new { @class = "form-control", @id = "url_0" } })
                         @Html.ValidationMessageFor(model => model.DataSource, "", new { @class = "text-danger" })
+                    </div>
+                    <div id="DataSourceErrorMsg">
+                        @* Error message for data source if any. *@
                     </div>
 
                     <div id="addUrlBtn">
@@ -85,7 +91,7 @@
                 @Html.LabelFor(model => model.PEReads, htmlAttributes: new { @class = "control-label col-md-2" })
                 <div class="col-md-10">
                     <div class="checkbox">
-                        @Html.EditorFor(model => model.PEReads)
+                        @Html.EditorFor(model => model.PEReads, "", new { @id = "PEReads" })
                         @Html.ValidationMessageFor(model => model.PEReads, "", new { @class = "text-danger" })
                     </div>
                 </div>
@@ -94,8 +100,11 @@
             <div class="form-group" id="PELength" hidden="hidden">
                 @Html.LabelFor(model => model.PairedEndLength, htmlAttributes: new { @class = "control-label col-md-2" })
                 <div class="col-md-10">
-                    @Html.EditorFor(model => model.PairedEndLength, new { htmlAttributes = new { @class = "form-control" } })
+                    @Html.EditorFor(model => model.PairedEndLength, new { htmlAttributes = new { @class = "form-control", @id = "PELengthInput" } })
                     @Html.ValidationMessageFor(model => model.PairedEndLength, "", new { @class = "text-danger" })
+                    <div id="PELengthErrorMsg">
+                        @* Error message goes here if any *@
+                    </div>
                 </div>
             </div>
 
@@ -107,7 +116,7 @@
                 @Html.LabelFor(model => model.JumpReads, htmlAttributes: new { @class = "control-label col-md-2" })
                 <div class="col-md-10">
                     <div class="checkbox">
-                        @Html.EditorFor(model => model.JumpReads)
+                        @Html.EditorFor(model => model.JumpReads, "", new { @id = "JumpReads" })
                         @Html.ValidationMessageFor(model => model.JumpReads, "", new { @class = "text-danger" })
                     </div>
                 </div>
@@ -116,8 +125,11 @@
             <div class="form-group" id="JumpLength" hidden="hidden">
                 @Html.LabelFor(model => model.JumpLength, htmlAttributes: new { @class = "control-label col-md-2" })
                 <div class="col-md-10">
-                    @Html.EditorFor(model => model.JumpLength, new { htmlAttributes = new { @class = "form-control" } })
+                    @Html.EditorFor(model => model.JumpLength, new { htmlAttributes = new { @class = "form-control", @id="JumpLengthInput" } })
                     @Html.ValidationMessageFor(model => model.JumpLength, "", new { @class = "text-danger" })
+                </div>
+                <div id="JumpLengthErrorMsg">
+                    @* Error message goes here if any *@
                 </div>
             </div>
 
