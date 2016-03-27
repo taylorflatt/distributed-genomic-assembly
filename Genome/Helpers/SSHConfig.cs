@@ -39,7 +39,7 @@ namespace Genome.Helpers
             using (var sshClient = new SshClient(ip, userName, password))
             {
                 sshClient.Connect();
-                using (var cmd = sshClient.CreateCommand("wget http://releases.ubuntu.com/14.04edrd.4/ubuntu-14.04.4-desktop-amd64.iso?_ga=1.226435546.1946723420.145723767987968576465354254237587696578456754675587i79868765768769867647654utu7r65476"))
+                using (var cmd = sshClient.CreateCommand("wget http://releases.ubuntu.com/14.04.4/ubuntu-14.04.4-desktop-amd64.iso?_ga=1.218458457.1946723420.1457237672"))
                 {
                     cmd.Execute();
                     Console.WriteLine("Command>" + cmd.CommandText);

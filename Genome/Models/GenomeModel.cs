@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Genome.Models
 {
@@ -16,6 +17,14 @@ namespace Genome.Models
 
         [Key]
         public int uuid { get; set; }
+
+        [NotMapped]
+        [Display(Name = "Big Dog Username:")]
+        public string SSHUser { get; set; }
+
+        [NotMapped]
+        [Display(Name = "Big Dog Password:")]
+        public string SSHPass { get; set; }
 
         //////////////////////////////
         // Data specific parameters //

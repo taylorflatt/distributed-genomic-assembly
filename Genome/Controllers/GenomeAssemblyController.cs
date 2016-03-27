@@ -3,6 +3,7 @@ using System.Data.Entity;
 using System.Net;
 using System.Web.Mvc;
 using Genome.Models;
+using Genome.Helpers;
 
 namespace Genome.Controllers
 {
@@ -46,7 +47,6 @@ namespace Genome.Controllers
                         genomeModel.MasurcaThreadNum = 20;
 
 
-
                     genomeModel.CreatedBy = User.Identity.Name;
                     genomeModel.CreatedDate = DateTime.Now;
                     genomeModel.JobStatus = "Pending";
@@ -54,8 +54,7 @@ namespace Genome.Controllers
                     db.GenomeModels.Add(genomeModel);
                     db.SaveChanges();
 
-                    // ssh
-                    //SSHConfig ssh = new SSHConfig("", "pw", "login-0-0.research.siu.edu");
+                    SSHConfig ssh = new SSHConfig("Big Dog IP", genomeModel.SSHUser, genomeModel.SSHPass);
                 }
 
                 catch (Exception e)

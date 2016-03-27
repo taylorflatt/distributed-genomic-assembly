@@ -198,6 +198,10 @@
     <Compile Include="Helpers\ConfigBuilder.cs" />
     <Compile Include="Helpers\CustomRoles.cs" />
     <Compile Include="Helpers\SSHConfig.cs" />
+    <Compile Include="Migrations\201603270155463_test.cs" />
+    <Compile Include="Migrations\201603270155463_test.Designer.cs">
+      <DependentUpon>201603270155463_test.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\AccountViewModels.cs" />
     <Compile Include="Models\GenomeModel.cs" />
@@ -216,7 +220,9 @@
     <Content Include="Content\Site.css" />
     <Content Include="Scripts\bootstrap.js" />
     <Content Include="Scripts\bootstrap.min.js" />
+    <Content Include="ClassDiagram1.cd" />
     <None Include="Scripts\jquery-1.10.2.intellisense.js" />
+    <Content Include="Scripts\GenomeCreate.js" />
     <Content Include="Scripts\jquery-1.10.2.js" />
     <Content Include="Scripts\jquery-1.10.2.min.js" />
     <None Include="Scripts\jquery.validate-vsdoc.js" />
@@ -292,6 +298,11 @@
     <Content Include="packages.config" />
     <None Include="Project_Readme.html" />
     <Content Include="Scripts\jquery-1.10.2.min.map" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Migrations\201603270155463_test.resx">
+      <DependentUpon>201603270155463_test.cs</DependentUpon>
+    </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
