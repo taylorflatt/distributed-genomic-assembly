@@ -276,7 +276,6 @@
     <Content Include="Views\ManageRoles\Index.cshtml" />
     <Content Include="Views\Shared\AuthorizeFailed.cshtml" />
     <Content Include="Views\Account\UnverifiedUser.cshtml" />
-    <Content Include="Views\GenomeAssembly\Index.cshtml" />
     <Content Include="Views\GenomeAssembly\Create.cshtml" />
     <Content Include="Views\GenomeAssembly\Details.cshtml" />
   </ItemGroup>
