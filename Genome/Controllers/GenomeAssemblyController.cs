@@ -55,10 +55,26 @@ namespace Genome.Controllers
                     genomeModel.CreatedDate = DateTime.Now;
                     genomeModel.JobStatus = "Pending";
 
-                    db.GenomeModels.Add(genomeModel);
-                    db.SaveChanges();
+                    string path = "temp";
+                    string error = "";
 
-                    SSHConfig ssh = new SSHConfig("login-0-0.research.siu.edu", genomeModel);
+                    SSHConfig sshConnection = new SSHConfig();
+                    bool connectionStatus = sshConnection.CreateConnection("login-0-0.research.siu.edu", genomeModel, path, out error);
+
+                    // There were no errors making the connection. Add model to the db and continue.
+                    if (connectionStatus == true)
+                    {
+                        db.GenomeModels.Add(genomeModel);
+                        db.SaveChanges();
+                    }
+
+                    // There was at least a single error. Show the error and redisplay their data.
+                    else
+                    {
+                        ViewBag.ConnectionError = "There was an error with the connection to BigDog. The following is the error we encountered: " + error;
+
+                        return View(genomeModel);
+                    }
                 }
 
                 catch (Exception e)
