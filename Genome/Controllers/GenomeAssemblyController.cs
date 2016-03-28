@@ -3,6 +3,7 @@ using System.Data.Entity;
 using System.Net;
 using System.Web.Mvc;
 using Genome.Models;
+using Genome.Helpers;
 
 namespace Genome.Controllers
 {
@@ -57,7 +58,7 @@ namespace Genome.Controllers
                     db.GenomeModels.Add(genomeModel);
                     db.SaveChanges();
 
-                    //SSHConfig ssh = new SSHConfig("login-0-0.research.siu.edu", genomeModel.SSHUser, genomeModel.SSHPass);
+                    SSHConfig ssh = new SSHConfig("login-0-0.research.siu.edu", genomeModel);
                 }
 
                 catch (Exception e)

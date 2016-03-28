@@ -8,24 +8,22 @@ namespace Genome.Helpers
 {
     public class SSHConfig
     {
-        private string userName = "";
-        private string password = "";
-        private string ip = "";
         private GenomeModel genomeModel;
 
         private static string COMPUTENODE1 = "compute-0-24";
         private static string COMPUTENODE2 = "compute-0-25";
 
-        public SSHConfig(string ip, string userName, string password)
+        public SSHConfig(string ip, GenomeModel genomeModel)
         {
-            this.userName = userName;
-            this.password = password;
-            this.ip = ip;
+            string username = genomeModel.SSHUser;
+            string password = genomeModel.SSHPass;
 
-            CreateConnection();
+            this.genomeModel = genomeModel;
+
+            CreateConnection(ip, username, password);
         }
 
-        private void CreateConnection()
+        private void CreateConnection(string ip, string username, string password)
         {
             // Need to create a directory here that is unique to the user if it doesn't already exist. 
             // For instance: WORKINGDIRECTORY/Taylor/Job1 and /WORKINGDIRECTORY/Taylor/Job2 and so on.
@@ -35,7 +33,7 @@ namespace Genome.Helpers
             // Then we call the WORKINGDIRECTORY/Taylor/Job1/Scripts/Scheduler.sh which will launch the init.sh script.
 
             // The init.sh script will contain all the basic logic to download the data and initiate the job on the assembler(s).
-            using (var sshClient = new SshClient(ip, userName, password))
+            using (var sshClient = new SshClient(ip, username, password))
             {
                 string jobID = genomeModel.uuid.ToString();
                 string jobDirectory = "Job/ " + jobID;
