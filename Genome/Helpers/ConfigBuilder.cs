@@ -2,13 +2,19 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Web;
 
 namespace Genome.Helpers
 {
     public class ConfigBuilder
     {
+        public string MasurcaConfigURL { get; set; }
+        public string InitConfigURL { get; set; }
+        public string SchedulerConfigURL { get; set; }
+
         public string BuildMasurcaConfig(GenomeModel genomeModel, List<string> dataSource)
         {
+            string urlPath = "AssemblerConfigs/" + "Job" + genomeModel.uuid + "/";
             string path = AppDomain.CurrentDomain.BaseDirectory + "AssemblerConfigs\\" + "Job" + genomeModel.uuid + "\\";
             Directory.CreateDirectory(path);
             string fileName = "MasurcaConfig_" + genomeModel.uuid + ".txt";
@@ -62,11 +68,13 @@ namespace Genome.Helpers
                 tw.Close();
             }
 
-            return fullPath;
+            MasurcaConfigURL = "http://" + HttpContext.Current.Request.Url.Authority.ToString() + "/" + urlPath + fileName;
+            return MasurcaConfigURL;
         }
 
         public string BuildInitConfig(GenomeModel genomeModel, List<string> dataSource)
         {
+            string urlPath = "AssemblerConfigs/" + "Job" + genomeModel.uuid + "/";
             string path = AppDomain.CurrentDomain.BaseDirectory + "AssemblerConfigs\\" + "Job" + genomeModel.uuid + "\\";
             Directory.CreateDirectory(path);
             string fileName = "init_" + genomeModel.uuid + ".sh";
@@ -93,11 +101,13 @@ namespace Genome.Helpers
                 // Next step is to do wget error checking. 
 
             }
-            return fullPath;
+            InitConfigURL = "http://" + HttpContext.Current.Request.Url.Authority.ToString() + "/" + urlPath + fileName;
+            return InitConfigURL;
         }
 
         public string BuildSchedulerConfig(GenomeModel genomeModel)
         {
+            string urlPath = "AssemblerConfigs/" + "Job" + genomeModel.uuid + "/";
             string path = AppDomain.CurrentDomain.BaseDirectory + "AssemblerConfigs\\" + "Job" + genomeModel.uuid + "\\";
             Directory.CreateDirectory(path);
             string fileName = "Scheduler_" + genomeModel.uuid + ".sh";
@@ -111,7 +121,8 @@ namespace Genome.Helpers
 
                 tw.Close();
             }
-            return fullPath;
+            SchedulerConfigURL = "http://" + HttpContext.Current.Request.Url.Authority.ToString() + "/" + urlPath + fileName;
+            return SchedulerConfigURL;
         }
     }
 }
