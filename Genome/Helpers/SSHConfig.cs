@@ -1,8 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using Renci.SshNet;
-using System.Threading;
+﻿using Renci.SshNet;
+using Genome.Models;
 
+/// <summary>
+/// TODO: Check permissions on newly downloaded files - may need to make them executable.
+/// TODO: May need to change the CWD to a default folder and run the scripts from a special folder rather than the user's folder.
+/// </summary>
 namespace Genome.Helpers
 {
     public class SSHConfig
@@ -10,18 +12,17 @@ namespace Genome.Helpers
         private string userName = "";
         private string password = "";
         private string ip = "";
+        private GenomeModel model;
 
-        private string configUrl = "";
-        private string schedulerUrl = "";
-        private string dataUrl = "";
         private static string COMPUTENODE1 = "compute-0-24";
         private static string COMPUTENODE2 = "compute-0-25";
 
-        public SSHConfig(string ip, string userName, string password)
+        public SSHConfig(string ip, string userName, string password, GenomeModel genomeModel)
         {
             this.userName = userName;
             this.password = password;
             this.ip = ip;
+            model = genomeModel;
 
             CreateConnection();
         }
@@ -39,13 +40,45 @@ namespace Genome.Helpers
             using (var sshClient = new SshClient(ip, userName, password))
             {
                 sshClient.Connect();
-                using (var cmd = sshClient.CreateCommand("wget http://releases.ubuntu.com/14.04.4/ubuntu-14.04.4-desktop-amd64.iso?_ga=1.218458457.1946723420.1457237672"))
-                {
-                    cmd.Execute();
-                    Console.WriteLine("Command>" + cmd.CommandText);
-                    Console.WriteLine("Return Value = {0}", cmd.ExitStatus);
-                }
+
+                UploadInitScript(sshClient);
+                UploadMasurcaScript(sshClient);
+                UploadSchedulerScript(sshClient);
+                AddJobToScheduler(sshClient);
+
                 sshClient.Disconnect();
+            }
+        }
+
+        private void AddJobToScheduler(SshClient client)
+        {
+            using (var cmd = client.CreateCommand("./scheduler.sh"))
+            {
+                cmd.Execute();
+            }
+        }
+
+        private void UploadInitScript(SshClient client)
+        {
+            using (var cmd = client.CreateCommand("wget [DOMAIN/IP]/AssemblerConfigs/Job" + model.uuid + "/init" + model.uuid + ".sh"))
+            {
+                cmd.Execute();
+            }
+        }
+
+        private void UploadMasurcaScript(SshClient client)
+        {
+            using (var cmd = client.CreateCommand("wget [DOMAIN/IP]/AssemblerConfigs/Job" + model.uuid + "/masurca" + model.uuid + ".sh"))
+            {
+                cmd.Execute();
+            }
+        }
+
+        private void UploadSchedulerScript(SshClient client)
+        {
+            using (var cmd = client.CreateCommand("wget [DOMAIN/IP]/AssemblerConfigs/Job" + model.uuid + "/scheduler" + model.uuid + ".sh"))
+            {
+                cmd.Execute();
             }
         }
 
