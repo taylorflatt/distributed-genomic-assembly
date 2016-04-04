@@ -319,11 +319,13 @@ $(function ()
         {
             $("#JumpLength").show();
             $("#PEReadsGroup").hide();
+            $("#MasurcaJumpGroup").show();
         }
 
         else {
             $("#JumpLength").hide();
             $("#PEReadsGroup").show();
+            $("#MasurcaJumpGroup").hide();
         }
     });
 });

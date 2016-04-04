@@ -104,13 +104,25 @@
                     </tr>
                 </thead>
                 <tbody>
+                    @if (Model.PEReads.Equals(true))
+                    {
+                        <tr>
+                            <td>Paired-End Mean</td>
+                            <td>@Html.DisplayFor(model => model.MasurcaPEMean)</td>
+                        </tr>
+                        <tr>
+                            <td>Paired-End Standard Deviation</td>
+                            <td>@Html.DisplayFor(model => model.MasurcaPEStdev)</td>
+                        </tr>
+                    }
+
                     <tr>
-                        <td>Paired-End Mean</td>
-                        <td>@Html.DisplayFor(model => model.MasurcaPEMean)</td>
+                        <td>deBruijin Graph k-mer values</td>
+                        <td>@Html.DisplayFor(model => model.MasurcaGraphKMerValue)</td>
                     </tr>
                     <tr>
-                        <td>Paired-End Standard Deviation</td>
-                        @if (Model.Primers.Equals(true))
+                        <td>Illumina Data</td>
+                        @if(Model.MasurcaLinkingMates.Equals(true))
                         {
                             <td>Yes</td>
                         }
@@ -119,39 +131,35 @@
                         {
                             <td>No</td>
                         }
-
                     </tr>
-                    @if (Model.PEReads.Equals(true))
-                {
-                        <tr>
-                            <td>Paired End Reads</td>
-                            <td>Yes</td>
-                        </tr>
-                        <tr>
-                            <td>Paired-End Length</td>
-                            <td>@Html.DisplayFor(model => model.PairedEndLength)</td>
-                        </tr>
-                        <tr>
-                            <td>Jump Reads</td>
-                            <td>No</td>
-                        </tr>
-                    }
-
-                    else
+                    @if (Model.JumpReads.Equals(true))
                     {
                         <tr>
-                            <td>Paired End Reads</td>
-                            <td>No</td>
+                            <td>Limit Jump Coverage</td>
+                            @if(Model.MasurcaLimitJumpCoverage.Equals(true))
+                            {
+                                <td>Yes</td>
+                            }
+
+                            else
+                            {
+                                <td>No</td>
+                            }
                         </tr>
-                        <tr>
-                            <td>Jump Reads</td>
-                            <td>Yes</td>
-                        </tr>
-                        <tr>
-                            <td>Jump Length</td>
-                            <td>@Html.DisplayFor(model => model.JumpLength)</td>
-                        </tr>
-                    }
+                    }<!---->
+
+                    <tr>
+                        <td>Paired End Reads</td>
+                        <td>No</td>
+                    </tr>
+                    <tr>
+                        <td>Jump Reads</td>
+                        <td>Yes</td>
+                    </tr>
+                    <tr>
+                        <td>Jump Length</td>
+                        <td>@Html.DisplayFor(model => model.JumpLength)</td>
+                    </tr>
 
                     <tr>
                         <td>&nbsp;</td>
@@ -178,22 +186,6 @@
 
 
     <dl class="dl-horizontal">
-
-        <dt>
-            @Html.DisplayNameFor(model => model.MasurcaPEMean)
-        </dt>
-
-        <dd>
-            @Html.DisplayFor(model => model.MasurcaPEMean)
-        </dd>
-
-        <dt>
-            @Html.DisplayNameFor(model => model.MasurcaPEStdev)
-        </dt>
-
-        <dd>
-            @Html.DisplayFor(model => model.MasurcaPEStdev)
-        </dd>
 
         <dt>
             @Html.DisplayNameFor(model => model.MasurcaGraphKMerValue)
