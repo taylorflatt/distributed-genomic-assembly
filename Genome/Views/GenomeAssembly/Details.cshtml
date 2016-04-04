@@ -49,8 +49,17 @@
                     <td>@Html.DisplayFor(model => model.DataSource)</td>
                 </tr>
                 <tr>
-                    <td>Primers</td>
-                    <td>@Html.DisplayFor(model => model.Primers)</td>
+                    <td>Primers Removed</td>
+                    @if (Model.Primers.Equals(true))
+                    {
+                        <td>Yes</td>
+                    }
+
+                    else
+                    {
+                        <td>No</td>
+                    }
+
                 </tr>
                 @if (Model.PEReads.Equals(true))
                 {
@@ -83,25 +92,87 @@
                         <td>@Html.DisplayFor(model => model.JumpLength)</td>
                     </tr>
                 }
-
-                <tr>
-                    <td>&nbsp;</td>
-                    <td>&nbsp;</td>
-                </tr>
-                <tr>
-                    <td>&nbsp;</td>
-                    <td>&nbsp;</td>
-                </tr>
-                <tr>
-                    <td>&nbsp;</td>
-                    <td>&nbsp;</td>
-                </tr>
-                <tr>
-                    <td>&nbsp;</td>
-                    <td>&nbsp;</td>
-                </tr>
             <tbody>
         </table>
+
+        @if (Model.UseMasurca.Equals(true))
+        {
+            <table class="table-hover">
+                <thead>
+                    <tr>
+                        <th>Masurca Data</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Paired-End Mean</td>
+                        <td>@Html.DisplayFor(model => model.MasurcaPEMean)</td>
+                    </tr>
+                    <tr>
+                        <td>Paired-End Standard Deviation</td>
+                        @if (Model.Primers.Equals(true))
+                        {
+                            <td>Yes</td>
+                        }
+
+                        else
+                        {
+                            <td>No</td>
+                        }
+
+                    </tr>
+                    @if (Model.PEReads.Equals(true))
+                {
+                        <tr>
+                            <td>Paired End Reads</td>
+                            <td>Yes</td>
+                        </tr>
+                        <tr>
+                            <td>Paired-End Length</td>
+                            <td>@Html.DisplayFor(model => model.PairedEndLength)</td>
+                        </tr>
+                        <tr>
+                            <td>Jump Reads</td>
+                            <td>No</td>
+                        </tr>
+                    }
+
+                    else
+                    {
+                        <tr>
+                            <td>Paired End Reads</td>
+                            <td>No</td>
+                        </tr>
+                        <tr>
+                            <td>Jump Reads</td>
+                            <td>Yes</td>
+                        </tr>
+                        <tr>
+                            <td>Jump Length</td>
+                            <td>@Html.DisplayFor(model => model.JumpLength)</td>
+                        </tr>
+                    }
+
+                    <tr>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                    </tr>
+                <tbody>
+            </table>
+        }
+
     </div>
 
 

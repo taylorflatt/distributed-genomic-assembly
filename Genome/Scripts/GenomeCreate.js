@@ -302,11 +302,13 @@ $(function ()
         {
             $("#PELength").show();
             $("#JumpReadsGroup").hide();
+            $("#MasurcaPEGroup").show();
         }
 
         else{
             $("#PELength").hide();
             $("#JumpReadsGroup").show();
+            $("#MasurcaPEGroup").hide();
         }
     });
 
