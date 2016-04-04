@@ -55,26 +55,35 @@ namespace Genome.Controllers
                     genomeModel.CreatedDate = DateTime.Now;
                     genomeModel.JobStatus = "Pending";
 
-                    string path = "temp";
-                    string error = "";
+                    //string path = "temp";
+                    //string error = "";
 
-                    SSHConfig sshConnection = new SSHConfig();
-                    bool connectionStatus = sshConnection.CreateConnection("login-0-0.research.siu.edu", genomeModel, path, out error);
+                    //SSHConfig sshConnection = new SSHConfig();
+                    //bool connectionStatus = sshConnection.CreateConnection("login-0-0.research.siu.edu", genomeModel, path, out error);
+
+                    // STRICTLY FOR TESTING PURPOSES, DELETE AFTER DEMO
+                    db.GenomeModels.Add(genomeModel);
+                    db.SaveChanges();
+
+                    return RedirectToAction("Details", new { id = genomeModel.uuid });
+                    // END COMMENT
 
                     // There were no errors making the connection. Add model to the db and continue.
-                    if (connectionStatus == true)
-                    {
-                        db.GenomeModels.Add(genomeModel);
-                        db.SaveChanges();
-                    }
+                    //if (connectionStatus == true)
+                    //{
+                        //db.GenomeModels.Add(genomeModel);
+                        //db.SaveChanges();
+
+                        //return RedirectToAction("Details", new { id = genomeModel.uuid });
+                    //}
 
                     // There was at least a single error. Show the error and redisplay their data.
-                    else
-                    {
-                        ViewBag.ConnectionError = "There was an error with the connection to BigDog. The following is the error we encountered: " + error;
+                    //else
+                    //{
+                    //    ViewBag.ConnectionError = "There was an error with the connection to BigDog. The following is the error we encountered: " + error;
 
-                        return View(genomeModel);
-                    }
+                    //    return View(genomeModel);
+                    //}
                 }
 
                 catch (Exception e)
@@ -82,7 +91,7 @@ namespace Genome.Controllers
                     Console.WriteLine(e.Message);
                 }
 
-                return RedirectToAction("Details", new { id = genomeModel.uuid });
+                
             }
 
             return View(genomeModel);

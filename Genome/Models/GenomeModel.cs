@@ -50,9 +50,12 @@ namespace Genome.Models
         [Display(Name = "Jump Length")]
         public int? JumpLength { get; set; }
 
-          /////////////////////////////////
-         // Masurca specific parameters //
         /////////////////////////////////
+        // Masurca specific parameters //
+        /////////////////////////////////
+        [Display(Name = "Masurca Assembler")]
+        public bool UseMasurca { get; set; }
+
         [Display(Name = "Masurca PE Mean")]
         public int? MasurcaPEMean { get; set; }
 
@@ -89,6 +92,18 @@ namespace Genome.Models
         // Must return 1 for true, or 0 for false
         [Display(Name = "Homoplymer Trim")]
         public bool HomoTrim { get; set; }
+
+        /////////////////////////////////
+        // SGA specific parameters     //
+        /////////////////////////////////
+        [Display(Name ="SGA Assembler")]
+        public bool UseSGA { get; set; }
+
+        /////////////////////////////////
+        // WGS specific parameters     //
+        /////////////////////////////////
+        [Display(Name = "WGS Assembler")]
+        public bool UseWGS { get; set; }
 
         ///////////////////////////////
         // Misc specific parameters //

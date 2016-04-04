@@ -9,16 +9,13 @@ namespace Genome.Helpers
 {
     public class SSHConfig
     {
-        private GenomeModel genomeModel;
         private int errorCount = 0;
         private string errorOutput = "";
 
         private static string COMPUTENODE1 = "compute-0-24";
         private static string COMPUTENODE2 = "compute-0-25";
 
-        public SSHConfig()
-        {
-        }
+        public SSHConfig() { }
 
         // Will return TRUE if successful connection and commands all run or FALSE if ANY error is encountered.
         public bool CreateConnection(string ip, GenomeModel genomeModel, string path, out string error)

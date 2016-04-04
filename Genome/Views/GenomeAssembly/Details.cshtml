@@ -9,54 +9,104 @@
 <div>
     <h4>GenomeModel</h4>
     <hr />
+    @*<table style="width: 50%;">
+        <thead>
+            <tr>
+                <th>
+                    Data Overview
+                </th>
+            </tr>
+        </thead>
+
+        <tbody>
+            <tr>
+                <td>
+                    Data Location:
+                </td>
+
+                <td>
+                    @Html.DisplayFor(model => model.DataSource)
+                </td>
+            </tr>
+
+            <tr>
+                <td>
+                    
+                </td>
+            </tr>
+        </tbody>
+    </table>*@
+    <div class="table-responsive">
+        <table class="table-hover">
+            <thead>
+                <tr>
+                    <th>Data Overview</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Data Location</td>
+                    <td>@Html.DisplayFor(model => model.DataSource)</td>
+                </tr>
+                <tr>
+                    <td>Primers</td>
+                    <td>@Html.DisplayFor(model => model.Primers)</td>
+                </tr>
+                @if (Model.PEReads.Equals(true))
+                {
+                    <tr>
+                        <td>Paired End Reads</td>
+                        <td>Yes</td>
+                    </tr>
+                    <tr>
+                        <td>Paired-End Length</td>
+                        <td>@Html.DisplayFor(model => model.PairedEndLength)</td>
+                    </tr>
+                    <tr>
+                        <td>Jump Reads</td>
+                        <td>No</td>
+                    </tr>
+                }
+
+                else
+                {
+                    <tr>
+                        <td>Paired End Reads</td>
+                        <td>No</td>
+                    </tr>
+                    <tr>
+                        <td>Jump Reads</td>
+                        <td>Yes</td>
+                    </tr>
+                    <tr>
+                        <td>Jump Length</td>
+                        <td>@Html.DisplayFor(model => model.JumpLength)</td>
+                    </tr>
+                }
+
+                <tr>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                </tr>
+                <tr>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                </tr>
+                <tr>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                </tr>
+                <tr>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                </tr>
+            <tbody>
+        </table>
+    </div>
+
+
+
     <dl class="dl-horizontal">
-        <dt>
-            @Html.DisplayNameFor(model => model.DataSource)
-        </dt>
-
-        <dd>
-            @Html.DisplayFor(model => model.DataSource)
-        </dd>
-
-        <dt>
-            @Html.DisplayNameFor(model => model.Primers)
-        </dt>
-
-        <dd>
-            @Html.DisplayFor(model => model.Primers)
-        </dd>
-
-        <dt>
-            @Html.DisplayNameFor(model => model.PEReads)
-        </dt>
-
-        <dd>
-            @Html.DisplayFor(model => model.PEReads)
-        </dd>
-
-        <dt>
-            @Html.DisplayNameFor(model => model.PairedEndLength)
-        </dt>
-
-        <dd>
-            @Html.DisplayFor(model => model.PairedEndLength)
-        </dd>
-
-        <dt>
-            @Html.DisplayNameFor(model => model.JumpReads)
-        </dt>
-
-        <dd>
-            @Html.DisplayFor(model => model.JumpReads)
-        </dd>
-
-        <dt>
-            @Html.DisplayNameFor(model => model.JumpLength)
-        </dt>
-
-        <dd>
-            @Html.DisplayFor(model => model.JumpLength)
-        </dd>
 
         <dt>
             @Html.DisplayNameFor(model => model.MasurcaPEMean)
