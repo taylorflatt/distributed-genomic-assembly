@@ -1,6 +1,5 @@
 ﻿using Renci.SshNet;
 using Genome.Models;
-using System.Threading;
 
 /// <summary>
 /// TODO: May need to change the CWD to a default folder and run the scripts from a special folder rather than the user's folder.
@@ -16,10 +15,33 @@ namespace Genome.Helpers
         private static string COMPUTENODE1 = "compute-0-24";
         private static string COMPUTENODE2 = "compute-0-25";
 
-        public SSHConfig() { }
+        private string ip;
+        private GenomeModel genomeModel;
+        private string path;
+        private string error;
+
+        public SSHConfig(string ip, GenomeModel genomeModel, string path, out string error)
+        {
+            error = "";
+
+            this.ip = ip;
+            this.genomeModel = genomeModel;
+            this.path = path;
+            this.error = error;
+        }
+
+        // Here we will use our account (or if we have to...the user's or we can curl) to grab the status of the job.
+        public bool UpdateJobStatus()
+        {
+            // We want to cat <job_name>.o<job_number> | grep "Status" and see where we are.
+            using (var sshClient = new SshClient(ip, genomeModel.SSHUser, genomeModel.SSHPass))
+            {
+
+            }
+        }
 
         // Will return TRUE if successful connection and commands all run or FALSE if ANY error is encountered.
-        public bool CreateConnection(string ip, GenomeModel genomeModel, string path, out string error)
+        public bool CreateConnection()
         {
             // Need to create a directory here that is unique to the user if it doesn't already exist. 
             // For instance: WORKINGDIRECTORY/Taylor/Job1 and /WORKINGDIRECTORY/Taylor/Job2 and so on.
@@ -43,13 +65,13 @@ namespace Genome.Helpers
 
                 if (errorCount == 0) { CreateDirectories(sshClient, localPath, dataPath, configPath, outputPath); }
 
-                //if (errorCount == 0) { UploadInitScript(sshClient, path, initName, configPath); }
-                //if (errorCount == 0) { UploadMasurcaScript(sshClient, path, masurcaName, configPath); }
-                //if (errorCount == 0) { UploadSchedulerScript(sshClient, path, schedulerName, configPath); }
+                if (errorCount == 0) { UploadInitScript(sshClient, path, initName, configPath); }
+                if (errorCount == 0) { UploadMasurcaScript(sshClient, path, masurcaName, configPath); }
+                if (errorCount == 0) { UploadSchedulerScript(sshClient, path, schedulerName, configPath); }
 
-                //if (errorCount == 0) { ChangePermissions(sshClient, localPath); }
+                if (errorCount == 0) { ChangePermissions(sshClient, localPath); }
 
-                //if (errorCount == 0) { AddJobToScheduler(sshClient); }
+                if (errorCount == 0) { AddJobToScheduler(sshClient); }
 
                 if (errorCount == 0)
                 {
@@ -190,8 +212,5 @@ namespace Genome.Helpers
                 error = cmd.Error;
             }
         }
-
-        // Cooked methods for demo
-
     }
 }

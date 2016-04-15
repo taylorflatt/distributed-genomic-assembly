@@ -64,14 +64,18 @@ namespace Genome.Controllers
                     // STRICTLY FOR TESTING PURPOSES, DELETE AFTER DEMO
                     db.GenomeModels.Add(genomeModel);
                     db.SaveChanges();
-
-                    SSHConfig ssh = new SSHConfig();
+                    
                     ConfigBuilder builder = new ConfigBuilder();
+
                     string[] dataArray = genomeModel.DataSource.Split(',');
+
                     builder.BuildMasurcaConfig(genomeModel, dataArray);
                     builder.BuildInitConfig(genomeModel, dataArray);
+
                     string error = "";
-                    ssh.CreateConnection("login-0-0.research.siu.edu", genomeModel, builder.InitConfigURL, out error);
+
+                    //ssh.CreateConnection("login-0-0.research.siu.edu", genomeModel, builder.InitConfigURL, out error);
+                    SSHConfig ssh = new SSHConfig("login-0-0.research.siu.edu", genomeModel, builder.InitConfigURL, out error);
                     return RedirectToAction("Details", new { id = genomeModel.uuid });
                     // END COMMENT
 
