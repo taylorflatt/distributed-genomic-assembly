@@ -12,7 +12,7 @@ namespace Genome.Helpers
         public string InitConfigURL { get; set; }
         public string SchedulerConfigURL { get; set; }
 
-        public string BuildMasurcaConfig(GenomeModel genomeModel, List<string> dataSource)
+        public string BuildMasurcaConfig(GenomeModel genomeModel, string[] dataSource)
         {
             string urlPath = "AssemblerConfigs/" + "Job" + genomeModel.uuid + "/";
             string path = AppDomain.CurrentDomain.BaseDirectory + "AssemblerConfigs\\" + "Job" + genomeModel.uuid + "\\";
@@ -26,9 +26,10 @@ namespace Genome.Helpers
 
                 tw.WriteLine("DATA");
                 string dataString = "";
+                int counter = 0;
                 foreach (string url in dataSource)
                 {
-                    dataString = dataString + url + " ";
+                    dataString = dataString + "Data_" + counter + ".fastq";
                 }
                 //data params
                 if (genomeModel.PEReads)
@@ -49,7 +50,11 @@ namespace Genome.Helpers
                 // Parameter params
                 tw.WriteLine("GRAPH_KMER_SIZE = auto");
                 tw.WriteLine("USE_LINKING_MATES = " + Convert.ToInt32(genomeModel.MasurcaLinkingMates));
-                tw.WriteLine("LIMIT_JUMP_COVERAGE = " + genomeModel.MasurcaLimitJumpCoverage);
+
+                if (genomeModel.MasurcaLimitJumpCoverage)
+                    tw.WriteLine("LIMIT_JUMP_COVERAGE = 60");
+                else
+                    tw.WriteLine("LIMIT_JUMP_COVERAGE = 300");
 
                 if (genomeModel.MasurcaCAParameters)
                     tw.WriteLine("CA_PARAMETERS = cgwErrorRate=0.25 ovlMemory=4GB");
@@ -58,7 +63,7 @@ namespace Genome.Helpers
                     tw.WriteLine("CA_PARAMETERS = cgwErrorRate=0.15 ovlMemory=4GB");
 
                 // Minimum count k-mers used in error correction 1 means all k-mers are used.  one can increase to 2 if coverage >100
-                tw.WriteLine("KMER_COUNT_THRESHOLD = 1");
+                tw.WriteLine("KMER_COUNT_THRESHOLD = " + genomeModel.MasurcaKMerErrorCount);
                 tw.WriteLine("NUM_THREADS = " + genomeModel.MasurcaThreadNum);
                 // this is mandatory jellyfish hash size -- a safe value is estimated_genome_size*estimated_coverage
                 tw.WriteLine("JF_SIZE = " + genomeModel.MasurcaJellyfishHashSize);
@@ -72,7 +77,7 @@ namespace Genome.Helpers
             return MasurcaConfigURL;
         }
 
-        public string BuildInitConfig(GenomeModel genomeModel, List<string> dataSource)
+        public string BuildInitConfig(GenomeModel genomeModel, string[] dataSource)
         {
             string urlPath = "AssemblerConfigs/" + "Job" + genomeModel.uuid + "/";
             string path = AppDomain.CurrentDomain.BaseDirectory + "AssemblerConfigs\\" + "Job" + genomeModel.uuid + "\\";
@@ -84,8 +89,8 @@ namespace Genome.Helpers
             {
                 TextWriter tw = new StreamWriter(fullPath);
 
-                tw.WriteLine("cd " + "WORKING DIRECTORY/Data"); // Change directory to working directory
-
+                //tw.WriteLine("cd " + "WORKING DIRECTORY/Data"); // Change directory to working directory
+                //tw
                 foreach (string url in dataSource)
                 {
                     tw.WriteLine("wget " + url.ToString());

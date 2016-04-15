@@ -1,5 +1,6 @@
 ﻿using Renci.SshNet;
 using Genome.Models;
+using System.Threading;
 
 /// <summary>
 /// TODO: May need to change the CWD to a default folder and run the scripts from a special folder rather than the user's folder.
@@ -31,23 +32,30 @@ namespace Genome.Helpers
             using (var sshClient = new SshClient(ip, genomeModel.SSHUser, genomeModel.SSHPass))
             {
                 string localPath = "Job" + genomeModel.uuid;
+                string dataPath = localPath + "/Data"; // Added dataPath variable - MG
+                string configPath = localPath + "/Config"; // Added configPath variable - MG
+                string outputPath = localPath + "/Output"; // Added outputPath variable - MG
                 string initName = "init" + genomeModel.uuid;
                 string masurcaName = "masurca" + genomeModel.uuid;
                 string schedulerName = "scheduler" + genomeModel.uuid;
 
                 sshClient.Connect();
 
-                if (errorCount == 0) { CreateDirectories(sshClient, localPath); }
+                if (errorCount == 0) { CreateDirectories(sshClient, localPath, dataPath, configPath, outputPath); }
 
-                if (errorCount == 0) { UploadInitScript(sshClient, path, initName); }
-                if (errorCount == 0) { UploadMasurcaScript(sshClient, path, masurcaName); }
-                if (errorCount == 0) { UploadSchedulerScript(sshClient, path, schedulerName); }
+                //if (errorCount == 0) { UploadInitScript(sshClient, path, initName, configPath); }
+                //if (errorCount == 0) { UploadMasurcaScript(sshClient, path, masurcaName, configPath); }
+                //if (errorCount == 0) { UploadSchedulerScript(sshClient, path, schedulerName, configPath); }
 
-                if (errorCount == 0) { ChangePermissions(sshClient, localPath); }
+                //if (errorCount == 0) { ChangePermissions(sshClient, localPath); }
 
-                if (errorCount == 0) { AddJobToScheduler(sshClient); }
+                //if (errorCount == 0) { AddJobToScheduler(sshClient); }
 
-                sshClient.Disconnect();
+                if (errorCount == 0)
+                {
+                    //RunDemo(sshClient);
+                }
+                //sshClient.Disconnect();
             }
 
             // There were no errors.
@@ -66,9 +74,29 @@ namespace Genome.Helpers
         }
 
         // Create the job directory.
-        private void CreateDirectories(SshClient client, string localPath)
+        // Added 3 new parameters -MG
+        private void CreateDirectories(SshClient client, string localPath, string dataPath, string configPath, string outputPath)
         {
-            using (var cmd = client.CreateCommand("mkdir -p" + localPath))
+            using (var cmd = client.CreateCommand("mkdir -p " + localPath))
+            {
+                cmd.Execute();
+                CatchError(cmd, out errorOutput);
+            }
+
+            // Added following commands -MG
+            using (var cmd = client.CreateCommand("mkdir -p " + dataPath))
+            {
+                cmd.Execute();
+                CatchError(cmd, out errorOutput);
+            }
+
+            using (var cmd = client.CreateCommand("mkdir -p " + configPath))
+            {
+                cmd.Execute();
+                CatchError(cmd, out errorOutput);
+            }
+
+            using (var cmd = client.CreateCommand("mkdir -p " + outputPath))
             {
                 cmd.Execute();
                 CatchError(cmd, out errorOutput);
@@ -76,9 +104,9 @@ namespace Genome.Helpers
         }
 
         // Upload the init script (initializes all other assembler scripts and grabs data at runtime).
-        private void UploadInitScript(SshClient client, string path, string initName)
+        private void UploadInitScript(SshClient client, string path, string initName, string configPath)
         {
-            using (var cmd = client.CreateCommand("wget " + path + initName))
+            using (var cmd = client.CreateCommand("wget -O " + configPath + "/" + initName + ".sh " + path))
             {
                 cmd.Execute();
                 CatchError(cmd, out errorOutput);
@@ -86,9 +114,9 @@ namespace Genome.Helpers
         }
 
         // Upload the Masurca assembler script.
-        private void UploadMasurcaScript(SshClient client, string path, string masurcaName)
+        private void UploadMasurcaScript(SshClient client, string path, string masurcaName, string configPath)
         {
-            using (var cmd = client.CreateCommand("wget " + path + masurcaName))
+            using (var cmd = client.CreateCommand("wget -O " + configPath + "/" + masurcaName + ".txt " + path))
             {
                 cmd.Execute();
                 CatchError(cmd, out errorOutput);
@@ -96,9 +124,9 @@ namespace Genome.Helpers
         }
 
         // Upload the scheduler script.
-        private void UploadSchedulerScript(SshClient client, string path, string schedulerName)
+        private void UploadSchedulerScript(SshClient client, string path, string schedulerName, string configPath)
         {
-            using (var cmd = client.CreateCommand("wget " + path + schedulerName))
+            using (var cmd = client.CreateCommand("wget -0 " + configPath + "/" + schedulerName + ".sh " + path))
             {
                 cmd.Execute();
                 CatchError(cmd, out errorOutput);
@@ -125,6 +153,32 @@ namespace Genome.Helpers
             }
         }
 
+        // Run init script, since scheduler is not implemented currently work in progress
+        private void RunInitScript(SshClient client, string initName, string configPath)
+        {
+            using (var cmd = client.CreateCommand("./scheduler.sh"))
+            {
+                cmd.Execute();
+                CatchError(cmd, out errorOutput);
+            }
+        }
+
+        // Cooked method for demo
+        private void RunDemo(SshClient client)
+        {
+            using (var cmd = client.CreateCommand("cd ~/Demo/Output && /share/bio/masurca/bin/masurca ~/Demo/Config/config.txt"))
+            {
+                cmd.Execute();
+                CatchError(cmd, out errorOutput);
+            }
+            using (var cmd = client.CreateCommand("cd ~/Demo/Output && ./test.sh"))
+            {
+                cmd.Execute();
+                CatchError(cmd, out errorOutput);
+            }
+            client.Disconnect();
+        }
+
         private void CatchError(SshCommand cmd, out string error)
         {
             error = "";
@@ -136,5 +190,8 @@ namespace Genome.Helpers
                 error = cmd.Error;
             }
         }
+
+        // Cooked methods for demo
+
     }
 }
