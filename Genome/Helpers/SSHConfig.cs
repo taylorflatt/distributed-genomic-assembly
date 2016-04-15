@@ -1,5 +1,8 @@
 ﻿using Renci.SshNet;
 using Genome.Models;
+using System.Collections.Generic;
+using System;
+using System.Text.RegularExpressions;
 
 /// <summary>
 /// TODO: May need to change the CWD to a default folder and run the scripts from a special folder rather than the user's folder.
@@ -20,29 +23,110 @@ namespace Genome.Helpers
         private string path;
         private string error;
 
-        public SSHConfig(string ip, GenomeModel genomeModel, string path, out string error)
+        public SSHConfig(string ip, GenomeModel genomeModel, string path)
         {
             error = "";
 
             this.ip = ip;
             this.genomeModel = genomeModel;
             this.path = path;
-            this.error = error;
-        }
 
-        // Here we will use our account (or if we have to...the user's or we can curl) to grab the status of the job.
-        public bool UpdateJobStatus()
-        {
             // We want to cat <job_name>.o<job_number> | grep "Status" and see where we are.
             using (var sshClient = new SshClient(ip, genomeModel.SSHUser, genomeModel.SSHPass))
             {
+                sshClient.Connect();
 
+                string jobName = genomeModel.SSHUser.ToString() + genomeModel.uuid.ToString();
+                //string pattern = "step";
+
+                CreateTestJob(sshClient, jobName);
+
+                string jobNumber = GetJobNumber(sshClient, jobName);
+
+                //GetStatusOutput(sshClient, "[job_name].o[job_number]", pattern);
+            }
+        }
+
+        private void CreateTestJob(SshClient client, string jobName)
+        {
+            using (var cmd = client.CreateCommand("qsub -pe make 20 -V -b y -cwd -l hostname=compute-0-25 -N " + jobName + " ./HelloWorld"))
+            {
+                cmd.Execute();
+
+                CatchError(cmd, out errorOutput);
+            }
+        }
+
+        private string GetJobNumber(SshClient client, string jobName)
+        {
+            // USAGE: qstat -f -u "USERNAME" | grep "JOBNAME"
+            // -f: Full Format
+            // -u "[user]": Jobs for specific user
+            // We want to get the job number (which is created at submit to the scheduler).
+            using (var cmd = client.CreateCommand("qstat -f -u " + "\"" + genomeModel.SSHUser + "\"" + "| grep " + jobName))
+            {
+                cmd.Execute();
+
+                // Grab only numbers, ignore the rest.
+                string[] jobNumber = Regex.Split(cmd.Result, @"\D+");
+
+                CatchError(cmd, out errorOutput);
+
+                // We return the second element [1] here because the first and last element of the array is always the empty "". Trimming
+                // doesn't remove it. So we will always return the first element which corresponds to the job number.
+
+                if (errorCount == 0)
+                {
+                    error = errorOutput;
+                    return jobNumber[1];
+                }
+
+                else
+                {
+                    error = errorOutput;
+                    return "failed";
+                }
+
+            }
+
+        }
+
+        // Here we will use our account (or if we have to...the user's or we can curl) to grab the status of the job.
+        public bool UpdateJobStatus(out string error)
+        {
+            error = "";
+            this.error = error;
+
+            // We want to cat <job_name>.o<job_number> | grep "Status" and see where we are.
+            using (var sshClient = new SshClient(ip, "OurSSHAccount", "OurSSHPassword"))
+            {
+                string jobName = genomeModel.SSHUser.ToString() + genomeModel.uuid.ToString();
+                string pattern = "step";
+
+                string logFile = jobName + ".o5";
+
+                GetStatusOutput(sshClient, "[job_name].o[job_number]", pattern);
+            }
+
+            if (errorCount == 0)
+            {
+                error = errorOutput;
+                return true;
+            }
+
+            else
+            {
+                error = errorOutput;
+                return false;
             }
         }
 
         // Will return TRUE if successful connection and commands all run or FALSE if ANY error is encountered.
-        public bool CreateConnection()
+        public bool CreateConnection(out string error)
         {
+            error = "";
+            this.error = error;
+
             // Need to create a directory here that is unique to the user if it doesn't already exist. 
             // For instance: WORKINGDIRECTORY/Taylor/Job1 and /WORKINGDIRECTORY/Taylor/Job2 and so on.
 
@@ -179,6 +263,18 @@ namespace Genome.Helpers
         private void RunInitScript(SshClient client, string initName, string configPath)
         {
             using (var cmd = client.CreateCommand("./scheduler.sh"))
+            {
+                cmd.Execute();
+                CatchError(cmd, out errorOutput);
+            }
+        }
+
+        private void GetStatusOutput(SshClient client, string file, string pattern)
+        {
+            // USAGE IN LINUX:        cat file1 | grep "string"
+            // USAGE IN ABOVE METHOD: GetStatusOutput(client, "[job_name].o[job_number]", "STEP");
+
+            using (var cmd = client.CreateCommand("cat " + file + "| " + "grep " + pattern))
             {
                 cmd.Execute();
                 CatchError(cmd, out errorOutput);
