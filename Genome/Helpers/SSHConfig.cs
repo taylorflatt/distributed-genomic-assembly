@@ -31,19 +31,75 @@ namespace Genome.Helpers
             this.genomeModel = genomeModel;
             this.path = path;
 
+            //// This is for TESTING PURPOSES ONLY. It is commented out otherwise.
+            //// We want to cat <job_name>.o<job_number> | grep "Status" and see where we are.
+            //using (var sshClient = new SshClient(ip, genomeModel.SSHUser, genomeModel.SSHPass))
+            //{
+            //    sshClient.Connect();
+
+            //    string jobName = genomeModel.SSHUser.ToString() + genomeModel.uuid.ToString();
+            //    //string pattern = "step";
+
+            //    CreateTestJob(sshClient, jobName);
+
+            //    string jobNumber = GetJobNumber(sshClient, jobName);
+
+            //    //GetStatusOutput(sshClient, "[job_name].o[job_number]", pattern);
+            //}
+        }
+
+        // Here we will use our account (or if we have to...the user's or we can curl) to grab the status of the job.
+        public bool UpdateJobStatus(out string error)
+        {
+            error = "";
+            this.error = error;
+
             // We want to cat <job_name>.o<job_number> | grep "Status" and see where we are.
-            using (var sshClient = new SshClient(ip, genomeModel.SSHUser, genomeModel.SSHPass))
+            // Reference for key: http://www.jokecamp.com/blog/connecting-to-sftp-with-key-file-and-password-using-ssh-net/
+            var keyFile = new PrivateKeyFile(@"[ABSOLUTE PATH OF OPENSSH PRIVATE PPK KEY]");
+            var keyFiles = new[] { keyFile };
+            var username = "[USERNAME FOR UPDATE ACCOUNT]"; // This is the account name we will use to run the updates for jobs.
+
+            var methods = new List<AuthenticationMethod>();
+            methods.Add(new PrivateKeyAuthenticationMethod(username, keyFiles));
+
+            var connectionInfo = new ConnectionInfo(ip, 22, username, methods.ToArray());
+
+            using (var client = new SshClient(connectionInfo))
             {
-                sshClient.Connect();
+                client.Connect();
 
                 string jobName = genomeModel.SSHUser.ToString() + genomeModel.uuid.ToString();
-                //string pattern = "step";
 
-                CreateTestJob(sshClient, jobName);
+                // This is the thing we search for in the output log file to see which step we are at. Maybe we have a 
+                // dictionary that keeps track of what each step is and the corresponding number to keep parsing easy.
+                // Or at each step we print STEPID=5 and we just cat file.log | grep "STEPID" and then just grab the last one and see 
+                // the number and then that is the current step.
+                string pattern = "step"; // This is the thing we search for in the output file to see our CURRENT step.
 
-                string jobNumber = GetJobNumber(sshClient, jobName);
+                string jobNumber = "";
 
-                //GetStatusOutput(sshClient, "[job_name].o[job_number]", pattern);
+                if (errorCount == 0) { CreateTestJob(client, jobName); }
+                if (errorCount == 0) { jobNumber = GetJobNumber(client, jobName); }
+                if (errorCount == 0) { GetStatusOutput(client, jobName + ".o" + jobNumber, pattern); }
+
+                if (errorCount == 0)
+                {
+                    // Only if successful do we set the UUID to the BigDog job ID.
+                    genomeModel.uuid = Convert.ToInt32(jobNumber);
+                    error = errorOutput;
+
+                    return true;
+                }
+
+                else
+                {
+                    error = errorOutput;
+
+                    return false;
+                }
+
+                
             }
         }
 
@@ -89,36 +145,6 @@ namespace Genome.Helpers
 
             }
 
-        }
-
-        // Here we will use our account (or if we have to...the user's or we can curl) to grab the status of the job.
-        public bool UpdateJobStatus(out string error)
-        {
-            error = "";
-            this.error = error;
-
-            // We want to cat <job_name>.o<job_number> | grep "Status" and see where we are.
-            using (var sshClient = new SshClient(ip, "OurSSHAccount", "OurSSHPassword"))
-            {
-                string jobName = genomeModel.SSHUser.ToString() + genomeModel.uuid.ToString();
-                string pattern = "step";
-
-                string logFile = jobName + ".o5";
-
-                GetStatusOutput(sshClient, "[job_name].o[job_number]", pattern);
-            }
-
-            if (errorCount == 0)
-            {
-                error = errorOutput;
-                return true;
-            }
-
-            else
-            {
-                error = errorOutput;
-                return false;
-            }
         }
 
         // Will return TRUE if successful connection and commands all run or FALSE if ANY error is encountered.
@@ -271,7 +297,7 @@ namespace Genome.Helpers
 
         private void GetStatusOutput(SshClient client, string file, string pattern)
         {
-            // USAGE IN LINUX:        cat file1 | grep "string"
+            // USAGE IN LINUX:        cat file1 | grep "Step"
             // USAGE IN ABOVE METHOD: GetStatusOutput(client, "[job_name].o[job_number]", "STEP");
 
             using (var cmd = client.CreateCommand("cat " + file + "| " + "grep " + pattern))

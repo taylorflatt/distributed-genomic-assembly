@@ -26,29 +26,29 @@ namespace Genome.Controllers
                 // Should that be a field that we include in the model so we can calculate a safe size or just
                 // have them do it? I think just have them do it with a tooltip and make it a required field.
                 try
-               {
+                {
                     // If they don't have jump reads.
                     if (genomeModel.JumpReads == false)
                         genomeModel.JumpLength = 0;
 
                     // If they don't have paired-end reads.
-                    if(genomeModel.PEReads == false)
+                    if (genomeModel.PEReads == false)
                         genomeModel.PairedEndLength = 0;
 
-                    if(genomeModel.MasurcaPEMean == null)
+                    if (genomeModel.MasurcaPEMean == null)
                         // Set Mean default value.
 
-                    if(genomeModel.MasurcaPEStdev == null)
-                        // Set std dev default value.
+                        if (genomeModel.MasurcaPEStdev == null)
+                            // Set std dev default value.
 
-                    if(genomeModel.MasurcaGraphKMerValue == null)
-                        // Set graph kmer default value.
+                            if (genomeModel.MasurcaGraphKMerValue == null)
+                                // Set graph kmer default value.
 
-                    if(genomeModel.MasurcaKMerErrorCount == null)
-                        // Set masurca kmer error threshold value.
+                                if (genomeModel.MasurcaKMerErrorCount == null)
+                                    // Set masurca kmer error threshold value.
 
-                    if(genomeModel.MasurcaThreadNum == null)
-                        genomeModel.MasurcaThreadNum = 20;
+                                    if (genomeModel.MasurcaThreadNum == null)
+                                        genomeModel.MasurcaThreadNum = 20;
 
 
                     genomeModel.CreatedBy = User.Identity.Name;
@@ -56,11 +56,6 @@ namespace Genome.Controllers
                     genomeModel.JobStatus = "Pending";
 
                     //string path = "temp";
-
-                    // STRICTLY FOR TESTING PURPOSES, DELETE AFTER DEMO
-                    db.GenomeModels.Add(genomeModel);
-                    db.SaveChanges();
-                    
                     //ConfigBuilder builder = new ConfigBuilder();
 
                     //string[] dataArray = genomeModel.DataSource.Split(',');
@@ -75,33 +70,26 @@ namespace Genome.Controllers
 
                     ssh.CreateConnection(out error);
 
-                    return RedirectToAction("Details", new { id = genomeModel.uuid });
-                    // END COMMENT
+                    // No error so proceed.
+                    if (error.Equals(""))
+                    {
+                        db.GenomeModels.Add(genomeModel);
+                        db.SaveChanges();
+                        return RedirectToAction("Details", new { id = genomeModel.uuid });
+                    }
 
-                    // There were no errors making the connection. Add model to the db and continue.
-                    //if (connectionStatus == true)
-                    //{
-                        //db.GenomeModels.Add(genomeModel);
-                        //db.SaveChanges();
-
-                        //return RedirectToAction("Details", new { id = genomeModel.uuid });
-                    //}
-
-                    // There was at least a single error. Show the error and redisplay their data.
-                    //else
-                    //{
-                    //    ViewBag.ConnectionError = "There was an error with the connection to BigDog. The following is the error we encountered: " + error;
-
-                    //    return View(genomeModel);
-                    //}
+                    // Redisplay the data and display the error.
+                    else
+                    {
+                        ViewBag.ConnectionError = "There was an error with the connection to BigDog. The following is the error we encountered: " + error;
+                        return View(genomeModel);
+                    }
                 }
 
                 catch (Exception e)
                 {
                     Console.WriteLine(e.Message);
                 }
-
-                
             }
 
             return View(genomeModel);
