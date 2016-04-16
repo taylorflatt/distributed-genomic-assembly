@@ -38,17 +38,17 @@ namespace Genome.Controllers
                     if (genomeModel.MasurcaPEMean == null)
                         // Set Mean default value.
 
-                        if (genomeModel.MasurcaPEStdev == null)
-                            // Set std dev default value.
+                    if (genomeModel.MasurcaPEStdev == null)
+                        // Set std dev default value.
 
-                            if (genomeModel.MasurcaGraphKMerValue == null)
-                                // Set graph kmer default value.
+                    if (genomeModel.MasurcaGraphKMerValue == null)
+                        // Set graph kmer default value.
 
-                                if (genomeModel.MasurcaKMerErrorCount == null)
-                                    // Set masurca kmer error threshold value.
+                    if (genomeModel.MasurcaKMerErrorCount == null)
+                        // Set masurca kmer error threshold value.
 
-                                    if (genomeModel.MasurcaThreadNum == null)
-                                        genomeModel.MasurcaThreadNum = 20;
+                    if (genomeModel.MasurcaThreadNum == null)
+                        genomeModel.MasurcaThreadNum = 20;
 
 
                     genomeModel.CreatedBy = User.Identity.Name;
@@ -66,9 +66,9 @@ namespace Genome.Controllers
                     string error = "";
 
                     //SSHConfig ssh = new SSHConfig("login-0-0.research.siu.edu", genomeModel, builder.InitConfigURL);
-                    SSHConfig ssh = new SSHConfig("login-0-0.research.siu.edu", genomeModel, "");
+                    SSHConfig ssh = new SSHConfig("login-0-0.research.siu.edu", genomeModel, "", out error);
 
-                    ssh.CreateConnection(out error);
+                    //ssh.CreateConnection(out error);
 
                     // No error so proceed.
                     if (error.Equals(""))
@@ -81,7 +81,9 @@ namespace Genome.Controllers
                     // Redisplay the data and display the error.
                     else
                     {
-                        ViewBag.ConnectionError = "There was an error with the connection to BigDog. The following is the error we encountered: " + error;
+                        ViewBag.ConnectionError = "There was an error with the connection to BigDog. The following is the error we encountered: ";
+                        ViewBag.ConnectionErrorDetails = error;
+
                         return View(genomeModel);
                     }
                 }

@@ -17,6 +17,20 @@
         <hr />
         @ViewBag.ConnectionError
 
+        @if (ViewBag.ConnectionErrorDetails != null)
+        { 
+            <br />
+            <br />
+
+            <p style="margin-left: 40px; background-color: #FFFFCD; font-size: 16px; font-family: monospace; color: #B12F2F;">
+                @ViewBag.ConnectionErrorDetails
+            </p>
+
+            <script type="text/javascript">
+                DisplayFinalStepError();
+            </script>
+        }
+
         <div id="WizardErrors" class="text-danger">
             @* Print wizard errors here if any. *@
         </div>
@@ -469,4 +483,11 @@
 
 
         </div>
+
+        if (ViewBag.ConnectionErrorDetails != null)
+        {
+            <script type="text/javascript">
+                DisplayFinalStepError();
+            </script>
+        }
 }

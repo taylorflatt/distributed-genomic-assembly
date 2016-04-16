@@ -244,6 +244,11 @@ function FinalStepMoveBackward() {
     document.getElementById('Step4').style.display = "block";
 }
 
+function DisplayFinalStepError() {
+    document.getElementById('Step1').style.display = "none";
+    document.getElementById('FinalStep').style.display = "block";
+}
+
 // Need to fix the styling issue on the textbox so it isn't static. On time crunch so I'm statically assigning values.
 function addURLBox() {
     document.getElementById("RemoveURLErrorMsg").innerHTML = "";
