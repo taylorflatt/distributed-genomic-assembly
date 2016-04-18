@@ -20,9 +20,9 @@ namespace Genome.Helpers
         private static string COMPUTENODE1 = "compute-0-24";
         private static string COMPUTENODE2 = "compute-0-25";
 
-        private string ip;
+        private string ip; // To login node.
         private GenomeModel genomeModel;
-        private string path;
+        private string path; // marty added this?
 
         public SSHConfig(string ip, GenomeModel genomeModel, string path, out string error)
         {
@@ -33,7 +33,6 @@ namespace Genome.Helpers
             this.path = path;
 
             //// This is for TESTING PURPOSES ONLY. It is commented out otherwise.
-            //// We want to cat <job_name>.o<job_number> | grep "Status" and see where we are.
             using (var sshClient = new SshClient("fake", genomeModel.SSHUser, genomeModel.SSHPass))
             {
                 try
@@ -68,19 +67,6 @@ namespace Genome.Helpers
             }
         }
 
-        private int GetNodeLoad(SshClient client, string node)
-        {
-            // We only want to get the load average of the specific node. 
-            using (var cmd = client.CreateCommand("qstat -f | grep " + node + " | awk '{print $4;}'"))
-            {
-                cmd.Execute();
-
-                CatchError(cmd, out error);
-
-                return Convert.ToInt32(cmd.Result);
-            }
-        }
-
         // Debug purposes only.
         private void CreateTestJob(SshClient client, string jobName, out string error)
         {
@@ -97,44 +83,36 @@ namespace Genome.Helpers
         public bool CreateJob(out string error)
         {
             error = "";
-            this.error = error;
-
-            // Need to create a directory here that is unique to the user if it doesn't already exist. 
-            // For instance: WORKINGDIRECTORY/Taylor/Job1 and /WORKINGDIRECTORY/Taylor/Job2 and so on.
-
-            // Then we wget all the scripts and store them in the WORKINGDIRECTORY/Taylor/Job1/Scripts.
-
-            // Then we call the WORKINGDIRECTORY/Taylor/Job1/Scripts/Scheduler.sh which will launch the init.sh script.
 
             // The init.sh script will contain all the basic logic to download the data and initiate the job on the assembler(s).
             using (var client = new SshClient(ip, genomeModel.SSHUser, genomeModel.SSHPass))
             {
-                string localPath = "/tmp/Genome/Job" + genomeModel.uuid;
-                string dataPath = localPath + "/Data"; 
-                string configPath = localPath + "/Config"; 
-                string outputPath = localPath + "/Output";
-                string logPath = localPath + "/Logs";
+                string workingDirectory = "/tmp/Genome/Job" + genomeModel.uuid;
+                string dataPath = workingDirectory + "/Data"; 
+                string configPath = workingDirectory + "/Config"; 
+                string outputPath = workingDirectory + "/Output";
+                string logPath = workingDirectory + "/Logs";
 
                 // The outward facing (FTP) path to where the scripts are stored for download.
-                string initScriptUrl = "PATH TO THE LOCATION WHERE THE INIT SCRIPT WILL BE STORED.";
-                string masurcaScriptUrl = "PATH TO THE LOCATION WHERE THE MASUCRA SCRIPT WILL BE STORED.";
+                string initScriptUrl = "PUBLIC PATH TO THE LOCATION WHERE THE INIT SCRIPT WILL BE STORED.";
+                string masurcaScriptUrl = "PUBLIC PATH TO THE LOCATION WHERE THE MASUCRA SCRIPT WILL BE STORED.";
                 //string schedulerScriptUrl = "PATH TO THE LOCATION WHERE THE SCHEDULER SCRIPT WILL BE STORED.";
 
                 string initName = "init" + genomeModel.uuid;
                 string masurcaName = "masurca" + genomeModel.uuid;
-                string schedulerName = "scheduler" + genomeModel.uuid;
+                //string schedulerName = "scheduler" + genomeModel.uuid;
 
                 // Location we store the wget error log.
                 string wgetLogParameter = "-O " + logPath + "wget.error";
 
                 string jobName = genomeModel.SSHUser.ToString() + genomeModel.uuid.ToString();
-                string node = COMPUTENODE1; // default              
+                string node = COMPUTENODE1; // default         
 
                 try
                 {
                     client.Connect();
 
-                    if (errorCount == 0) { CreateDirectory(client, localPath, out error, "-p"); }
+                    if (errorCount == 0) { CreateDirectory(client, workingDirectory, out error, "-p"); }
                     if (errorCount == 0) { CreateDirectory(client, dataPath, out error, "-p"); }
                     if (errorCount == 0) { CreateDirectory(client, configPath, out error, "-p"); }
                     if (errorCount == 0) { CreateDirectory(client, outputPath, out error, "-p"); }
@@ -144,7 +122,7 @@ namespace Genome.Helpers
                     if (errorCount == 0) { DownloadFile(client, masurcaScriptUrl, out error, wgetLogParameter); }
                     //if (errorCount == 0) { DownloadFile(client, schedulerScriptUrl, out error, wgetLogParameter); }
 
-                    if (errorCount == 0) { ChangePermissions(client, localPath, "777", out error, "-R"); }
+                    if (errorCount == 0) { ChangePermissions(client, workingDirectory, "777", out error, "-R"); }
 
                     if(errorCount == 0)
                     {
@@ -156,7 +134,10 @@ namespace Genome.Helpers
                             node = COMPUTENODE1;
                     }
 
-                    // Need to make sure we are in the location of the assemble.sh script that we need to reference in the AddJobToScheduler method.
+                    // May need to investigate this. But I'm fairly certain you need to be in the current directory or we can always call it 
+                    // via its absolute path but this is probably easier. It is late, but I am pretty sure you aren't able to do a qsub on 
+                    // anything but the login node. So we might need to investigate the way in which we store the information.
+                    if(errorCount == 0) { ChangeDirectory(client, configPath, out error); }
 
                     if (errorCount == 0) { AddJobToScheduler(client, logPath, node, jobName, out error); }
 
@@ -203,20 +184,9 @@ namespace Genome.Helpers
             }
         }
 
-        // Here we will use our account (or if we have to...the user's or we can curl) to grab the status of the job.
-        // Returns TRUE if the update was successful. Returns FALSE if something went wrong.
-
-        // TODO: Need to get update from admins on the issue with regards to inability to access the home directories of users. Maybe we can 
-        // get a working directory with access for everyone.
-
-        // What we can do is set a WORKING DIRECTORY to be /tmp/Genome and then have the entire directory 777 so everyone has access. We then redirect all outputs to that location under unique folders and we will have access to those files.
-        // Step 1: Create Unique folders for output (error logs and eventual output).
-        // Step 2: chmod the directories to 777.
-        // Step 3: Initiate the job with the specific pathing variables.
         public bool UpdateJobStatus(out string error)
         {
             error = "";
-            this.error = error;
 
             // We want to cat <job_name>.o<job_number> | grep "Status" and see where we are.
             // Reference for key: http://www.jokecamp.com/blog/connecting-to-sftp-with-key-file-and-password-using-ssh-net/
@@ -267,6 +237,17 @@ namespace Genome.Helpers
 
                     return false;
                 }
+            }
+        }
+
+        private void ChangeDirectory(SshClient client, string newDirectory, out string error, string parameters = "")
+        {
+            // USAGE: cd /opt/testDirectory
+            using (var cmd = client.CreateCommand("cd " + newDirectory + " " + parameters))
+            {
+                cmd.Execute();
+
+                CatchError(cmd, out error);
             }
         }
 
@@ -343,14 +324,10 @@ namespace Genome.Helpers
                 // doesn't remove it. So we will always return the first element which corresponds to the job number.
 
                 if (errorCount == 0)
-                {
                     genomeModel.SGEJobId = Convert.ToInt32(jobNumber[1]);
-                }
 
                 else
-                {
                     error = "Failed to get the job ID for the job. Something went wrong with the scheduler. Please contact an administrator.";
-                }
             }
         }
 
@@ -386,6 +363,19 @@ namespace Genome.Helpers
             }
 
             return currentStep;
+        }
+
+        private int GetNodeLoad(SshClient client, string node)
+        {
+            // We only want to get the load average of the specific node. 
+            using (var cmd = client.CreateCommand("qstat -f | grep " + node + " | awk '{print $4;}'"))
+            {
+                cmd.Execute();
+
+                CatchError(cmd, out error);
+
+                return Convert.ToInt32(cmd.Result);
+            }
         }
 
         private void CatchError(SshCommand cmd, out string error)
