@@ -195,8 +195,11 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
+    <Compile Include="Helpers\CheckJobStatus.cs" />
     <Compile Include="Helpers\ConfigBuilder.cs" />
     <Compile Include="Helpers\CustomRoles.cs" />
+    <Compile Include="Helpers\LinuxCommands.cs" />
+    <Compile Include="Helpers\LinuxErrorHandling.cs" />
     <Compile Include="Helpers\SSHConfig.cs" />
     <Compile Include="Migrations\201604032021313_test.cs" />
     <Compile Include="Migrations\201604032021313_test.Designer.cs">
