@@ -3,11 +3,12 @@ using Genome.Models;
 using System.Collections.Generic;
 using System;
 using System.Text.RegularExpressions;
-using System.ComponentModel;
+using Renci.SshNet.Common;
+using System.Net.Sockets;
 
 /// <summary>
-/// TODO: May need to change the CWD to a default folder and run the scripts from a special folder rather than the user's folder.
 /// TODO: Output ANY error information to a log file with the user's details and session data. Should probably be done in the controller.
+/// TODO: Get update with regards to permission issues when reading other user's directories for status updates.
 /// </summary>
 namespace Genome.Helpers
 {
@@ -33,7 +34,7 @@ namespace Genome.Helpers
 
             //// This is for TESTING PURPOSES ONLY. It is commented out otherwise.
             //// We want to cat <job_name>.o<job_number> | grep "Status" and see where we are.
-            using (var sshClient = new SshClient(ip, genomeModel.SSHUser, genomeModel.SSHPass))
+            using (var sshClient = new SshClient("fake", genomeModel.SSHUser, genomeModel.SSHPass))
             {
                 try
                 {
@@ -49,9 +50,22 @@ namespace Genome.Helpers
                     //GetStatusOutput(sshClient, "[job_name].o[job_number]", pattern);
                 }
 
-                catch (Exception e)
+                // SSH Connection couldn't be established.
+                catch (SocketException e)
                 {
-                    error = e.Message;
+                    error = "The SSH connection couldn't be established. " + e.Message;
+                }
+
+                // Authentication failure.
+                catch(SshAuthenticationException e)
+                {
+                    error = "The credentials were entered incorrectly. " + e.Message;
+                }
+
+                // The SSH connection was dropped.
+                catch(SshConnectionException e)
+                {
+                    error = "The connection was terminated unexpectedly. " + e.Message;
                 }
             }
         }
@@ -59,7 +73,7 @@ namespace Genome.Helpers
         // Debug purposes only.
         private void CreateTestJob(SshClient client, string jobName, out string error)
         {
-            using (var cmd = client.CreateCommand("qub -pe make 20 -V -b y -cwd -l hostname=compute-0-25 -N " + jobName + " ./HelloWorld"))
+            using (var cmd = client.CreateCommand("qub -pe make 20 -V -b y -cwd -l hostname=" + COMPUTENODE1 + " -N " + jobName + " ./HelloWorld"))
             {
                 cmd.Execute();
 
@@ -69,6 +83,10 @@ namespace Genome.Helpers
 
 
         // Here we will use our account (or if we have to...the user's or we can curl) to grab the status of the job.
+        // Returns TRUE if the update was successful. Returns FALSE if something went wrong.
+
+        // TODO: Need to get update from admins on the issue with regards to inability to access the home directories of users. Maybe we can 
+        // get a working directory with access for everyone.
         public bool UpdateJobStatus(out string error)
         {
             error = "";
@@ -87,35 +105,61 @@ namespace Genome.Helpers
 
             using (var client = new SshClient(connectionInfo))
             {
-                client.Connect();
-
-                string jobName = genomeModel.SSHUser.ToString() + genomeModel.uuid.ToString();
-
-                // This is the thing we search for in the output log file to see which step we are at. Maybe we have a 
-                // dictionary that keeps track of what each step is and the corresponding number to keep parsing easy.
-                // Or at each step we print STEPID=5 and we just cat file.log | grep "STEPID" and then just grab the last one and see 
-                // the number and then that is the current step.
-                string pattern = "step"; // This is the thing we search for in the output file to see our CURRENT step.
-
-                string jobNumber = "";
-
-                if (errorCount == 0) { CreateTestJob(client, jobName, out error); }
-                if (errorCount == 0) { jobNumber = GetJobNumber(client, jobName, out error); }
-                if (errorCount == 0) { GetStatusOutput(client, jobName + ".o" + jobNumber, pattern, out error); }
-
-                if (errorCount == 0)
+                try
                 {
-                    // Only if successful do we set the UUID to the BigDog job ID.
-                    genomeModel.uuid = Convert.ToInt32(jobNumber);
+                    client.Connect();
 
-                    return true;
+                    string jobName = genomeModel.SSHUser.ToString() + genomeModel.uuid.ToString();
+
+                    // This is the thing we search for in the output log file to see which step we are at. Maybe we have a 
+                    // dictionary that keeps track of what each step is and the corresponding number to keep parsing easy.
+                    // Or at each step we print STEPID=5 and we just cat file.log | grep "STEPID" and then just grab the last one and see 
+                    // the number and then that is the current step.
+                    string pattern = "step"; // This is the thing we search for in the output file to see our CURRENT step.
+
+                    string jobNumber = "";
+
+                    if (errorCount == 0) { CreateTestJob(client, jobName, out error); }
+                    if (errorCount == 0) { jobNumber = GetJobNumber(client, jobName, out error); }
+                    if (errorCount == 0) { GetStatusOutput(client, jobName + ".o" + jobNumber, pattern, out error); }
+
+                    if (errorCount == 0)
+                    {
+                        // Only if successful do we set the UUID to the BigDog job ID.
+                        genomeModel.uuid = Convert.ToInt32(jobNumber);
+
+                        return true;
+                    }
+
+                    else
+                    {
+                        return false;
+                    }
                 }
 
-                else
+                // SSH Connection couldn't be established.
+                catch (SocketException e)
                 {
+                    error = "The SSH connection couldn't be established. " + e.Message;
 
                     return false;
-                }                
+                }
+
+                // Authentication failure.
+                catch (SshAuthenticationException e)
+                {
+                    error = "The credentials were entered incorrectly. " + e.Message;
+
+                    return false;
+                }
+
+                // The SSH connection was dropped.
+                catch (SshConnectionException e)
+                {
+                    error = "The connection was terminated unexpectedly. " + e.Message;
+
+                    return false;
+                }
             }
         }
 
@@ -143,37 +187,55 @@ namespace Genome.Helpers
                 string masurcaName = "masurca" + genomeModel.uuid;
                 string schedulerName = "scheduler" + genomeModel.uuid;
 
-                sshClient.Connect();
-
-                if (errorCount == 0) { CreateDirectories(sshClient, localPath, dataPath, configPath, outputPath, out error); }
-
-                if (errorCount == 0) { UploadInitScript(sshClient, path, initName, configPath, out error); }
-                if (errorCount == 0) { UploadMasurcaScript(sshClient, path, masurcaName, configPath, out error); }
-                if (errorCount == 0) { UploadSchedulerScript(sshClient, path, schedulerName, configPath, out error); }
-
-                if (errorCount == 0) { ChangePermissions(sshClient, localPath, out error); }
-
-                if (errorCount == 0) { AddJobToScheduler(sshClient, out error); }
-
-                if (errorCount == 0)
+                try
                 {
-                    //RunDemo(sshClient);
+                    sshClient.Connect();
+
+                    if (errorCount == 0) { CreateDirectories(sshClient, localPath, dataPath, configPath, outputPath, out error); }
+
+                    if (errorCount == 0) { UploadInitScript(sshClient, path, initName, configPath, out error); }
+                    if (errorCount == 0) { UploadMasurcaScript(sshClient, path, masurcaName, configPath, out error); }
+                    if (errorCount == 0) { UploadSchedulerScript(sshClient, path, schedulerName, configPath, out error); }
+
+                    if (errorCount == 0) { ChangePermissions(sshClient, localPath, out error); }
+
+                    if (errorCount == 0) { AddJobToScheduler(sshClient, out error); }
+
+                    // There were no errors.
+                    if (errorCount == 0)
+                    {
+                        return true;
+                    }
+
+                    else
+                    {
+                        return false;
+                    }
                 }
-                //sshClient.Disconnect();
-            }
 
-            // There were no errors.
-            if (errorCount == 0)
-            {
-                //error = errorOutput;
-                return true;
-            }
+                // SSH Connection couldn't be established.
+                catch (SocketException e)
+                {
+                    error = "The SSH connection couldn't be established. " + e.Message;
 
-            // There was at least one error, return false as well as the error itself.
-            else
-            {
-                //error = errorOutput;
-                return false;
+                    return false;
+                }
+
+                // Authentication failure.
+                catch (SshAuthenticationException e)
+                {
+                    error = "The credentials were entered incorrectly. " + e.Message;
+
+                    return false;
+                }
+
+                // The SSH connection was dropped.
+                catch (SshConnectionException e)
+                {
+                    error = "The connection was terminated unexpectedly. " + e.Message;
+
+                    return false;
+                }
             }
         }
 
@@ -299,6 +361,7 @@ namespace Genome.Helpers
             }
         }
 
+        // This will change depending on how we approach doing the check for the status.
         private void GetStatusOutput(SshClient client, string file, string pattern, out string error)
         {
             // USAGE IN LINUX:        cat file1 | grep "Step"
@@ -312,26 +375,26 @@ namespace Genome.Helpers
         }
 
         // Cooked method for demo
-        private void RunDemo(SshClient client)
-        {
-            using (var cmd = client.CreateCommand("cd ~/Demo/Output && /share/bio/masurca/bin/masurca ~/Demo/Config/config.txt"))
-            {
-                cmd.Execute();
-                CatchError(cmd, out error);
-            }
-            using (var cmd = client.CreateCommand("cd ~/Demo/Output && ./test.sh"))
-            {
-                cmd.Execute();
-                CatchError(cmd, out error);
-            }
-            client.Disconnect();
-        }
+        //private void RunDemo(SshClient client)
+        //{
+        //    using (var cmd = client.CreateCommand("cd ~/Demo/Output && /share/bio/masurca/bin/masurca ~/Demo/Config/config.txt"))
+        //    {
+        //        cmd.Execute();
+        //        CatchError(cmd, out error);
+        //    }
+        //    using (var cmd = client.CreateCommand("cd ~/Demo/Output && ./test.sh"))
+        //    {
+        //        cmd.Execute();
+        //        CatchError(cmd, out error);
+        //    }
+        //    client.Disconnect();
+        //}
 
         private void CatchError(SshCommand cmd, out string error)
         {
             error = "";
 
-            // There is an error...return the error so we can display it to the user.
+            // There is an error return the error so we can display it to the user.
             if (!string.IsNullOrEmpty(cmd.Error))
             {
                 errorCount++;
