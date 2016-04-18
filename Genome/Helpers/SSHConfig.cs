@@ -45,8 +45,6 @@ namespace Genome.Helpers
 
                     if (errorCount == 0) { CreateTestJob(sshClient, jobName, out error); }
 
-                    if (errorCount == 0) { string jobNumber = GetJobNumber(sshClient, jobName, out error); }
-
                     //GetStatusOutput(sshClient, "[job_name].o[job_number]", pattern);
                 }
 
@@ -67,6 +65,19 @@ namespace Genome.Helpers
                 {
                     error = "The connection was terminated unexpectedly. " + e.Message;
                 }
+            }
+        }
+
+        private int GetNodeLoad(SshClient client, string node)
+        {
+            // We only want to get the load average of the specific node. 
+            using (var cmd = client.CreateCommand("qstat -f | grep " + node + " | awk '{print $4;}'"))
+            {
+                cmd.Execute();
+
+                CatchError(cmd, out error);
+
+                return Convert.ToInt32(cmd.Result);
             }
         }
 
@@ -116,8 +127,8 @@ namespace Genome.Helpers
                 // Location we store the wget error log.
                 string wgetLogParameter = "-O " + logPath + "wget.error";
 
-                string jobNumber = "";
-                string jobName = genomeModel.SSHUser.ToString() + genomeModel.uuid.ToString();               
+                string jobName = genomeModel.SSHUser.ToString() + genomeModel.uuid.ToString();
+                string node = COMPUTENODE1; // default              
 
                 try
                 {
@@ -135,25 +146,28 @@ namespace Genome.Helpers
 
                     if (errorCount == 0) { ChangePermissions(client, localPath, "777", out error, "-R"); }
 
+                    if(errorCount == 0)
+                    {
+                        // So COMPUTENODE2 has a smaller load, we want to use that instead.
+                        if(GetNodeLoad(client, COMPUTENODE1) > GetNodeLoad(client, COMPUTENODE2))
+                            node = COMPUTENODE2;
+
+                        else
+                            node = COMPUTENODE1;
+                    }
+
                     // Need to make sure we are in the location of the assemble.sh script that we need to reference in the AddJobToScheduler method.
 
-                    if (errorCount == 0) { AddJobToScheduler(client, logPath, COMPUTENODE1, jobName, out error); }
+                    if (errorCount == 0) { AddJobToScheduler(client, logPath, node, jobName, out error); }
 
-                    if (errorCount == 0) { jobNumber = SetJobNumber(client, jobName, out error); }
+                    if (errorCount == 0) { SetJobNumber(client, jobName, out error); }
 
                     // There were no errors.
                     if (errorCount == 0)
-                    {
-                        // Set the scheduler Job ID only if we are completely successful and the job has been added to the scheduler.
-                        genomeModel.SGEJobId = Convert.ToInt32(jobNumber);
-
                         return true;
-                    }
 
                     else
-                    {
                         return false;
-                    }
                 }
 
                 // SSH Connection couldn't be established.
@@ -221,25 +235,13 @@ namespace Genome.Helpers
                 {
                     client.Connect();
 
-                    string jobName = genomeModel.SSHUser.ToString() + genomeModel.uuid.ToString();
-
-                    // This is the thing we search for in the output log file to see which step we are at. Maybe we have a 
-                    // dictionary that keeps track of what each step is and the corresponding number to keep parsing easy.
-                    // Or at each step we print STEPID=5 and we just cat file.log | grep "STEPID" and then just grab the last one and see 
-                    // the number and then that is the current step.
-                    string pattern = "step"; // This is the thing we search for in the output file to see our CURRENT step.
-
-                    GetStatusOutput(client, jobName + ".o" + genomeModel.SGEJobId, pattern, out error);
+                    GetCurrentStep(client, out error);
 
                     if (errorCount == 0)
-                    {
                         return true;
-                    }
 
                     else
-                    {
                         return false;
-                    }
                 }
 
                 // SSH Connection couldn't be established.
@@ -353,32 +355,37 @@ namespace Genome.Helpers
         }
 
         // This will change depending on how we approach doing the check for the status.
-        private void GetStatusOutput(SshClient client, string file, string pattern, out string error)
+        private int GetCurrentStep(SshClient client, out string error)
         {
-            // USAGE IN LINUX:        cat file1 | grep "Step"
-            // USAGE IN ABOVE METHOD: GetStatusOutput(client, "[job_name].o[job_number]", "STEP");
+            error = "";
 
-            using (var cmd = client.CreateCommand("cat " + file + "| " + "grep " + pattern))
+            // A quick and dirty way to check for specific files is to create a dictionary of known files associated with the steps
+            // and then successively run through each command to see the job is.
+
+            var stepList = new List<KeyValuePair<int, string>>();
+            stepList.Add(new KeyValuePair<int, string>(1, "FILENAME"));
+            stepList.Add(new KeyValuePair<int, string>(2, "FILENAME"));
+            stepList.Add(new KeyValuePair<int, string>(3, "FILENAME"));
+            stepList.Add(new KeyValuePair<int, string>(4, "FILENAME"));
+            stepList.Add(new KeyValuePair<int, string>(5, "FILENAME"));
+
+            int currentStep = 0;
+
+            foreach(var item in stepList)
             {
-                cmd.Execute();
-                CatchError(cmd, out error);
-            }
-
-            // OR, we check for the files in the CWD and compare those to a dictionary of known steps and return the current step.
-            // A quick and dirty way to check for this is to simply find a known file and if it exists, we are in that step or after that step.
-            // Then we need to check for the next file until we reach an error (no file found or something like that).
-
-            using (var cmd = client.CreateCommand("grep " + step1File + " | wc -l"))
-            {
-                cmd.Execute();
-
-                if(Convert.ToInt32(cmd.Result.ToString()) > 0)
+                using(var cmd = client.CreateCommand("ls -l | grep " + item.Value + " | wc -l"))
                 {
-                    //Step 1 achieved
-                }
+                    cmd.Execute();
 
-                CatchError(cmd, out error);
+                    // File found.
+                    if (Convert.ToInt32(cmd.Result.ToString()) > 0)
+                        currentStep = item.Key;
+
+                    CatchError(cmd, out error);
+                }
             }
+
+            return currentStep;
         }
 
         private void CatchError(SshCommand cmd, out string error)
