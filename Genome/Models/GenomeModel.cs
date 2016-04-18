@@ -123,6 +123,10 @@ namespace Genome.Models
         [Display(Name = "Created Date")]
         public DateTime CreatedDate { get; set; }
 
+        [DisplayFormat(ApplyFormatInEditMode = true, DataFormatString = "{0:MM/dd/yy HH:mm}")]
+        [Display(Name = "Completed Date")]
+        public DateTime CompletedDate { get; set; }
+
         [Display(Name = "Current Status")]
         public string JobStatus { get; set; }
     }
