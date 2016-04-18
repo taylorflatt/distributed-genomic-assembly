@@ -18,6 +18,9 @@ namespace Genome.Models
         [Key]
         public int uuid { get; set; }
 
+        // The job ID that is seen in the scheduler of BigDog so we can use this to check for updates.
+        public int SGEJobId { get; set; }
+
         [NotMapped]
         [Display(Name = "Big Dog Username:")]
         public string SSHUser { get; set; }

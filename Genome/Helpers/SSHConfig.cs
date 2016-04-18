@@ -73,6 +73,7 @@ namespace Genome.Helpers
         // Debug purposes only.
         private void CreateTestJob(SshClient client, string jobName, out string error)
         {
+            // qsub -pe make 20 -V -e /tmp/Genome/ -o /tmp/Genome/ -b y -l hostname=compute-0-24 -N taylor1 ./HelloWorld
             using (var cmd = client.CreateCommand("qub -pe make 20 -V -b y -cwd -l hostname=" + COMPUTENODE1 + " -N " + jobName + " ./HelloWorld"))
             {
                 cmd.Execute();
@@ -81,12 +82,123 @@ namespace Genome.Helpers
             }
         }
 
+        // Will return TRUE if successful connection and commands all run or FALSE if ANY error is encountered.
+        public bool CreateJob(out string error)
+        {
+            error = "";
+            this.error = error;
+
+            // Need to create a directory here that is unique to the user if it doesn't already exist. 
+            // For instance: WORKINGDIRECTORY/Taylor/Job1 and /WORKINGDIRECTORY/Taylor/Job2 and so on.
+
+            // Then we wget all the scripts and store them in the WORKINGDIRECTORY/Taylor/Job1/Scripts.
+
+            // Then we call the WORKINGDIRECTORY/Taylor/Job1/Scripts/Scheduler.sh which will launch the init.sh script.
+
+            // The init.sh script will contain all the basic logic to download the data and initiate the job on the assembler(s).
+            using (var client = new SshClient(ip, genomeModel.SSHUser, genomeModel.SSHPass))
+            {
+                string localPath = "/tmp/Genome/Job" + genomeModel.uuid;
+                string dataPath = localPath + "/Data"; 
+                string configPath = localPath + "/Config"; 
+                string outputPath = localPath + "/Output";
+                string logPath = localPath + "/Logs";
+
+                // The outward facing (FTP) path to where the scripts are stored for download.
+                string initScriptUrl = "PATH TO THE LOCATION WHERE THE INIT SCRIPT WILL BE STORED.";
+                string masurcaScriptUrl = "PATH TO THE LOCATION WHERE THE MASUCRA SCRIPT WILL BE STORED.";
+                //string schedulerScriptUrl = "PATH TO THE LOCATION WHERE THE SCHEDULER SCRIPT WILL BE STORED.";
+
+                string initName = "init" + genomeModel.uuid;
+                string masurcaName = "masurca" + genomeModel.uuid;
+                string schedulerName = "scheduler" + genomeModel.uuid;
+
+                // Location we store the wget error log.
+                string wgetLogParameter = "-O " + logPath + "wget.error";
+
+                string jobNumber = "";
+                string jobName = genomeModel.SSHUser.ToString() + genomeModel.uuid.ToString();               
+
+                try
+                {
+                    client.Connect();
+
+                    if (errorCount == 0) { CreateDirectory(client, localPath, out error, "-p"); }
+                    if (errorCount == 0) { CreateDirectory(client, dataPath, out error, "-p"); }
+                    if (errorCount == 0) { CreateDirectory(client, configPath, out error, "-p"); }
+                    if (errorCount == 0) { CreateDirectory(client, outputPath, out error, "-p"); }
+                    if (errorCount == 0) { CreateDirectory(client, logPath, out error, "-p"); }
+
+                    if (errorCount == 0) { DownloadFile(client, initScriptUrl, out error, wgetLogParameter); }
+                    if (errorCount == 0) { DownloadFile(client, masurcaScriptUrl, out error, wgetLogParameter); }
+                    //if (errorCount == 0) { DownloadFile(client, schedulerScriptUrl, out error, wgetLogParameter); }
+
+                    if (errorCount == 0) { ChangePermissions(client, localPath, "777", out error, "-R"); }
+
+                    // Need to make sure we are in the location of the assemble.sh script that we need to reference in the AddJobToScheduler method.
+
+                    if (errorCount == 0) { AddJobToScheduler(client, logPath, COMPUTENODE1, jobName, out error); }
+
+                    if (errorCount == 0) { jobNumber = SetJobNumber(client, jobName, out error); }
+
+                    // There were no errors.
+                    if (errorCount == 0)
+                    {
+                        // Set the scheduler Job ID only if we are completely successful and the job has been added to the scheduler.
+                        genomeModel.SGEJobId = Convert.ToInt32(jobNumber);
+
+                        return true;
+                    }
+
+                    else
+                    {
+                        return false;
+                    }
+                }
+
+                // SSH Connection couldn't be established.
+                catch (SocketException e)
+                {
+                    error = "The SSH connection couldn't be established. " + e.Message;
+
+                    return false;
+                }
+
+                // Authentication failure.
+                catch (SshAuthenticationException e)
+                {
+                    error = "The credentials were entered incorrectly. " + e.Message;
+
+                    return false;
+                }
+
+                // The SSH connection was dropped.
+                catch (SshConnectionException e)
+                {
+                    error = "The connection was terminated unexpectedly. " + e.Message;
+
+                    return false;
+                }
+
+                catch(Exception e)
+                {
+                    error = "There was an uncaught exception. " + e.Message;
+
+                    return false;
+                }
+            }
+        }
 
         // Here we will use our account (or if we have to...the user's or we can curl) to grab the status of the job.
         // Returns TRUE if the update was successful. Returns FALSE if something went wrong.
 
         // TODO: Need to get update from admins on the issue with regards to inability to access the home directories of users. Maybe we can 
         // get a working directory with access for everyone.
+
+        // What we can do is set a WORKING DIRECTORY to be /tmp/Genome and then have the entire directory 777 so everyone has access. We then redirect all outputs to that location under unique folders and we will have access to those files.
+        // Step 1: Create Unique folders for output (error logs and eventual output).
+        // Step 2: chmod the directories to 777.
+        // Step 3: Initiate the job with the specific pathing variables.
         public bool UpdateJobStatus(out string error)
         {
             error = "";
@@ -117,91 +229,8 @@ namespace Genome.Helpers
                     // the number and then that is the current step.
                     string pattern = "step"; // This is the thing we search for in the output file to see our CURRENT step.
 
-                    string jobNumber = "";
+                    GetStatusOutput(client, jobName + ".o" + genomeModel.SGEJobId, pattern, out error);
 
-                    if (errorCount == 0) { CreateTestJob(client, jobName, out error); }
-                    if (errorCount == 0) { jobNumber = GetJobNumber(client, jobName, out error); }
-                    if (errorCount == 0) { GetStatusOutput(client, jobName + ".o" + jobNumber, pattern, out error); }
-
-                    if (errorCount == 0)
-                    {
-                        // Only if successful do we set the UUID to the BigDog job ID.
-                        genomeModel.uuid = Convert.ToInt32(jobNumber);
-
-                        return true;
-                    }
-
-                    else
-                    {
-                        return false;
-                    }
-                }
-
-                // SSH Connection couldn't be established.
-                catch (SocketException e)
-                {
-                    error = "The SSH connection couldn't be established. " + e.Message;
-
-                    return false;
-                }
-
-                // Authentication failure.
-                catch (SshAuthenticationException e)
-                {
-                    error = "The credentials were entered incorrectly. " + e.Message;
-
-                    return false;
-                }
-
-                // The SSH connection was dropped.
-                catch (SshConnectionException e)
-                {
-                    error = "The connection was terminated unexpectedly. " + e.Message;
-
-                    return false;
-                }
-            }
-        }
-
-        // Will return TRUE if successful connection and commands all run or FALSE if ANY error is encountered.
-        public bool CreateConnection(out string error)
-        {
-            error = "";
-            this.error = error;
-
-            // Need to create a directory here that is unique to the user if it doesn't already exist. 
-            // For instance: WORKINGDIRECTORY/Taylor/Job1 and /WORKINGDIRECTORY/Taylor/Job2 and so on.
-
-            // Then we wget all the scripts and store them in the WORKINGDIRECTORY/Taylor/Job1/Scripts.
-
-            // Then we call the WORKINGDIRECTORY/Taylor/Job1/Scripts/Scheduler.sh which will launch the init.sh script.
-
-            // The init.sh script will contain all the basic logic to download the data and initiate the job on the assembler(s).
-            using (var sshClient = new SshClient(ip, genomeModel.SSHUser, genomeModel.SSHPass))
-            {
-                string localPath = "Job" + genomeModel.uuid;
-                string dataPath = localPath + "/Data"; // Added dataPath variable - MG
-                string configPath = localPath + "/Config"; // Added configPath variable - MG
-                string outputPath = localPath + "/Output"; // Added outputPath variable - MG
-                string initName = "init" + genomeModel.uuid;
-                string masurcaName = "masurca" + genomeModel.uuid;
-                string schedulerName = "scheduler" + genomeModel.uuid;
-
-                try
-                {
-                    sshClient.Connect();
-
-                    if (errorCount == 0) { CreateDirectories(sshClient, localPath, dataPath, configPath, outputPath, out error); }
-
-                    if (errorCount == 0) { UploadInitScript(sshClient, path, initName, configPath, out error); }
-                    if (errorCount == 0) { UploadMasurcaScript(sshClient, path, masurcaName, configPath, out error); }
-                    if (errorCount == 0) { UploadSchedulerScript(sshClient, path, schedulerName, configPath, out error); }
-
-                    if (errorCount == 0) { ChangePermissions(sshClient, localPath, out error); }
-
-                    if (errorCount == 0) { AddJobToScheduler(sshClient, out error); }
-
-                    // There were no errors.
                     if (errorCount == 0)
                     {
                         return true;
@@ -239,70 +268,43 @@ namespace Genome.Helpers
             }
         }
 
-        // Create the job directory.
-        // Added 3 new parameters -MG
-        private void CreateDirectories(SshClient client, string localPath, string dataPath, string configPath, string outputPath, out string error)
+        private void ChangeNode(SshClient client, string node, out string error)
         {
-            using (var cmd = client.CreateCommand("mkdir -p " + localPath))
+            // USAGE: ssh compute-0-24/25
+            // Changes to the specific node that we are using.
+            using (var cmd = client.CreateCommand("ssh " + node))
             {
                 cmd.Execute();
-                CatchError(cmd, out error);
-            }
 
-            // Added following commands -MG
-            using (var cmd = client.CreateCommand("mkdir -p " + dataPath))
-            {
-                cmd.Execute();
-                CatchError(cmd, out error);
-            }
-
-            using (var cmd = client.CreateCommand("mkdir -p " + configPath))
-            {
-                cmd.Execute();
-                CatchError(cmd, out error);
-            }
-
-            using (var cmd = client.CreateCommand("mkdir -p " + outputPath))
-            {
-                cmd.Execute();
                 CatchError(cmd, out error);
             }
         }
 
-        // Upload the init script (initializes all other assembler scripts and grabs data at runtime).
-        private void UploadInitScript(SshClient client, string path, string initName, string configPath, out string error)
+        private void CreateDirectory(SshClient client, string directoryPath, out string error, string directoryParameters = "")
         {
-            using (var cmd = client.CreateCommand("wget -O " + configPath + "/" + initName + ".sh " + path))
+            // USAGE: mkdir /tmp/Genome/tflatt1029/Logs -p
+            using (var cmd = client.CreateCommand("mkdir " + directoryPath + " " + directoryParameters))
             {
                 cmd.Execute();
+
                 CatchError(cmd, out error);
             }
         }
 
-        // Upload the Masurca assembler script.
-        private void UploadMasurcaScript(SshClient client, string path, string masurcaName, string configPath, out string error)
+        private void DownloadFile(SshClient client, string URL, out string error, string parameters = "")
         {
-            using (var cmd = client.CreateCommand("wget -O " + configPath + "/" + masurcaName + ".txt " + path))
+            using (var cmd = client.CreateCommand("wget " + URL + " " + parameters))
             {
                 cmd.Execute();
+
                 CatchError(cmd, out error);
             }
         }
 
-        // Upload the scheduler script.
-        private void UploadSchedulerScript(SshClient client, string path, string schedulerName, string configPath, out string error)
+        private void ChangePermissions(SshClient client, string absolutePath, string newPermissions, out string error, string parameters = "")
         {
-            using (var cmd = client.CreateCommand("wget -0 " + configPath + "/" + schedulerName + ".sh " + path))
-            {
-                cmd.Execute();
-                CatchError(cmd, out error);
-            }
-        }
-
-        // Change the entire directory's contents to R/W/X.
-        private void ChangePermissions(SshClient client, string localPath, out string error)
-        {
-            using (var cmd = client.CreateCommand("chmod -R +rwx " + localPath))
+            // USAGE: chmod 777 /tmp/test -R
+            using (var cmd = client.CreateCommand("chmod " + " " + newPermissions + " " + absolutePath + " " + parameters))
             {
                 cmd.Execute();
                 CatchError(cmd, out error);
@@ -310,26 +312,17 @@ namespace Genome.Helpers
         }
 
         // Add the job to the scheduler.
-        private void AddJobToScheduler(SshClient client, out string error)
+        private void AddJobToScheduler(SshClient client, string logPath, string node, string jobName, out string error)
         {
-            using (var cmd = client.CreateCommand("./scheduler.sh"))
+            //qsub - pe make 20 - V - e / tmp / Genome / -o / tmp / Genome / -b y - l hostname = compute - 0 - 24 - N taylor1./ HelloWorld
+            using (var cmd = client.CreateCommand("qsub -pe make 20 -V -e " + logPath + " -o " + logPath + " -b y -l hostname=" + node + "-N " +  jobName + "./assemble.sh"))
             {
                 cmd.Execute();
                 CatchError(cmd, out error);
             }
         }
 
-        // Run init script, since scheduler is not implemented currently work in progress
-        private void RunInitScript(SshClient client, string initName, string configPath, out string error)
-        {
-            using (var cmd = client.CreateCommand("./scheduler.sh"))
-            {
-                cmd.Execute();
-                CatchError(cmd, out error);
-            }
-        }
-
-        private string GetJobNumber(SshClient client, string jobName, out string error)
+        private void SetJobNumber(SshClient client, string jobName, out string error)
         {
             // USAGE: qstat -f -u "USERNAME" | grep "JOBNAME"
             // -f: Full Format
@@ -349,14 +342,12 @@ namespace Genome.Helpers
 
                 if (errorCount == 0)
                 {
-                    //error = errorOutput;
-                    return jobNumber[1];
+                    genomeModel.SGEJobId = Convert.ToInt32(jobNumber[1]);
                 }
 
                 else
                 {
-                    //error = errorOutput;
-                    return "failed";
+                    error = "Failed to get the job ID for the job. Something went wrong with the scheduler. Please contact an administrator.";
                 }
             }
         }
@@ -372,23 +363,23 @@ namespace Genome.Helpers
                 cmd.Execute();
                 CatchError(cmd, out error);
             }
-        }
 
-        // Cooked method for demo
-        //private void RunDemo(SshClient client)
-        //{
-        //    using (var cmd = client.CreateCommand("cd ~/Demo/Output && /share/bio/masurca/bin/masurca ~/Demo/Config/config.txt"))
-        //    {
-        //        cmd.Execute();
-        //        CatchError(cmd, out error);
-        //    }
-        //    using (var cmd = client.CreateCommand("cd ~/Demo/Output && ./test.sh"))
-        //    {
-        //        cmd.Execute();
-        //        CatchError(cmd, out error);
-        //    }
-        //    client.Disconnect();
-        //}
+            // OR, we check for the files in the CWD and compare those to a dictionary of known steps and return the current step.
+            // A quick and dirty way to check for this is to simply find a known file and if it exists, we are in that step or after that step.
+            // Then we need to check for the next file until we reach an error (no file found or something like that).
+
+            using (var cmd = client.CreateCommand("grep " + step1File + " | wc -l"))
+            {
+                cmd.Execute();
+
+                if(Convert.ToInt32(cmd.Result.ToString()) > 0)
+                {
+                    //Step 1 achieved
+                }
+
+                CatchError(cmd, out error);
+            }
+        }
 
         private void CatchError(SshCommand cmd, out string error)
         {
