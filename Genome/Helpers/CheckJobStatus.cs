@@ -5,15 +5,16 @@ using System;
 using System.Text.RegularExpressions;
 using Renci.SshNet.Common;
 using System.Net.Sockets;
+using System.Linq;
 
 namespace Genome.Helpers
 {
     public class CheckJobStatus
     {
-        private string error = "";
         private string ip = "";
+        private GenomeAssemblyDbContext db = new GenomeAssemblyDbContext();
 
-        public CheckJobStatus(string ip, string path, out string error)
+        public CheckJobStatus(string ip, out string error)
         {
             error = "";
 
@@ -50,7 +51,26 @@ namespace Genome.Helpers
 
                     string workingDirectory = "/share/scratch/Genome/";
 
-                    LinuxCommands.ChangeDirectory(client, workingDirectory, out error);
+                    using (GenomeAssemblyDbContext db = new GenomeAssemblyDbContext())
+                    {
+                        // Find all of the jobs that are currently running and return their SGEJobId.
+                        //var jobIds = (from j in db.GenomeModels
+                        //              where j.JobStatus.Equals("Running")
+                        //              select j.SGEJobId);
+
+                        var jobInfo = (from j in db.GenomeModels
+                                       where j.JobStatus.Equals("Running")
+                                       select new { j.uuid, j.SGEJobId });
+
+                        List<Tuple<int, int>> list = new List<Tuple<int, int>>();
+
+                        foreach (var job in jobInfo)
+                        {
+                            list.Add(Tuple.Create(job.uuid, job.SGEJobId));
+                        }
+
+                        GetCurrentStep(client, list, out error);
+                    }
 
                     GetCurrentStep(client, out error);
 
@@ -139,7 +159,7 @@ namespace Genome.Helpers
 
         // This will change depending on how we approach doing the check for the status.
         // Returns the current step of the job or -1 if there was an error encountered.
-        private int GetCurrentStep(SshClient client, out string error)
+        private int GetCurrentStep(SshClient client, List<Tuple<int, int>> jobInfo, out string error)
         {
             error = "";
 
@@ -155,20 +175,35 @@ namespace Genome.Helpers
 
             int currentStep = 0;
 
-            foreach (var item in stepList)
+            // Here item1 = uuid and item2 = sgejobid.
+            foreach(var job in jobInfo)
             {
-                using (var cmd = client.CreateCommand("ls -l | grep " + item.Value + " | wc -l"))
+                 string workingDirectory = "/share/scratch/Genome/Job" + job.Item1;
+
+                LinuxCommands.ChangeDirectory(client, workingDirectory, out error);
+
+                foreach (var item in stepList)
                 {
-                    cmd.Execute();
+                    using (var cmd = client.CreateCommand("ls -l | grep " + item.Value + " | wc -l"))
+                    {
+                        cmd.Execute();
 
-                    // File found.
-                    if (Convert.ToInt32(cmd.Result.ToString()) > 0)
-                        currentStep = item.Key;
+                        // File found.
+                        if (Convert.ToInt32(cmd.Result.ToString()) > 0)
+                            currentStep = item.Key;
 
-                    if (LinuxErrorHandling.CommandError(cmd, out error) == true)
-                        break;
+                        if (LinuxErrorHandling.CommandError(cmd, out error) == true)
+                            break;
+                    }
+                }
+
+                // If the final file set has been created, we need to check to see if the job is still running or if it has completed.
+                if (currentStep == stepList.Last().Key)
+                {
+
                 }
             }
+
 
             // Now if the currentStep is the LAST step, we need to check if it is done. This can be done a couple different ways:
             // 1) Create a LINQ command that parses the genome database grabbing only the jobs that are running (aka not finished), 

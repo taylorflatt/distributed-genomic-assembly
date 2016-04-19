@@ -209,6 +209,10 @@
     <Compile Include="Migrations\201604180418010_sgejobid.Designer.cs">
       <DependentUpon>201604180418010_sgejobid.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201604182328263_completeddate.cs" />
+    <Compile Include="Migrations\201604182328263_completeddate.Designer.cs">
+      <DependentUpon>201604182328263_completeddate.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\AccountViewModels.cs" />
     <Compile Include="Models\GenomeModel.cs" />
@@ -311,6 +315,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201604180418010_sgejobid.resx">
       <DependentUpon>201604180418010_sgejobid.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201604182328263_completeddate.resx">
+      <DependentUpon>201604182328263_completeddate.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>

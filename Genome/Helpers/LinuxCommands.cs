@@ -21,6 +21,17 @@ namespace Genome.Helpers
             }
         }
 
+        protected internal static bool JobRunning(SshClient client, int jobId, out string error)
+        {
+            // USAGE: cd /opt/testDirectory
+            using (var cmd = client.CreateCommand("cd " + newDirectory + " " + parameters))
+            {
+                cmd.Execute();
+
+                LinuxErrorHandling.CommandError(cmd, out error);
+            }
+        }
+
         protected internal static void ChangeDirectory(SshClient client, string newDirectory, out string error, string parameters = "")
         {
             // USAGE: cd /opt/testDirectory
