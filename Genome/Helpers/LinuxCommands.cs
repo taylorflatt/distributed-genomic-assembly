@@ -21,6 +21,21 @@ namespace Genome.Helpers
             }
         }
 
+        protected internal static void CompressOutputs(SshClient client, string outputFile, string sourceFolder, out string error, string parameters = "")
+        {
+            // USAGE (optimal run): zip -9 -y -r -q file.zip folder/
+            // -9 optimal compression speed
+            // -y store symbolic links
+            // -r recursively traverse the directory
+            // -q quiet mode 
+            using (var cmd = client.CreateCommand("zip " + outputFile + sourceFolder + parameters))
+            {
+                cmd.Execute();
+
+                LinuxErrorHandling.CommandError(cmd, out error);
+            }
+        }
+
         // Returns true if the job is currently running or false if the job isn't running/if an error exists.
         protected internal static bool JobRunning(SshClient client, int jobId, out string error)
         {
@@ -63,6 +78,7 @@ namespace Genome.Helpers
                     // The error log is empty and so we had a successful run.
                     if (Convert.ToInt32(cmd.Result) > 0)
                     {
+                        // We need to compress their data on bigdog prior to sending it.
                         // We need to download the data from bigdog back to the webserver under the public FTP.
                         // We need to make the download link accessible (or at least known) to the user.
                         // We need to now notify the user that their download is complete.
@@ -72,6 +88,7 @@ namespace Genome.Helpers
                     // There is something in the error log, we had an unsuccessful run.
                     else
                     {
+                        // We need to compress their data on bigdog prior to sending it.
                         // We need to donwload the data from bigdog back to the webserver under the public FTP.
                         // We need to add a README file or at least specify that the data located therein is not complete.
                         // We need to make the download link accessible (or at least known) to the user.
