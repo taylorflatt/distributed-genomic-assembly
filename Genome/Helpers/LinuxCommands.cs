@@ -21,14 +21,64 @@ namespace Genome.Helpers
             }
         }
 
+        // Returns true if the job is currently running or false if the job isn't running/if an error exists.
         protected internal static bool JobRunning(SshClient client, int jobId, out string error)
         {
-            // USAGE: cd /opt/testDirectory
-            using (var cmd = client.CreateCommand("cd " + newDirectory + " " + parameters))
+            // USAGE: qstat -j 5120
+            using (var cmd = client.CreateCommand("qstat -j " + jobId))
             {
                 cmd.Execute();
 
-                LinuxErrorHandling.CommandError(cmd, out error);
+                // So long as there isn't an error...
+                if(LinuxErrorHandling.CommandError(cmd, out error) == false)
+                {
+                    if (cmd.Result.Contains("Following jobs do not exist:"))
+                        return false;
+
+                    else
+                        return true;
+                }
+
+                // Need to come back to this to address better exception handling. This should be fine in the meantime.
+                else
+                {
+                    throw new Exception();
+                }
+            }
+        }
+
+        protected internal static void CheckJobError(SshClient client, int jobId, string workingDirectory, out string error)
+        {
+            ChangeDirectory(client, workingDirectory + "/Logs", out error);
+
+            // USAGE: ls -l | grep e2014 | cat `awk '{print $9}'`
+            // This effectively finds the error log in the cwd then prints the word count to stdout.
+            using (var cmd = client.CreateCommand("ls -l | grep e" + jobId + " " + "| cat `awk '{print $9}'` | wc -w")) 
+            {
+                cmd.Execute();
+
+                // Provided there was no error, we now need to see if if there are any characters in that file. If ANY, we have a problem.
+                if (LinuxErrorHandling.CommandError(cmd, out error) == false)
+                {
+                    // The error log is empty and so we had a successful run.
+                    if (Convert.ToInt32(cmd.Result) > 0)
+                    {
+                        // We need to download the data from bigdog back to the webserver under the public FTP.
+                        // We need to make the download link accessible (or at least known) to the user.
+                        // We need to now notify the user that their download is complete.
+                        // We need to mark the job as completed (job status = completed/finished).
+                    }
+
+                    // There is something in the error log, we had an unsuccessful run.
+                    else
+                    {
+                        // We need to donwload the data from bigdog back to the webserver under the public FTP.
+                        // We need to add a README file or at least specify that the data located therein is not complete.
+                        // We need to make the download link accessible (or at least known) to the user.
+                        // We need to now notify the user that their download is complete and that an error occured.
+                        // We need to mark the job as error (job status = error).
+                    }
+                }
             }
         }
 
@@ -91,7 +141,8 @@ namespace Genome.Helpers
         // Add the job to the scheduler.
         protected internal static void AddJobToScheduler(SshClient client, string logPath, string node, string jobName, out string error)
         {
-            // USAGE: qsub - pe make 20 - V - e / tmp / Genome / -o / tmp / Genome / -b y - l hostname = compute - 0 - 24 - N taylor1./ HelloWorld
+            // USAGE: qsub -pe make 20 -V -e /tmp/Genome/ -o/tmp/Genome/ -b y -l hostname=compute-0-24 -N taylor1 ./HelloWorld
+            // qsub -pe make 20 -V  -b y -l hostname=compute-0-24 -cwd -N taylor1 ./HelloWorld
             using (var cmd = client.CreateCommand("qsub -pe make 20 -V -e " + logPath + " -o " + logPath + " -b y -l hostname=" + node + "-N " + jobName + "./assemble.sh"))
             {
                 cmd.Execute();

@@ -200,7 +200,11 @@ namespace Genome.Helpers
                 // If the final file set has been created, we need to check to see if the job is still running or if it has completed.
                 if (currentStep == stepList.Last().Key)
                 {
-
+                    // The job is NOT running we need to check the stderr file to make sure there aren't any errors. Otherwise we don't care.
+                    if(LinuxCommands.JobRunning(client, job.Item2, out error) == false)
+                    {
+                        LinuxCommands.CheckJobError(client, job.Item2, workingDirectory, out error);
+                    }
                 }
             }
 
