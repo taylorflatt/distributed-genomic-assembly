@@ -201,22 +201,21 @@ namespace Genome.Helpers
                 if (currentStep == stepList.Last().Key)
                 {
                     // The job is NOT running we need to check the stderr file to make sure there aren't any errors. Otherwise we don't care.
-                    if(LinuxCommands.JobRunning(client, job.Item2, out error) == false)
+                    if (LinuxCommands.JobRunning(client, job.Item2, out error) == false)
                     {
                         LinuxCommands.CheckJobError(client, job.Item2, workingDirectory, out error);
                     }
+
+                    else
+                        return currentStep;
                 }
+
+                else if (string.IsNullOrEmpty(error))
+                    return currentStep;
+
+                else
+                    return -1;
             }
-
-
-            // Now if the currentStep is the LAST step, we need to check if it is done. This can be done a couple different ways:
-            // 1) Create a LINQ command that parses the genome database grabbing only the jobs that are running (aka not finished), 
-            // and just check those for completion.
-            if (string.IsNullOrEmpty(error))
-                return currentStep;
-
-            else
-                return -1;
         }
     }
 }
