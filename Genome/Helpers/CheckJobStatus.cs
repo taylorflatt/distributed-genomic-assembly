@@ -202,20 +202,18 @@ namespace Genome.Helpers
                 {
                     // The job is NOT running we need to check the stderr file to make sure there aren't any errors. Otherwise we don't care.
                     if (LinuxCommands.JobRunning(client, job.Item2, out error) == false)
-                    {
                         LinuxCommands.CheckJobError(client, job.Item2, workingDirectory, out error);
-                    }
 
                     else
                         return currentStep;
                 }
-
-                else if (string.IsNullOrEmpty(error))
-                    return currentStep;
-
-                else
-                    return -1;
             }
+
+            if (string.IsNullOrEmpty(error))
+                return currentStep;
+
+            else
+                return -1;
         }
     }
 }
