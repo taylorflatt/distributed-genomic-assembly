@@ -6,7 +6,7 @@ namespace Genome.Helpers
     public class LinuxCommands
     {
         // Returns the node load or -1 if the command was unsuccessful.
-        protected internal static int GetNodeLoad(SshClient client, string node, out string error)
+        protected internal static double GetNodeLoad(SshClient client, string node, out string error)
         {
             // We only want to get the load average of the specific node. 
             using (var cmd = client.CreateCommand("qstat -f | grep " + node + " | awk '{print $4;}'"))
@@ -14,7 +14,7 @@ namespace Genome.Helpers
                 cmd.Execute();
 
                 if(LinuxErrorHandling.CommandError(cmd, out error) == false)
-                    return Convert.ToInt32(cmd.Result);
+                    return Convert.ToDouble(cmd.Result);
 
                 else
                     return -1;

@@ -83,11 +83,12 @@ namespace Genome.Helpers
         public bool CreateJob(out string error)
         {
             error = "";
+            // UUID is not being assigned before it hits this method so we have a problem. We need to save it to the DB prior to hitting this method but that causes other problems.......need to look into this. We can probably find a work around by checking the db and seeing the previous uuid and just incrementing the previous uuid.
 
             // The init.sh script will contain all the basic logic to download the data and initiate the job on the assembler(s).
             using (var client = new SshClient(ip, genomeModel.SSHUser, genomeModel.SSHPass))
             {
-                string workingDirectory = "/share/scratch/Genome/Job" + genomeModel.uuid;
+                string workingDirectory = "/share/scratch/tflatt/Job" + genomeModel.uuid; // this will eventually be /share/scratch/Genome/Job
                 string dataPath = workingDirectory + "/Data";
                 string configPath = workingDirectory + "/Config"; 
                 string outputPath = workingDirectory + "/Output";
@@ -104,7 +105,10 @@ namespace Genome.Helpers
                 string wgetLogParameter = "-O " + logPath + "wget.error";
 
                 string jobName = genomeModel.SSHUser.ToString() + genomeModel.uuid.ToString();
-                string node = COMPUTENODE1; // default         
+                string node = COMPUTENODE1; // default  
+
+                // The split up list of each data source location.
+                List<string> dataSources = HelperMethods.ParseUrlString(genomeModel.DataSource);
 
                 try
                 {
@@ -116,8 +120,21 @@ namespace Genome.Helpers
                     if (string.IsNullOrEmpty(error)) { LinuxCommands.CreateDirectory(client, outputPath, out error, "-p"); }
                     if (string.IsNullOrEmpty(error)) { LinuxCommands.CreateDirectory(client, logPath, out error, "-p"); }
 
+                    if (string.IsNullOrEmpty(error)) { LinuxCommands.ChangeDirectory(client, configPath, out error); }
+
+                    // This command has NOT been tested.
                     if (string.IsNullOrEmpty(error)) { LinuxCommands.DownloadFile(client, initScriptUrl, out error, wgetLogParameter); }
+
+                    // This command has NOT been tested.
                     if (string.IsNullOrEmpty(error)) { LinuxCommands.DownloadFile(client, masurcaScriptUrl, out error, wgetLogParameter); }
+
+                    if (string.IsNullOrEmpty(error)) { LinuxCommands.ChangeDirectory(client, dataPath, out error); }
+
+                    // Now we need to download each of the data files the user has supplied.
+                    foreach(var url in dataSources)
+                    {
+                        if (string.IsNullOrEmpty(error)) { LinuxCommands.DownloadFile(client, url, out error, wgetLogParameter); }
+                    }
 
                     if (string.IsNullOrEmpty(error)) { LinuxCommands.ChangePermissions(client, workingDirectory, "777", out error, "-R"); }
 
@@ -136,6 +153,7 @@ namespace Genome.Helpers
                     // anything but the login node. So we might need to investigate the way in which we store the information.
                     if(string.IsNullOrEmpty(error)) { LinuxCommands.ChangeDirectory(client, outputPath, out error); }
 
+                    // This command has NOT been tested. We may need an absolute path rather than the relative one that we reference in this method since we switch directories to the output path directory.
                     if (string.IsNullOrEmpty(error)) { LinuxCommands.AddJobToScheduler(client, logPath, node, jobName, out error); }
 
                     if (string.IsNullOrEmpty(error)) { SetJobNumber(client, jobName, out error); }

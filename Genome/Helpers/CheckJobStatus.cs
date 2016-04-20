@@ -72,8 +72,6 @@ namespace Genome.Helpers
                         GetCurrentStep(client, list, out error);
                     }
 
-                    GetCurrentStep(client, out error);
-
                     if (string.IsNullOrEmpty(error))
                         return true;
 
@@ -122,7 +120,7 @@ namespace Genome.Helpers
 
                     LinuxCommands.ChangeDirectory(client, workingDirectory + uuid, out error);
                     
-                    GetCurrentStep(client, out error);
+                    //GetCurrentStep(client, out error);
 
                     if (string.IsNullOrEmpty(error))
                         return true;

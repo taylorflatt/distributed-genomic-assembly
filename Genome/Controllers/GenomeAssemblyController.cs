@@ -68,6 +68,8 @@ namespace Genome.Controllers
                     //SSHConfig ssh = new SSHConfig("login-0-0.research.siu.edu", genomeModel, builder.InitConfigURL);
                     SSHConfig ssh = new SSHConfig("login-0-0.research.siu.edu", genomeModel, "", out error);
 
+                    ssh.CreateJob(out error);
+
                     //ssh.CreateConnection(out error);
 
                     // No error so proceed.
