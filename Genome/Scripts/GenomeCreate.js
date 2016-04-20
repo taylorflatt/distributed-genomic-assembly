@@ -38,8 +38,9 @@ function Step2MoveForward() {
     // Only if there are more text boxes entered.
     if (x > 1)
     {
-        for (var i = 2; i <= x; i++)
+        for (var i = 1; i < x; i++)
         {
+            // They added a textbox and didn't enter anything in it.
             if (document.getElementById("url_" + i).value == "")
             {
                 document.getElementById("DataSourceErrorMsg_" + i).innerHTML = "You need to enter a data source!";
@@ -47,17 +48,19 @@ function Step2MoveForward() {
                 invalidURL++;
             }
 
+            // They added a textbox but entered something (anything) into it.
             else
             {
                 document.getElementById("DataSourceErrorMsg_" + i).innerHTML = "";
             }
         }
 
-        if (invalidURL == 0)
-        {
-            document.getElementById("DataSourceErrorMsg_" + x).innerHTML = "";
-            invalidURL = 0;
-        }
+        // If there are no errors, make sure the the error message for the first textbox is nulled.
+        //if (invalidURL == 0)
+        //{
+        //    document.getElementById("DataSourceErrorMsg_" + x).innerHTML = "";
+        //    invalidURL = 0;
+        //}
     }
 
 
@@ -252,7 +255,8 @@ function DisplayFinalStepError() {
 // Need to fix the styling issue on the textbox so it isn't static. On time crunch so I'm statically assigning values.
 function addURLBox() {
     document.getElementById("RemoveURLErrorMsg").innerHTML = "";
-    $('#addUrlBtn').append("<label id='lab_" + ++x + "' class='control-label col-md-3' style='padding-top: 8px;'> Data Location (URL): </label><div class='row' id='row_" + x + "' style='padding-top: 8px;'><div class='col-md-4' id='col_" + x + "'><input type='text' id='url_" + x + "' value='' class='form-control text-box single-line' style='width: 229.984px;' type='text'></div><div id='DataSourceErrorMsg_" + x + "' class='col-md-4 text-danger'></div></div>");
+    $('#addUrlBtn').append("<label id='lab_" + x + "' class='control-label col-md-3' style='padding-top: 8px;'> Data Location (URL): </label><div class='row' id='row_" + x + "' style='padding-top: 8px;'><div class='col-md-4' id='col_" + x + "'><input type='text' id='url_" + x + "' class='form-control text-box single-line' style='width: 229.984px;' type='text'></div><div id='DataSourceErrorMsg_" + x + "' class='col-md-4 text-danger'></div></div>");
+    x++;
 }
 
 function removeURLBox() {
@@ -282,11 +286,13 @@ function isURL(url) {
 
 function concatURLs() {
 
-    for(var i = 2; i <= x; i++ )
-    {
-        var dataSource = document.getElementById("DataSource").value;
-        var textboxValue = document.getElementById("url_" + i).value;
-        document.getElementById("DataSource").value = dataSource + "," + textboxValue;
+    // Only if there is more than a single textbox do we need to concat the textboxes.
+    if (x > 1) {
+        for (var i = 1; i < x; i++) {
+            var dataSource = document.getElementById("url_0").value; // Get first textbox.
+            var textboxValue = document.getElementById("url_" + i).value; // Get second text box.
+            document.getElementById("url_0").value = dataSource + "," + textboxValue; // Combine their values delineated by a comma.
+        }
     }
 }
 
