@@ -18,6 +18,18 @@ namespace Genome.Controllers
         private ApplicationSignInManager _signInManager;
         private ApplicationUserManager _userManager;
 
+        public ActionResult ViewJobs()
+        {
+            using (GenomeAssemblyDbContext db = new GenomeAssemblyDbContext())
+            {
+                var jobList = from jobs in db.GenomeModels
+                              where jobs.CreatedBy.Equals(User.Identity.Name)
+                              select jobs;
+
+                return View(jobList.ToList());
+            }
+        }
+
         public ActionResult VerifyBigDogAccount()
         {
             return View();

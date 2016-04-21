@@ -1,0 +1,55 @@
+﻿@model IEnumerable<Genome.Models.GenomeModel>
+
+@{
+    ViewBag.Title = "My Jobs";
+}
+
+<h2>My Jobs</h2>
+
+<p>
+    @Html.ActionLink("Create New", "Create")
+</p>
+<table class="table">
+    <tr>
+        <th>
+            @Html.DisplayNameFor(model => model.SGEJobId)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.DataSource)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.CreatedDate)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.CompletedDate)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.JobStatus)
+        </th>
+        <th>Job Information</th>
+    </tr>
+
+@foreach (var item in Model) {
+    <tr>
+        <td>
+            @Html.DisplayFor(modelItem => item.SGEJobId)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.DataSource)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.CreatedDate)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.CompletedDate)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.JobStatus)
+        </td>
+        <td>
+            @Html.ActionLink("Details", "Details", "GenomeAssembly", new { id=item.uuid }, "")
+        </td>
+    </tr>
+}
+
+</table>
