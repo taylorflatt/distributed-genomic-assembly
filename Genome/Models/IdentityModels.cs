@@ -10,6 +10,7 @@ namespace Genome.Models
     public class ApplicationUser : IdentityUser
     {
         public int DawgTag { get; set; }
+        public bool ClusterAccountVerified { get; set; }
 
         public async Task<ClaimsIdentity> GenerateUserIdentityAsync(UserManager<ApplicationUser> manager)
         {

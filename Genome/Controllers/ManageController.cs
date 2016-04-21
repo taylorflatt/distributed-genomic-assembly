@@ -7,6 +7,8 @@ using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.Owin;
 using Microsoft.Owin.Security;
 using Genome.Models;
+using Genome.Helpers;
+using Microsoft.AspNet.Identity.EntityFramework;
 
 namespace Genome.Controllers
 {
@@ -15,6 +17,72 @@ namespace Genome.Controllers
     {
         private ApplicationSignInManager _signInManager;
         private ApplicationUserManager _userManager;
+
+        public ActionResult VerifyBigDogAccount()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<ActionResult> VerifyBigDogAccount(string SSHUser, string SSHPass)
+        {
+            string error = "";
+            string permissionsError = "";
+            string quotaError = "";
+            int quotaAmount = 0;
+            //ViewBag.ShowResults = null; // Need to null this so if the user tries to check again in the SAME session and there is an error it won't display.
+
+            // Make sure there is actually information. Otherwise we just return them to the form.
+            if (SSHUser != "" && SSHPass != "")
+            {
+                // Now we need to connect to bigdog and run the quota call and run the permissions call.
+                SSHConfig ssh = new SSHConfig("login-0-0.research.siu.edu", out error);
+                ssh.VerifyPermissions(SSHUser, SSHPass, out permissionsError);
+                ssh.VerifyQuota(SSHUser, SSHPass, out quotaError, out quotaAmount);
+
+                // There was a problem with their permissions. Report it.
+                if (!string.IsNullOrEmpty(permissionsError))
+                    ViewBag.PermissionError = permissionsError;
+
+                else
+                    ViewBag.PermissionsSuccess = "The permissions validated successfully!";
+
+                // There was a problem with their quota. Report it.
+                if (!string.IsNullOrEmpty(quotaError))
+                    ViewBag.QuotaError = quotaError;
+
+                else
+                    ViewBag.QuotaSuccess = "You have sufficient quota!";
+
+                if (string.IsNullOrEmpty(permissionsError) && string.IsNullOrEmpty(quotaError))
+                {
+                    // Get the user.
+                    ApplicationUser Model = UserManager.FindById(User.Identity.GetUserId());
+
+                    // Update the account to be verified.
+                    Model.ClusterAccountVerified = true;
+
+                    // Save the user information.
+                    IdentityResult result = await UserManager.UpdateAsync(Model);
+
+                    if (quotaAmount == 0)
+                        ViewBag.QuotaAmount = "Unknown. Something went wrong.";
+
+                    else
+                        ViewBag.QuotaAmount = quotaAmount + "Gb";
+
+                    ViewBag.ShowResults = "Show Results";
+                }
+
+                return View();
+            }
+
+            else
+            {
+                ViewBag.Error = "The username and password field cannot be blank.";
+                return View();
+            }
+        }
 
         public ManageController()
         {

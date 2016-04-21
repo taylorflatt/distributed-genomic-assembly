@@ -1,113 +1,354 @@
-﻿using System;
+﻿using Renci.SshNet;
+using Genome.Models;
 using System.Collections.Generic;
-using Renci.SshNet;
-using System.Threading;
+using System;
+using System.Text.RegularExpressions;
+using Renci.SshNet.Common;
+using System.Net.Sockets;
+using Genome.Helpers;
 
+/// <summary>
+/// TODO: Output ANY error information to a log file with the user's details and session data. Should probably be done in the controller.
+/// TODO: Get update with regards to permission issues when reading other user's directories for status updates.
+/// </summary>
 namespace Genome.Helpers
 {
     public class SSHConfig
     {
-        private string userName = "";
-        private string password = "";
-        private string ip = "";
+        private string error = "";
 
-        private string configUrl = "";
-        private string schedulerUrl = "";
-        private string dataUrl = "";
         private static string COMPUTENODE1 = "compute-0-24";
         private static string COMPUTENODE2 = "compute-0-25";
 
-        public SSHConfig(string ip, string userName, string password)
-        {
-            this.userName = userName;
-            this.password = password;
-            this.ip = ip;
+        private string ip; // To login node.
+        private GenomeModel genomeModel;
+        private string path; // marty added this?
 
-            CreateConnection();
+        public SSHConfig(string ip, out string error)
+        {
+            error = "";
+            this.ip = ip;
         }
 
-        private void CreateConnection()
+        public bool VerifyQuota(string SSHUser, string SSHPass, out string error, out int quotaAmount)
         {
-            // Need to create a directory here that is unique to the user if it doesn't already exist. 
-            // For instance: WORKINGDIRECTORY/Taylor/Job1 and /WORKINGDIRECTORY/Taylor/Job2 and so on.
+            quotaAmount = 0;
+            error = "";
 
-            // Then we wget all the scripts and store them in the WORKINGDIRECTORY/Taylor/Job1/Scripts.
-
-            // Then we call the WORKINGDIRECTORY/Taylor/Job1/Scripts/Scheduler.sh which will launch the init.sh script.
-
-            // The init.sh script will contain all the basic logic to download the data and initiate the job on the assembler(s).
-            using (var sshClient = new SshClient(ip, userName, password))
+            using (var client = new SshClient(ip, SSHUser, SSHPass))
             {
-                sshClient.Connect();
-                using (var cmd = sshClient.CreateCommand("wget http://releases.ubuntu.com/14.04.4/ubuntu-14.04.4-desktop-amd64.iso?_ga=1.218458457.1946723420.1457237672"))
+                try
                 {
-                    cmd.Execute();
-                    Console.WriteLine("Command>" + cmd.CommandText);
-                    Console.WriteLine("Return Value = {0}", cmd.ExitStatus);
+                    client.Connect();
+
+                    int minimumQuota = 50; // Minimum quota size (in Gb) the user can have.
+
+                    if (string.IsNullOrEmpty(error) && LinuxCommands.CheckQuota(client, minimumQuota, out error, out quotaAmount))
+                        return true;
+
+                    else
+                        return false;
                 }
-                sshClient.Disconnect();
+
+                // SSH Connection couldn't be established.
+                catch (SocketException e)
+                {
+                    error = "The SSH connection couldn't be established. " + e.Message;
+
+                    return false;
+                }
+
+                // Authentication failure.
+                catch (SshAuthenticationException e)
+                {
+                    error = "The credentials were entered incorrectly. " + e.Message;
+
+                    return false;
+                }
+
+                // The SSH connection was dropped.
+                catch (SshConnectionException e)
+                {
+                    error = "The connection was terminated unexpectedly. " + e.Message;
+
+                    return false;
+                }
+
+                catch (Exception e)
+                {
+                    error = "There was an uncaught exception. " + e.Message;
+
+                    return false;
+                }
             }
         }
 
-        //public SSHConfig(string configUrl, string schedulerUrl, string dataUrl)
-        //{
-        //    this.configUrl = configUrl;
-        //    this.schedulerUrl = schedulerUrl;
-        //    this.dataUrl = dataUrl;
-        //}
+        // We attempt to create a directory 
+        public bool VerifyPermissions(string SSHUser, string SSHPass, out string error)
+        {
+            error = "";
 
-        //public void CreateConnectionThread()
-        //{
-        //    //ThreadStart job = new ThreadStart();
-        //    Thread thread = new Thread(() => CreateConnection(configUrl, schedulerUrl, dataUrl));
-        //    //thread.IsBackground = true;
-        //    thread.Start();
-        //}
+            using (var client = new SshClient(ip, SSHUser, SSHPass))
+            {
+                try
+                {
+                    client.Connect();
 
-        //private void CreateConnection(List<string> configUrl, string schedulerUrl, List<string> dataUrl)
+                    string testDirectory = "/share/scratch/tflatt/testPermissions";
+
+                    LinuxCommands.CreateDirectory(client, testDirectory, out error);
+
+                    // There is an error. Here we specifically overwrite the error with our own. Since ANY write error here is a problem.
+                    if (!string.IsNullOrEmpty(error))
+                    {
+                        error = "You do not have sufficient permissions to write to the proper directories. Please contact the BigDog Linux team about addressing this problem.";
+
+                        return false;
+                    }
+
+                    else
+                    {
+                        // We want to remove the directory we just created as a test. We recursively force the deletion.
+                        LinuxCommands.RemoveFile(client, testDirectory, out error, "-rf");
+
+                        return true;
+                    }
+                }
+
+                // SSH Connection couldn't be established.
+                catch (SocketException e)
+                {
+                    error = "The SSH connection couldn't be established. " + e.Message;
+
+                    return false;
+                }
+
+                // Authentication failure.
+                catch (SshAuthenticationException e)
+                {
+                    error = "The credentials were entered incorrectly. " + e.Message;
+
+                    return false;
+                }
+
+                // The SSH connection was dropped.
+                catch (SshConnectionException e)
+                {
+                    error = "The connection was terminated unexpectedly. " + e.Message;
+
+                    return false;
+                }
+
+                catch (Exception e)
+                {
+                    error = "There was an uncaught exception. " + e.Message;
+
+                    return false;
+                }
+            }
+        }
+
+        public SSHConfig(string ip, GenomeModel genomeModel, string path, out string error)
+        {
+            error = "";
+
+            this.ip = ip;
+            this.genomeModel = genomeModel;
+            this.path = path;
+
+            //// This is for TESTING PURPOSES ONLY. It is commented out otherwise.
+            //using (var sshClient = new SshClient("fake", genomeModel.SSHUser, genomeModel.SSHPass))
+            //{
+            //    try
+            //    {
+            //        sshClient.Connect();
+
+            //        string jobName = genomeModel.SSHUser.ToString() + genomeModel.uuid.ToString();
+            //        //string pattern = "step";
+
+            //        if (errorCount == 0) { CreateTestJob(sshClient, jobName, out error); }
+
+            //        //GetStatusOutput(sshClient, "[job_name].o[job_number]", pattern);
+            //    }
+
+            //    // SSH Connection couldn't be established.
+            //    catch (SocketException e)
+            //    {
+            //        error = "The SSH connection couldn't be established. " + e.Message;
+            //    }
+
+            //    // Authentication failure.
+            //    catch(SshAuthenticationException e)
+            //    {
+            //        error = "The credentials were entered incorrectly. " + e.Message;
+            //    }
+
+            //    // The SSH connection was dropped.
+            //    catch(SshConnectionException e)
+            //    {
+            //        error = "The connection was terminated unexpectedly. " + e.Message;
+            //    }
+            //}
+        }
+
+        //// Debug purposes only.
+        //private void CreateTestJob(SshClient client, string jobName, out string error)
         //{
-        //    using (var sshClient = new SshClient("ip", "username", "password"))
+        //    // qsub -pe make 20 -V -e /tmp/Genome/ -o /tmp/Genome/ -b y -l hostname=compute-0-24 -N taylor1 ./HelloWorld
+        //    using (var cmd = client.CreateCommand("qub -pe make 20 -V -b y -cwd -l hostname=" + COMPUTENODE1 + " -N " + jobName + " ./HelloWorld"))
         //    {
-        //        sshClient.Connect();
-        //        using (var cmd = sshClient.CreateCommand("mkdir -p /tmp/uploadtest && chmod +rw /tmp/uploadtest"))
-        //        {
-        //            cmd.Execute();
-        //            Console.WriteLine("Command>" + cmd.CommandText);
-        //            Console.WriteLine("Return Value = {0}", cmd.ExitStatus);
-        //        }
+        //        cmd.Execute();
 
-        //        // May not be needed once scheduler is running
-        //        sshClient.CreateCommand("ssh " + COMPUTENODE1);
-
-        //        foreach (string config in configUrl)
-        //        {
-        //            sshClient.CreateCommand("wget \"" + config + "\"").Execute();
-        //        }
-
-        //        //Create working directory
-        //        //Need to make a directory: mkdir //share/GenomeAssembly/{username}/{job#}
-        //        sshClient.CreateCommand();
-
-
-        //  The following will be changed with an init script on big dog itself 
-        //        for (int i = 0; i < dataUrl.Count; i++)
-        //        {
-        //            // Last command sent starts the assembler specifc commands
-        //            if (i == dataUrl.Count - 1)
-        //                sshClient.CreateCommand("wget \"" + dataUrl[i] + "\" && ").Execute();
-
-        //            else
-        //                sshClient.CreateCommand("wget \"" + dataUrl[i] + "\"").Execute();
-        //        }
-
-        //        sshClient.CreateCommand("wget " + schedulerUrl).Execute();
-
-        //        sshClient.Disconnect();
+        //        CatchError(cmd, out error);
         //    }
+        //}
+
+        // Will return TRUE if successful connection and commands all run or FALSE if ANY error is encountered.
+        public bool CreateJob(out string error)
+        {
+            error = "";
+            // UUID is not being assigned before it hits this method so we have a problem. We need to save it to the DB prior to hitting this method but that causes other problems.......need to look into this. We can probably find a work around by checking the db and seeing the previous uuid and just incrementing the previous uuid.
+
+            // The init.sh script will contain all the basic logic to download the data and initiate the job on the assembler(s).
+            using (var client = new SshClient(ip, genomeModel.SSHUser, genomeModel.SSHPass))
+            {
+                string workingDirectory = "/share/scratch/tflatt/Job" + genomeModel.uuid; // this will eventually be /share/scratch/Genome/Job
+                string dataPath = workingDirectory + "/Data";
+                string configPath = workingDirectory + "/Config"; 
+                string outputPath = workingDirectory + "/Output";
+                string logPath = workingDirectory + "/Logs";
+
+                // The outward facing (FTP) path to where the scripts are stored for download.
+                string initScriptUrl = "PUBLIC PATH TO THE LOCATION WHERE THE INIT SCRIPT WILL BE STORED.";
+                string masurcaScriptUrl = "PUBLIC PATH TO THE LOCATION WHERE THE MASUCRA SCRIPT WILL BE STORED.";
+
+                string initName = "init" + genomeModel.uuid;
+                string masurcaName = "masurca" + genomeModel.uuid;
+
+                // Location we store the wget error log.
+                string wgetLogParameter = "-O " + logPath + "wget.error";
+
+                string jobName = genomeModel.SSHUser.ToString() + genomeModel.uuid.ToString();
+                string node = COMPUTENODE1; // default  
+
+                // The split up list of each data source location.
+                List<string> dataSources = HelperMethods.ParseUrlString(genomeModel.DataSource);
+
+                try
+                {
+                    client.Connect();
+
+                    if (string.IsNullOrEmpty(error)) { LinuxCommands.CreateDirectory(client, workingDirectory, out error, "-p"); }
+                    if (string.IsNullOrEmpty(error)) { LinuxCommands.CreateDirectory(client, dataPath, out error, "-p"); }
+                    if (string.IsNullOrEmpty(error)) { LinuxCommands.CreateDirectory(client, configPath, out error, "-p"); }
+                    if (string.IsNullOrEmpty(error)) { LinuxCommands.CreateDirectory(client, outputPath, out error, "-p"); }
+                    if (string.IsNullOrEmpty(error)) { LinuxCommands.CreateDirectory(client, logPath, out error, "-p"); }
+
+                    if (string.IsNullOrEmpty(error)) { LinuxCommands.ChangeDirectory(client, configPath, out error); }
+
+                    // This command has NOT been tested.
+                    if (string.IsNullOrEmpty(error)) { LinuxCommands.DownloadFile(client, initScriptUrl, out error, wgetLogParameter); }
+
+                    // This command has NOT been tested.
+                    if (string.IsNullOrEmpty(error)) { LinuxCommands.DownloadFile(client, masurcaScriptUrl, out error, wgetLogParameter); }
+
+                    if (string.IsNullOrEmpty(error)) { LinuxCommands.ChangeDirectory(client, dataPath, out error); }
+
+                    // Now we need to download each of the data files the user has supplied. Actually we don't want to do this because it will
+                    // force the user to wait until the files are all downloaded (which may take a long time). So we need to pass that off to a script 
+                    // which we will run with the scheduler.
+                    //foreach(var url in dataSources)
+                    //{
+                    //    if (string.IsNullOrEmpty(error)) { LinuxCommands.DownloadFile(client, url, out error, wgetLogParameter); }
+                    //}
+
+                    if (string.IsNullOrEmpty(error)) { LinuxCommands.ChangePermissions(client, workingDirectory, "777", out error, "-R"); }
+
+                    if(string.IsNullOrEmpty(error))
+                    {
+                        // So COMPUTENODE2 has a smaller load, we want to use that instead.
+                        if(LinuxCommands.GetNodeLoad(client, COMPUTENODE1, out error) > LinuxCommands.GetNodeLoad(client, COMPUTENODE2, out error))
+                            node = COMPUTENODE2;
+
+                        else
+                            node = COMPUTENODE1;
+                    }
+
+                    // May need to investigate this. But I'm fairly certain you need to be in the current directory or we can always call it 
+                    // via its absolute path but this is probably easier. It is late, but I am pretty sure you aren't able to do a qsub on 
+                    // anything but the login node. So we might need to investigate the way in which we store the information.
+                    if(string.IsNullOrEmpty(error)) { LinuxCommands.ChangeDirectory(client, outputPath, out error); }
+
+                    // This command has NOT been tested. We may need an absolute path rather than the relative one that we reference in this method since we switch directories to the output path directory.
+                    if (string.IsNullOrEmpty(error)) { LinuxCommands.AddJobToScheduler(client, logPath, node, jobName, out error); }
+
+                    if (string.IsNullOrEmpty(error)) { SetJobNumber(client, jobName, out error); }
+
+                    // There were no errors.
+                    if (string.IsNullOrEmpty(error))
+                        return true;
+
+                    else
+                        return false;
+                }
+
+                // SSH Connection couldn't be established.
+                catch (SocketException e)
+                {
+                    error = "The SSH connection couldn't be established. " + e.Message;
+
+                    return false;
+                }
+
+                // Authentication failure.
+                catch (SshAuthenticationException e)
+                {
+                    error = "The credentials were entered incorrectly. " + e.Message;
+
+                    return false;
+                }
+
+                // The SSH connection was dropped.
+                catch (SshConnectionException e)
+                {
+                    error = "The connection was terminated unexpectedly. " + e.Message;
+
+                    return false;
+                }
+
+                catch(Exception e)
+                {
+                    error = "There was an uncaught exception. " + e.Message;
+
+                    return false;
+                }
+            }
+        }
+
+        private void SetJobNumber(SshClient client, string jobName, out string error)
+        {
+            // USAGE: qstat -f -u "USERNAME" | grep "JOBNAME"
+            // -f: Full Format
+            // -u "[user]": Jobs for specific user
+            // We want to get the job number (which is created at submit to the scheduler).
+            using (var cmd = client.CreateCommand("qstat -f -u " + "\"" + genomeModel.SSHUser + "\"" + "| grep " + jobName))
+            {
+                cmd.Execute();
+
+                // Grab only numbers, ignore the rest.
+                string[] jobNumber = Regex.Split(cmd.Result, @"\D+");
+
+                LinuxErrorHandling.CommandError(cmd, out error);
+
+                // We return the second element [1] here because the first and last element of the array is always the empty "". Trimming
+                // doesn't remove it. So we will always return the first element which corresponds to the job number.
+
+                if (string.IsNullOrEmpty(error))
+                    genomeModel.SGEJobId = Convert.ToInt32(jobNumber[1]);
+
+                else
+                    error = "Failed to get the job ID for the job. Something went wrong with the scheduler. Please contact an administrator.";
+            }
+        }
     }
 }
-
-    //Config File
-    //Data
-    //Scheduler config
-    //Execute assembler specific commands

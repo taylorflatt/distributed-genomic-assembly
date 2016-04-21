@@ -3,6 +3,7 @@ using System.Data.Entity;
 using System.Net;
 using System.Web.Mvc;
 using Genome.Models;
+using Genome.Helpers;
 
 namespace Genome.Controllers
 {
@@ -25,28 +26,28 @@ namespace Genome.Controllers
                 // Should that be a field that we include in the model so we can calculate a safe size or just
                 // have them do it? I think just have them do it with a tooltip and make it a required field.
                 try
-               {
+                {
                     // If they don't have jump reads.
                     if (genomeModel.JumpReads == false)
                         genomeModel.JumpLength = 0;
 
                     // If they don't have paired-end reads.
-                    if(genomeModel.PEReads == false)
+                    if (genomeModel.PEReads == false)
                         genomeModel.PairedEndLength = 0;
 
-                    if(genomeModel.MasurcaPEMean == null)
+                    if (genomeModel.MasurcaPEMean == null)
                         // Set Mean default value.
 
-                    if(genomeModel.MasurcaPEStdev == null)
+                    if (genomeModel.MasurcaPEStdev == null)
                         // Set std dev default value.
 
-                    if(genomeModel.MasurcaGraphKMerValue == null)
+                    if (genomeModel.MasurcaGraphKMerValue == null)
                         // Set graph kmer default value.
 
-                    if(genomeModel.MasurcaKMerErrorCount == null)
+                    if (genomeModel.MasurcaKMerErrorCount == null)
                         // Set masurca kmer error threshold value.
 
-                    if(genomeModel.MasurcaThreadNum == null)
+                    if (genomeModel.MasurcaThreadNum == null)
                         genomeModel.MasurcaThreadNum = 20;
 
 
@@ -54,18 +55,45 @@ namespace Genome.Controllers
                     genomeModel.CreatedDate = DateTime.Now;
                     genomeModel.JobStatus = "Pending";
 
-                    db.GenomeModels.Add(genomeModel);
-                    db.SaveChanges();
+                    //string path = "temp";
+                    //ConfigBuilder builder = new ConfigBuilder();
 
-                    //SSHConfig ssh = new SSHConfig("login-0-0.research.siu.edu", genomeModel.SSHUser, genomeModel.SSHPass);
+                    //string[] dataArray = genomeModel.DataSource.Split(',');
+
+                    //builder.BuildMasurcaConfig(genomeModel, dataArray);
+                    //builder.BuildInitConfig(genomeModel, dataArray);
+
+                    string error = "";
+
+                    //SSHConfig ssh = new SSHConfig("login-0-0.research.siu.edu", genomeModel, builder.InitConfigURL);
+                    SSHConfig ssh = new SSHConfig("login-0-0.research.siu.edu", genomeModel, "", out error);
+
+                    ssh.CreateJob(out error);
+
+                    //ssh.CreateConnection(out error);
+
+                    // No error so proceed.
+                    if (error.Equals(""))
+                    {
+                        db.GenomeModels.Add(genomeModel);
+                        db.SaveChanges();
+                        return RedirectToAction("Details", new { id = genomeModel.uuid });
+                    }
+
+                    // Redisplay the data and display the error.
+                    else
+                    {
+                        ViewBag.ConnectionError = "There was an error with the connection to BigDog. The following is the error we encountered: ";
+                        ViewBag.ConnectionErrorDetails = error;
+
+                        return View(genomeModel);
+                    }
                 }
 
                 catch (Exception e)
                 {
                     Console.WriteLine(e.Message);
                 }
-
-                return RedirectToAction("Details", new { id = genomeModel.uuid });
             }
 
             return View(genomeModel);

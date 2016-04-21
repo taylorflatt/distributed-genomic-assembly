@@ -18,6 +18,9 @@ namespace Genome.Models
         [Key]
         public int uuid { get; set; }
 
+        // The job ID that is seen in the scheduler of BigDog so we can use this to check for updates.
+        public int SGEJobId { get; set; }
+
         [NotMapped]
         [Display(Name = "Big Dog Username:")]
         public string SSHUser { get; set; }
@@ -50,9 +53,12 @@ namespace Genome.Models
         [Display(Name = "Jump Length")]
         public int? JumpLength { get; set; }
 
-          /////////////////////////////////
-         // Masurca specific parameters //
         /////////////////////////////////
+        // Masurca specific parameters //
+        /////////////////////////////////
+        [Display(Name = "Masurca Assembler")]
+        public bool UseMasurca { get; set; }
+
         [Display(Name = "Masurca PE Mean")]
         public int? MasurcaPEMean { get; set; }
 
@@ -90,6 +96,18 @@ namespace Genome.Models
         [Display(Name = "Homoplymer Trim")]
         public bool HomoTrim { get; set; }
 
+        /////////////////////////////////
+        // SGA specific parameters     //
+        /////////////////////////////////
+        [Display(Name ="SGA Assembler")]
+        public bool UseSGA { get; set; }
+
+        /////////////////////////////////
+        // WGS specific parameters     //
+        /////////////////////////////////
+        [Display(Name = "WGS Assembler")]
+        public bool UseWGS { get; set; }
+
         ///////////////////////////////
         // Misc specific parameters //
         /////////////////////////////
@@ -104,6 +122,10 @@ namespace Genome.Models
         [DisplayFormat(ApplyFormatInEditMode = true, DataFormatString = "{0:MM/dd/yy HH:mm}")]
         [Display(Name = "Created Date")]
         public DateTime CreatedDate { get; set; }
+
+        [DisplayFormat(ApplyFormatInEditMode = true, DataFormatString = "{0:MM/dd/yy HH:mm}")]
+        [Display(Name = "Completed Date")]
+        public DateTime CompletedDate { get; set; }
 
         [Display(Name = "Current Status")]
         public string JobStatus { get; set; }

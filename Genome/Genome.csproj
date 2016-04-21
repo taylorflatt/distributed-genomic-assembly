@@ -19,9 +19,9 @@
     <MvcBuildViews>false</MvcBuildViews>
     <UseIISExpress>true</UseIISExpress>
     <IISExpressSSLPort />
-    <IISExpressAnonymousAuthentication />
-    <IISExpressWindowsAuthentication />
-    <IISExpressUseClassicPipelineMode />
+    <IISExpressAnonymousAuthentication>enabled</IISExpressAnonymousAuthentication>
+    <IISExpressWindowsAuthentication>enabled</IISExpressWindowsAuthentication>
+    <IISExpressUseClassicPipelineMode>false</IISExpressUseClassicPipelineMode>
     <UseGlobalApplicationHostFile />
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
@@ -195,9 +195,37 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
+    <Compile Include="Helpers\CheckJobStatus.cs" />
     <Compile Include="Helpers\ConfigBuilder.cs" />
     <Compile Include="Helpers\CustomRoles.cs" />
+    <Compile Include="Helpers\HelperMethods.cs" />
+    <Compile Include="Helpers\LinuxCommands.cs" />
+    <Compile Include="Helpers\LinuxErrorHandling.cs" />
     <Compile Include="Helpers\SSHConfig.cs" />
+    <Compile Include="Migrations\201604032021313_test.cs" />
+    <Compile Include="Migrations\201604032021313_test.Designer.cs">
+      <DependentUpon>201604032021313_test.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201604180418010_sgejobid.cs" />
+    <Compile Include="Migrations\201604180418010_sgejobid.Designer.cs">
+      <DependentUpon>201604180418010_sgejobid.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201604182328263_completeddate.cs" />
+    <Compile Include="Migrations\201604182328263_completeddate.Designer.cs">
+      <DependentUpon>201604182328263_completeddate.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201604212016494_clustercheck.cs" />
+    <Compile Include="Migrations\201604212016494_clustercheck.Designer.cs">
+      <DependentUpon>201604212016494_clustercheck.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201604212127329_clustercheck2.cs" />
+    <Compile Include="Migrations\201604212127329_clustercheck2.Designer.cs">
+      <DependentUpon>201604212127329_clustercheck2.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201604212132416_clusteraccountcheck.cs" />
+    <Compile Include="Migrations\201604212132416_clusteraccountcheck.Designer.cs">
+      <DependentUpon>201604212132416_clusteraccountcheck.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\AccountViewModels.cs" />
     <Compile Include="Models\GenomeModel.cs" />
@@ -209,6 +237,8 @@
   <ItemGroup>
     <Content Include="Content\bootstrap.css" />
     <Content Include="Content\bootstrap.min.css" />
+    <Content Include="Content\customStyle.css" />
+    <Content Include="Content\Images\jumbotron.jpg" />
     <Content Include="Content\jquery.steps.css" />
     <Content Include="favicon.ico" />
     <Content Include="fonts\glyphicons-halflings-regular.svg" />
@@ -237,7 +267,9 @@
     <Content Include="Scripts\respond.js" />
     <Content Include="Scripts\respond.min.js" />
     <Content Include="Scripts\_references.js" />
-    <Content Include="Web.config" />
+    <Content Include="Web.config">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </Content>
@@ -271,18 +303,17 @@
     <Content Include="Views\Manage\VerifyPhoneNumber.cshtml" />
     <Content Include="Views\Shared\Lockout.cshtml" />
     <Content Include="Views\Shared\_LoginPartial.cshtml" />
-    <Content Include="Views\Home\UserViewModel.cshtml" />
     <Content Include="Views\ManageRoles\Edit.cshtml" />
     <Content Include="Views\ManageRoles\Index.cshtml" />
     <Content Include="Views\Shared\AuthorizeFailed.cshtml" />
     <Content Include="Views\Account\UnverifiedUser.cshtml" />
     <Content Include="Views\GenomeAssembly\Create.cshtml" />
     <Content Include="Views\GenomeAssembly\Details.cshtml" />
+    <Content Include="Views\Manage\VerifyBigDogAccount.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
     <Folder Include="Content\AssemblerConfig\" />
-    <Folder Include="Views\UserView\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="fonts\glyphicons-halflings-regular.woff" />
@@ -291,6 +322,26 @@
     <Content Include="packages.config" />
     <None Include="Project_Readme.html" />
     <Content Include="Scripts\jquery-1.10.2.min.map" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Migrations\201604032021313_test.resx">
+      <DependentUpon>201604032021313_test.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201604180418010_sgejobid.resx">
+      <DependentUpon>201604180418010_sgejobid.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201604182328263_completeddate.resx">
+      <DependentUpon>201604182328263_completeddate.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201604212016494_clustercheck.resx">
+      <DependentUpon>201604212016494_clustercheck.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201604212127329_clustercheck2.resx">
+      <DependentUpon>201604212127329_clustercheck2.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201604212132416_clusteraccountcheck.resx">
+      <DependentUpon>201604212132416_clusteraccountcheck.cs</DependentUpon>
+    </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
