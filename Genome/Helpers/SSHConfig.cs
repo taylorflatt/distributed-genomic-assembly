@@ -24,6 +24,57 @@ namespace Genome.Helpers
         private GenomeModel genomeModel;
         private string path; // marty added this?
 
+        public SSHConfig(string ip, out string error)
+        {
+            error = "";
+            this.ip = ip;
+        }
+
+        public bool VerifyQuota(string SSHUser, string SSHPass, out string error)
+        {
+            error = "";
+
+            using (var client = new SshClient(ip, SSHUser, SSHPass))
+            {
+                int minimumQuota = 50; // Minimum quota size (in Gb) the user can have.
+
+                if (LinuxCommands.CheckQuota(client, minimumQuota, out error))
+                    return true;
+
+                else
+                    return false;
+            }
+        }
+
+        // We attempt to create a directory 
+        public bool VerifyPermissions(string SSHUser, string SSHPass, out string error)
+        {
+            error = "";
+
+            using (var client = new SshClient(ip, SSHUser, SSHPass))
+            {
+                string testDirectory = "/scratch/tflatt/testPermissions";
+
+                LinuxCommands.CreateDirectory(client, testDirectory, out error);
+
+                // There is an error.
+                if (!string.IsNullOrEmpty(error))
+                {
+                    error = "You do not have sufficient permissions to write to the proper directories. Please contact the BigDog Linux team about addressing this problem.";
+
+                    return false;
+                }
+
+                else
+                {
+                    // We want to remove the directory we just created as a test. We recursively force the deletion.
+                    LinuxCommands.RemoveFile(client, testDirectory, out error, "-rf");
+
+                    return true;
+                }
+            }
+        }
+
         public SSHConfig(string ip, GenomeModel genomeModel, string path, out string error)
         {
             error = "";
@@ -130,11 +181,13 @@ namespace Genome.Helpers
 
                     if (string.IsNullOrEmpty(error)) { LinuxCommands.ChangeDirectory(client, dataPath, out error); }
 
-                    // Now we need to download each of the data files the user has supplied.
-                    foreach(var url in dataSources)
-                    {
-                        if (string.IsNullOrEmpty(error)) { LinuxCommands.DownloadFile(client, url, out error, wgetLogParameter); }
-                    }
+                    // Now we need to download each of the data files the user has supplied. Actually we don't want to do this because it will
+                    // force the user to wait until the files are all downloaded (which may take a long time). So we need to pass that off to a script 
+                    // which we will run with the scheduler.
+                    //foreach(var url in dataSources)
+                    //{
+                    //    if (string.IsNullOrEmpty(error)) { LinuxCommands.DownloadFile(client, url, out error, wgetLogParameter); }
+                    //}
 
                     if (string.IsNullOrEmpty(error)) { LinuxCommands.ChangePermissions(client, workingDirectory, "777", out error, "-R"); }
 

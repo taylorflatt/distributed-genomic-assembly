@@ -7,6 +7,7 @@ using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.Owin;
 using Microsoft.Owin.Security;
 using Genome.Models;
+using Genome.Helpers;
 
 namespace Genome.Controllers
 {
@@ -15,6 +16,34 @@ namespace Genome.Controllers
     {
         private ApplicationSignInManager _signInManager;
         private ApplicationUserManager _userManager;
+
+        public ActionResult VerifyBigDogAccount()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public ActionResult VerifyBigDogAccount(string SSHUser, string SSHPass)
+        {
+            string error = "";
+
+            // Make sure there is actually information. Otherwise we just return them to the form.
+            if(SSHUser != "" && SSHPass != "")
+            {
+                // Now we need to connect to bigdog and run the quota call and run the permissions call.
+                SSHConfig ssh = new SSHConfig("login-0-0.research.siu.edu", out error);
+                ssh.VerifyPermissions(SSHUser, SSHPass, out error);
+                ssh.VerifyQuota(SSHUser, SSHPass, out error);
+            }
+
+            else
+            {
+                ViewBag.Error = "The username and password field cannot be blank.";
+                return View();
+            }
+
+            return View();
+        }
 
         public ManageController()
         {

@@ -225,6 +225,8 @@
   <ItemGroup>
     <Content Include="Content\bootstrap.css" />
     <Content Include="Content\bootstrap.min.css" />
+    <Content Include="Content\customStyle.css" />
+    <Content Include="Content\Images\jumbotron.jpg" />
     <Content Include="Content\jquery.steps.css" />
     <Content Include="favicon.ico" />
     <Content Include="fonts\glyphicons-halflings-regular.svg" />
@@ -289,18 +291,17 @@
     <Content Include="Views\Manage\VerifyPhoneNumber.cshtml" />
     <Content Include="Views\Shared\Lockout.cshtml" />
     <Content Include="Views\Shared\_LoginPartial.cshtml" />
-    <Content Include="Views\Home\UserViewModel.cshtml" />
     <Content Include="Views\ManageRoles\Edit.cshtml" />
     <Content Include="Views\ManageRoles\Index.cshtml" />
     <Content Include="Views\Shared\AuthorizeFailed.cshtml" />
     <Content Include="Views\Account\UnverifiedUser.cshtml" />
     <Content Include="Views\GenomeAssembly\Create.cshtml" />
     <Content Include="Views\GenomeAssembly\Details.cshtml" />
+    <Content Include="Views\Manage\VerifyBigDogAccount.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
     <Folder Include="Content\AssemblerConfig\" />
-    <Folder Include="Views\UserView\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="fonts\glyphicons-halflings-regular.woff" />

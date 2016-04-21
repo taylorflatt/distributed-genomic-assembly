@@ -21,6 +21,65 @@ namespace Genome.Helpers
             }
         }
 
+        // We check the user's current quota against a minQuota passed into the method. We assume in Gb.
+        protected internal static bool CheckQuota(SshClient client, int minQuota, out string error)
+        {
+            int quotaAmount = 0;
+            string byteType = CheckQuotaType(client, out error); // Check whether the quota is in MB or GB.
+
+            // Now we need to get the quota size.
+            if (string.IsNullOrEmpty(error)) { quotaAmount = CheckQuotaSize(client, out error); }
+
+            // If the quota is in MB, we need to convert it. Otherwise, we are fine.
+            if (string.IsNullOrEmpty(error) && byteType.Equals("M")) { quotaAmount = ConvertToGigabyte(quotaAmount); }
+
+            // If they have less than 'minQuota' then we return an error telling them the problem and how to rectify it.
+            if (quotaAmount < minQuota)
+            {
+                error = "You do not have the requisite amount of disk space (" + minQuota + "G) for us to safely run a general assembly job. Please contact the BigDog admin team to increase your quota. You currently have " + quotaAmount + " space to use.";
+
+                return false;
+            }
+
+            // They have at least the minimum quota.
+            else
+                return true;
+        }
+
+        // Check whether the quota is returning in Gb or Mb.
+        protected internal static string CheckQuotaType(SshClient client, out string error)
+        {
+            // First we need to get whether it is in gigabytes or megabytes.
+            using (var cmd = client.CreateCommand("quota -vs | awk '{print $2}' | grep '[0-9][0-9]*' | grep -o '[a-zA-Z]'"))
+            {
+                cmd.Execute();
+
+                LinuxErrorHandling.CommandError(cmd, out error);
+
+                return cmd.Result.ToString();
+            }
+        }
+
+        // Check the actual number size of the quota being returned regardless of the type (Gb or Mb).
+        protected internal static int CheckQuotaSize(SshClient client, out string error)
+        {
+            // Now we need to check the number.
+            using (var cmd = client.CreateCommand("quota -vs | awk '{print $2}' | grep -o '[0-9][0-9]*'"))
+            {
+                cmd.Execute();
+
+                LinuxErrorHandling.CommandError(cmd, out error);
+
+                return Convert.ToInt32(cmd.Result);
+            }
+        }
+
+        // Convert FROM Mb TO Gb. 
+        protected internal static int ConvertToGigabyte(int megabyteSize)
+        {
+            return megabyteSize * (1 / 1024);
+        }
+
         protected internal static void CompressOutputs(SshClient client, string outputFile, string sourceFolder, out string error, string parameters = "")
         {
             // USAGE (optimal run): zip -9 -y -r -q file.zip folder/
@@ -126,6 +185,18 @@ namespace Genome.Helpers
         {
             // USAGE: mkdir /tmp/Genome/tflatt1029/Logs -p
             using (var cmd = client.CreateCommand("mkdir " + directoryPath + " " + directoryParameters))
+            {
+                cmd.Execute();
+
+                LinuxErrorHandling.CommandError(cmd, out error);
+            }
+        }
+
+        // Removes files OR directories (everything in linux is essentially considered a file....)
+        protected internal static void RemoveFile(SshClient client, string path, out string error, string directoryParameters = "")
+        {
+            // USAGE: mkdir /tmp/Genome/tflatt1029/Logs -p
+            using (var cmd = client.CreateCommand("rm " + path + " " + directoryParameters))
             {
                 cmd.Execute();
 

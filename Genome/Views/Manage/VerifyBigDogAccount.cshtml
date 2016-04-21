@@ -1,0 +1,55 @@
+﻿
+@{
+    ViewBag.Title = "VerifyBigDogAccount";
+}
+
+<h2>VerifyBigDogAccount</h2>
+
+<p style="margin-left: 40px; background-color: #FFFFCD; font-size: 16px; font-family: monospace; color: #B12F2F;">
+    @ViewBag.Error
+</p>
+
+
+@Html.BeginForm("VerifyBigDogAccount", "Manage", FormMethod.Post)
+{
+    @Html.AntiForgeryToken()
+
+    <p>
+        Please enter your BigDog SSH credentials so we can check the following items on your account:
+    </p>
+
+    <ol>
+        <li>
+            Disk quota: How much space your account has to use. We want to make sure that you don't run out of space on your account in the middle of an assembly.
+        </li>
+        <li>
+            Account Permissions: We want to make sure that you have the proper permissions to make files and directories in a certain location on BigDog. You will need these permissions for creating locations where job information is stored.
+        </li>
+    </ol>
+
+    <div class="form-group">
+        BigDog SSH Username:
+        <div class="col-md-10">
+            <div class="checkbox">
+                @Html.TextBox("SSHUser")
+            </div>
+        </div>
+    </div>
+
+    <div class="form-group">
+        BigDog SSH Password:
+        <div class="col-md-10">
+            <div class="checkbox">
+                @Html.TextBox("SSHPass")
+            </div>
+        </div>
+    </div>
+
+<div class="col-md-offset-10 col-md-1">
+    <input type="submit" value="Create" class="btn btn-default" />
+</div>
+
+
+}
+
+

@@ -75,8 +75,8 @@ namespace Genome.Controllers
                     // No error so proceed.
                     if (error.Equals(""))
                     {
-                        //db.GenomeModels.Add(genomeModel);
-                        //db.SaveChanges();
+                        db.GenomeModels.Add(genomeModel);
+                        db.SaveChanges();
                         return RedirectToAction("Details", new { id = genomeModel.uuid });
                     }
 
