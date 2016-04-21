@@ -30,8 +30,9 @@ namespace Genome.Helpers
             this.ip = ip;
         }
 
-        public bool VerifyQuota(string SSHUser, string SSHPass, out string error)
+        public bool VerifyQuota(string SSHUser, string SSHPass, out string error, out int quotaAmount)
         {
+            quotaAmount = 0;
             error = "";
 
             using (var client = new SshClient(ip, SSHUser, SSHPass))
@@ -42,7 +43,7 @@ namespace Genome.Helpers
 
                     int minimumQuota = 50; // Minimum quota size (in Gb) the user can have.
 
-                    if (string.IsNullOrEmpty(error) && LinuxCommands.CheckQuota(client, minimumQuota, out error))
+                    if (string.IsNullOrEmpty(error) && LinuxCommands.CheckQuota(client, minimumQuota, out error, out quotaAmount))
                         return true;
 
                     else

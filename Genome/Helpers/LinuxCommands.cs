@@ -22,9 +22,9 @@ namespace Genome.Helpers
         }
 
         // We check the user's current quota against a minQuota passed into the method. We assume in Gb.
-        protected internal static bool CheckQuota(SshClient client, int minQuota, out string error)
+        protected internal static bool CheckQuota(SshClient client, int minQuota, out string error, out int quotaAmount)
         {
-            int quotaAmount = 0;
+            quotaAmount = 0;
             string byteType = CheckQuotaType(client, out error); // Check whether the quota is in MB or GB.
 
             // Now we need to get the quota size.

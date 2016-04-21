@@ -29,6 +29,8 @@ namespace Genome.Controllers
             string error = "";
             string permissionsError = "";
             string quotaError = "";
+            int quotaAmount = 0;
+            //ViewBag.ShowResults = null; // Need to null this so if the user tries to check again in the SAME session and there is an error it won't display.
 
             // Make sure there is actually information. Otherwise we just return them to the form.
             if (SSHUser != "" && SSHPass != "")
@@ -36,7 +38,7 @@ namespace Genome.Controllers
                 // Now we need to connect to bigdog and run the quota call and run the permissions call.
                 SSHConfig ssh = new SSHConfig("login-0-0.research.siu.edu", out error);
                 ssh.VerifyPermissions(SSHUser, SSHPass, out permissionsError);
-                ssh.VerifyQuota(SSHUser, SSHPass, out quotaError);
+                ssh.VerifyQuota(SSHUser, SSHPass, out quotaError, out quotaAmount);
 
                 // There was a problem with their permissions. Report it.
                 if (!string.IsNullOrEmpty(permissionsError))
@@ -62,6 +64,14 @@ namespace Genome.Controllers
 
                     // Save the user information.
                     IdentityResult result = await UserManager.UpdateAsync(Model);
+
+                    if (quotaAmount == 0)
+                        ViewBag.QuotaAmount = "Unknown. Something went wrong.";
+
+                    else
+                        ViewBag.QuotaAmount = quotaAmount + "Gb";
+
+                    ViewBag.ShowResults = "Show Results";
                 }
 
                 return View();

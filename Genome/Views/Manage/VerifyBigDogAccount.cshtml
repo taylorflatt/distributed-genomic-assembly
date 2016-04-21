@@ -1,5 +1,4 @@
-﻿
-@{
+﻿@{
     ViewBag.Title = "Verify Account";
 }
 
@@ -13,15 +12,6 @@
         @ViewBag.PermissionsError
         <br />
         @ViewBag.QuotaError
-    </p>
-}
-
-@if (ViewBag.PermissionsSuccess != null || ViewBag.QuotaSuccess != null)
-{
-    <p style="margin-left: 40px; background-color: #FFFFCD; font-size: 16px; font-family: monospace; color: #B12F2F;">
-        @ViewBag.PermissionsSuccess
-        <br />
-        @ViewBag.QuotaSuccess
     </p>
 }
 
@@ -69,11 +59,80 @@
             </div>
         </div>
 
+        @if (ViewBag.ShowResults != null)
+        {
+            <br />
+
+            <h3>
+                Your Account Information
+            </h3>
+            <hr />
+
+            if (ViewBag.PermissionsSuccess != null || ViewBag.QuotaSuccess != null)
+            {
+                <p style="margin-left: 40px; background-color: #FFFFCD; font-size: 16px; font-family: monospace; color: #238438;">
+                    @ViewBag.PermissionsSuccess
+                    <br />
+                    @ViewBag.QuotaSuccess
+                </p>
+            }
+
+            <div id="Results">
+                <div class="form-group">
+                    <label class="control-label col-md-2">
+                        Current Quota:
+                    </label>
+                    <div class="col-md-10">
+                        <div class="checkbox">
+                            @if(ViewBag.QuotaError != null)
+                            {
+                                <p style="color: #CE0D0D;">
+                                    @ViewBag.QuotaAmount
+                                </p>
+                            }
+
+                            else
+                            {
+                                <p style="color:#238438;">
+                                    @ViewBag.QuotaAmount
+                                </p>
+                            }
+
+                        </div>
+                    </div>
+
+                <label class="control-label col-md-2">
+                    Current Permissions:
+                </label>
+                <div class="col-md-10">
+                    <div class="checkbox">
+                        @if (ViewBag.PermissionsError != null)
+                        {
+                            <p style="color: #CE0D0D;">
+                                NO
+                            </p>
+                        }
+
+                        else
+                        {
+                            <p style="color: #238438;">
+                                OK
+                            </p>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+        }
+
+
         <div class="col-md-offset-10 col-md-1">
-            <input type="submit" value="Submit" class="btn btn-default" />
+            <input type="submit" value="Submit" class="btn btn-default" onsubmit="ShowResults();"/>
         </div>
 
     </div>
 }
+
+<br />
 <br />
 
