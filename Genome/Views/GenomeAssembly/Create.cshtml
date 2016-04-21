@@ -14,22 +14,39 @@
     @Html.AntiForgeryToken()
 
     <div class="form-horizontal">
-        <h4>GenomeModel</h4>
         <hr />
-        <div id="WizardErrors">
+        @ViewBag.ConnectionError
+
+        @if (ViewBag.ConnectionErrorDetails != null)
+        { 
+            <br />
+            <br />
+
+            <p style="margin-left: 40px; background-color: #FFFFCD; font-size: 16px; font-family: monospace; color: #B12F2F;">
+                @ViewBag.ConnectionErrorDetails
+            </p>
+        }
+
+        <div id="WizardErrors" class="text-danger">
             @* Print wizard errors here if any. *@
         </div>
         @Html.ValidationSummary(true, "", new { @class = "text-danger" })
         <!-- Introduction (STEP 1)-->
         <div id="Step1">
             <h3>
-                Start
+                Introduction
             </h3>
             <hr />
 
             <p>
-                Here is a paragraph that explains what using this means and that by accepting this you accept responsibilities for its misuse and so on. Here is a paragraph that explains what using this means and that by accepting this you accept responsibilities for its misuse and so on. Here is a paragraph that explains what using this means and that by accepting this you accept responsibilities for its misuse and so on. Here is a paragraph that explains what using this means and that by accepting this you accept responsibilities for its misuse and so on. Here is a paragraph that explains what using this means and that by accepting this you accept responsibilities for its misuse and so on. Here is a paragraph that explains what using this means and that by accepting this you accept responsibilities for its misuse and so on.
+                By using this tool, you are asserting that you have the proper access to BigDog and are using this tool for researcher or training purposes only. Any malicious use of this tool is strictly prohibited.
             </p>
+
+            <p>
+                This tool is used to initate Genomic Assembly jobs on the BigDog cluster. Its purpose is simply to bridge the gap between advanced and entry-level users requiring no knowledge of any linux or assembler specific information. The only information needed is data-specific information that you should already have. If you encounter any issues when running this tool or believe something isn't correct, please <a href="#">contact an administrator</a>.
+            </p>
+
+            <br />
 
             <div class="form-group">
                 <input type="button" value="Accept" class="btn btn-default" id="AcceptedInstructions" onclick="Step1MoveForward();" required />
@@ -47,30 +64,45 @@
             <!-- Here we might want to also include checkboxes for the different assemblers that they want so we can show/hide. -->
             <div class="form-group">
 
-                <div class="col-md-10">
+                <div class="col-md-8">
 
-                    <label class="control-label col-md-2">
+                    <label class="control-label col-md-3">
                         Data Location (URL):
                     </label>
 
                     <!-- Dynamically create list of URL textboxes here -->
-                    <div class="col-md-10">
-                        @Html.TextBoxFor(model => model.DataSource, new { htmlAttributes = new { @class = "form-control", @id = "url_0" } })
-                        @Html.ValidationMessageFor(model => model.DataSource, "", new { @class = "text-danger" })
+                        <div class="row">
+                            <div class="col-md-4">
+                                @Html.EditorFor(model => model.DataSource, new { htmlAttributes = new { @class = "form-control", @id = "url_0" } })
+                                @Html.ValidationMessageFor(model => model.DataSource, "", new { @class = "text-danger" })
+                            </div>
+
+                            <div id="DataSourceErrorMsg_0" class="col-md-4 text-danger">
+                                @* Error message for data source if any. *@
+                            </div>
+                        </div>
+
+                    <div id="RemoveURLErrorMsg" class="text-danger">
+                        @* Remove textbox error msg if any. *@
                     </div>
 
-                    <div id="addUrlBtn">
-                        <button type="button" id="UrlBtn" onclick="addURLBox()" value="Add Row">Add URL</button>
+                    <!-- Where the new URL text box will appear. -->
+                    <div id="addUrlBtn"></div>
+                    <br />
+
+                    <div class="row">
+                        <div class="col-md-3 col-md-offset-3">
+                            <button type="button" id="UrlBtn" onclick="addURLBox()" value="Add Row">Add URL</button>
+                        </div>
+
+                        <div id="removeUrlBtn" class="col-md-3">
+                            <button type="button" id="UrlBtn" onclick="removeURLBox()" value="Remove Row">Remove URL</button>
+                        </div>
                     </div>
 
-                    <div id="removeUrlBtn">
-                        <button type="button" id="UrlBtn" onclick="removeURLBox()" value="Remove Row">Remove URL</button>
-                    </div>
                     <!-- End dynamically created list of URL textboxes -->
 
-                    <div id="DataSourceErrorMsg">
-                        @* Error message for data source if any. *@
-                    </div>
+
                 </div>
             </div>
 
@@ -91,7 +123,7 @@
                 and handle that in the config creator. (If model.PEReads == "" then pe_length = 0) for instance.
             *@
 
-            <div class="form-group">
+            <div class="form-group" id="PEReadsGroup">
                 @Html.LabelFor(model => model.PEReads, htmlAttributes: new { @class = "control-label col-md-2" })
                 <div class="col-md-10">
                     <div class="checkbox">
@@ -106,7 +138,7 @@
                 <div class="col-md-10">
                     @Html.EditorFor(model => model.PairedEndLength, new { htmlAttributes = new { @class = "form-control", @id = "PELengthInput" } })
                     @Html.ValidationMessageFor(model => model.PairedEndLength, "", new { @class = "text-danger" })
-                    <div id="PELengthErrorMsg">
+                    <div id="PELengthErrorMsg" class="text-danger">
                         @* Error message goes here if any *@
                     </div>
                 </div>
@@ -116,7 +148,7 @@
                 Upon checking the box, we show the jump-length text box for them to enter the data. Otherwise we leave the data null 
                 and handle that in the config creator. (If model.jumpreads == "" then jump_reads = 0) for instance.
             *@
-            <div class="form-group">
+            <div class="form-group" id="JumpReadsGroup">
                 @Html.LabelFor(model => model.JumpReads, htmlAttributes: new { @class = "control-label col-md-2" })
                 <div class="col-md-10">
                     <div class="checkbox">
@@ -131,69 +163,134 @@
                 <div class="col-md-10">
                     @Html.EditorFor(model => model.JumpLength, new { htmlAttributes = new { @class = "form-control", @id = "JumpLengthInput" } })
                     @Html.ValidationMessageFor(model => model.JumpLength, "", new { @class = "text-danger" })
-                </div>
-                <div id="JumpLengthErrorMsg">
-                    @* Error message goes here if any *@
+                    <div id="JumpLengthErrorMsg" class="text-danger">
+                        @* Error message goes here if any *@
+                    </div>
                 </div>
             </div>
 
-            <div class="form-group">
-                <input type="button" value="Previous" class="btn btn-default" id="PreviousStep" onclick="Step2MoveBack();" />
+            <div class="row">
+                <div class="col-md-4">
+                    <input type="button" value="Previous" class="btn btn-default" id="PreviousStep" onclick="Step2MoveBack();" />
+                </div>
+
+                <div class="col-md-4" style="margin-left: 40px;">
+                    <input type="button" value="Next" class="btn btn-default" id="AcceptedInstructions" onclick="Step2MoveForward();" />
+                </div>
             </div>
 
-            <div class="form-group">
-                <input type="button" value="Next" class="btn btn-default" id="AcceptedInstructions" onclick="Step2MoveForward();" /> 
-            </div>
         </div>
-            <!-- END INITIAL DATA (STEP 2)-->
-
-
-        <!-- Masurca Data (STEP 3)-->
+        <!-- END INITIAL DATA (STEP 2)-->
+        <!-- Choose Assembler(s) (Step 3) -->
         <div id="Step3" hidden="hidden">
+            <h3>
+                Choose Assemblers
+            </h3>
+
+            <div id="AssemblerChoiceErrorMsg" class="text-danger"></div>
+            <hr />
+
+            <p>
+                Currently, we have only added a single assembler (Masurca) to our platform. However, as time progresses, we have planned at least 2-3 more assemblers to be added. Below, we provide only a brief overview of each assembler. If you would like detailed information about each assembler as we have implemented it - please visit our <a href="#">Assemblers Page</a>.
+            </p>
+
+            <br />
+
+            <div class="form-group">
+                <label class="control-label col-md-2">
+                    Masurca Assembler
+                </label>
+                <div class="col-md-10">
+                    <p>
+                        MaSuRCA is whole genome assembly software. It combines the efficiency of the de Bruijn graph and Overlap-Layout-Consensus (OLC) approaches. MaSuRCA can assemble data sets containing only short reads from Illumina sequencing or a mixture of short reads and long reads (Sanger, 454). <a href="http://www.genome.umd.edu/masurca.html">Source</a>
+                    </p>
+                    <div class="checkbox col-md-offset-10">
+                        @Html.LabelFor(model => model.UseMasurca)
+                        @Html.EditorFor(model => model.UseMasurca)
+                        @Html.ValidationMessageFor(model => model.UseMasurca, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="control-label col-md-2">
+                    SGA Assembler
+                </label>
+                <div class="col-md-10">
+                    <p>
+                        SGA is a de novo assembler designed to assemble large genomes from high coverage short read data. SGA implements a set of assembly algorithms based on the FM-index. As the FM-index is a compressed data structure, the algorithms are very memory efficient.
+                    </p>
+
+                    <p>
+                        An SGA assembly has three distinct phases. The first phase corrects base calling errors in the reads. The second phase assembles contigs from the corrected reads. The third phase uses paired end and/or mate pair data to build scaffolds from the contigs. <a href="https://github.com/jts/sga/wiki">Source</a>.
+                    </p>
+                    <div class="checkbox col-md-offset-10">
+                        @Html.LabelFor(model => model.UseSGA)
+                        <input class="check-box" data-val="true" data-val-required="The SGA Assembler field is required." id="UseSGA" name="UseSGA" type="checkbox" value="true" disabled>
+                        @*@Html.EditorFor(model => model.UseSGA)*@
+                        @Html.ValidationMessageFor(model => model.UseSGA, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="control-label col-md-2">
+                    WGS Assembler
+                </label>
+                <div class="col-md-10">
+                    <p>
+                        Celera Assembler is a de novo whole-genome shotgun (WGS) DNA sequence assembler. It reconstructs long sequences of genomic DNA from fragmentary data produced by whole-genome shotgun sequencing. Celera Assembler can use any combination of reads from dideoxy (Sanger) sequencing platforms, pyrosequencing platforms, sequencing by synthesis platforms, and single-molecule sequencing platforms. <a href="http://wgs-assembler.sourceforge.net/wiki/index.php?title=Main_Page">Source</a>.
+                    </p>
+                    <div class="checkbox col-md-offset-10">
+                        @Html.LabelFor(model => model.UseWGS)
+                        <input class="check-box" data-val="true" data-val-required="The WGS Assembler field is required." id="UseWGS" name="UseWGS" type="checkbox" value="true" disabled>
+                        @*@Html.EditorFor(model => model.UseWGS)*@
+                        @Html.ValidationMessageFor(model => model.UseWGS, "", new { @class = "text-danger" })
+
+                    </div>
+                </div>
+            </div>
+
+            <br />
+
+            <div class="row">
+                <div class="col-md-4">
+                    <input type="button" value="Previous" class="btn btn-default" id="PreviousStep" onclick="Step3MoveBack();" />
+                </div>
+
+                <div class="col-md-1 col-md-offset-7">
+                    <input type="button" value="Next" class="btn btn-default" id="AcceptedInstructions" onclick="Step3MoveForward();" />
+                </div>
+            </div>
+
+        </div>
+
+        <!-- END CHOOSE ASSEMBLER(S) (STEP 3) -->
+        <!-- Masurca Data (STEP 4)-->
+        <div id="Step4" hidden="hidden">
             <h3>
                 Masurca Data
             </h3>
             <hr />
 
             <div class="form-group">
-                @Html.LabelFor(model => model.MasurcaPEMean, htmlAttributes: new { @class = "control-label col-md-2" })
-                <div class="col-md-10">
-                    @Html.EditorFor(model => model.MasurcaPEMean, new { htmlAttributes = new { @class = "form-control" } })
-                    @Html.ValidationMessageFor(model => model.MasurcaPEMean, "", new { @class = "text-danger" })
-                </div>
-            </div>
-
-            <div class="form-group">
-                @Html.LabelFor(model => model.MasurcaPEStdev, htmlAttributes: new { @class = "control-label col-md-2" })
-                <div class="col-md-10">
-                    @Html.EditorFor(model => model.MasurcaPEStdev, new { htmlAttributes = new { @class = "form-control" } })
-                    @Html.ValidationMessageFor(model => model.MasurcaPEStdev, "", new { @class = "text-danger" })
-                </div>
-            </div>
-
-            <div class="form-group">
-                @Html.LabelFor(model => model.MasurcaGraphKMerValue, htmlAttributes: new { @class = "control-label col-md-2" })
-                <div class="col-md-10">
-                    @Html.EditorFor(model => model.MasurcaGraphKMerValue, new { htmlAttributes = new { @class = "form-control" } })
-                    @Html.ValidationMessageFor(model => model.MasurcaGraphKMerValue, "", new { @class = "text-danger" })
-                </div>
-                <div id="GraphKmerErrorMsg">
-                    @* Graph KMer Size Error if any here. *@
-                </div>
-            </div>
-
-            <div class="form-group">
-                @Html.LabelFor(model => model.MasurcaLinkingMates, htmlAttributes: new { @class = "control-label col-md-2" })
+                @*@Html.LabelFor(model => model.MasurcaCAParameters, htmlAttributes: new { @class = "control-label col-md-2" })*@
+                <label class="control-label col-md-2">
+                    Bacteria Genome
+                </label>
                 <div class="col-md-10">
                     <div class="checkbox">
-                        @Html.EditorFor(model => model.MasurcaLinkingMates)
-                        @Html.ValidationMessageFor(model => model.MasurcaLinkingMates, "", new { @class = "text-danger" })
+                        @Html.EditorFor(model => model.MasurcaCAParameters)
+                        @Html.ValidationMessageFor(model => model.MasurcaCAParameters, "", new { @class = "text-danger" })
                     </div>
                 </div>
             </div>
 
-            <div class="form-group">
-                @Html.LabelFor(model => model.MasurcaLimitJumpCoverage, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div id="MasurcaJumpGroup" class="form-group" hidden="hidden">
+                @*@Html.LabelFor(model => model.MasurcaLimitJumpCoverage, htmlAttributes: new { @class = "control-label col-md-2" })*@
+                <label class="control-label col-md-2">
+                    Limit Jump Coverage
+                </label>
                 <div class="col-md-10">
                     <div class="checkbox">
                         @Html.EditorFor(model => model.MasurcaLimitJumpCoverage)
@@ -203,47 +300,23 @@
             </div>
 
             <div class="form-group">
-                @Html.LabelFor(model => model.MasurcaCAParameters, htmlAttributes: new { @class = "control-label col-md-2" })
+                @*@Html.LabelFor(model => model.MasurcaLinkingMates, htmlAttributes: new { @class = "control-label col-md-2" })*@
+                <label class="control-label col-md-2">
+                    Illumina Data
+                </label>
                 <div class="col-md-10">
                     <div class="checkbox">
-                        @Html.EditorFor(model => model.MasurcaCAParameters)
-                        @Html.ValidationMessageFor(model => model.MasurcaCAParameters, "", new { @class = "text-danger" })
+                        @Html.EditorFor(model => model.MasurcaLinkingMates)
+                        @Html.ValidationMessageFor(model => model.MasurcaLinkingMates, "", new { @class = "text-danger" })
                     </div>
                 </div>
             </div>
 
             <div class="form-group">
-                @Html.LabelFor(model => model.MasurcaKMerErrorCount, htmlAttributes: new { @class = "control-label col-md-2" })
-                <div class="col-md-10">
-                    @Html.EditorFor(model => model.MasurcaKMerErrorCount, new { htmlAttributes = new { @class = "form-control" } })
-                    @Html.ValidationMessageFor(model => model.MasurcaKMerErrorCount, "", new { @class = "text-danger" })
-                </div>
-                <div id="KMerCountThresholdErrorMsg">
-                    @* Graph KMer Size Error if any here. *@
-                </div>
-            </div>
-
-            <div class="form-group">
-                @Html.LabelFor(model => model.MasurcaThreadNum, htmlAttributes: new { @class = "control-label col-md-2" })
-                <div class="col-md-10">
-                    @Html.EditorFor(model => model.MasurcaThreadNum, new { htmlAttributes = new { @class = "form-control" } })
-                    @Html.ValidationMessageFor(model => model.MasurcaThreadNum, "", new { @class = "text-danger" })
-                </div>
-                <div id="ThreadNumErrorMsg">
-                    @* Graph KMer Size Error if any here. *@
-                </div>
-            </div>
-
-            <div class="form-group">
-                @Html.LabelFor(model => model.MasurcaJellyfishHashSize, htmlAttributes: new { @class = "control-label col-md-2" })
-                <div class="col-md-10">
-                    @Html.EditorFor(model => model.MasurcaJellyfishHashSize, new { htmlAttributes = new { @class = "form-control" } })
-                    @Html.ValidationMessageFor(model => model.MasurcaJellyfishHashSize, "", new { @class = "text-danger" })
-                </div>
-            </div>
-
-            <div class="form-group">
-                @Html.LabelFor(model => model.HomoTrim, htmlAttributes: new { @class = "control-label col-md-2" })
+                @*@Html.LabelFor(model => model.HomoTrim, htmlAttributes: new { @class = "control-label col-md-2" })*@
+                <label class="control-label col-md-2">
+                    Trim Homopolymers
+                </label>
                 <div class="col-md-10">
                     <div class="checkbox">
                         @Html.EditorFor(model => model.HomoTrim)
@@ -252,21 +325,101 @@
                 </div>
             </div>
 
+            @* Only display the Paired-End fields if their data contains Paired-Ends. *@
+            <div id="MasurcaPEGroup" hidden="hidden">
+                <div class="form-group">
+                    @*@Html.LabelFor(model => model.MasurcaPEMean, htmlAttributes: new { @class = "control-label col-md-2" })*@
+                    <label class="control-label col-md-2">
+                        Paired-End Mean
+                    </label>
+                    <div class="col-md-10">
+                        @Html.EditorFor(model => model.MasurcaPEMean, new { htmlAttributes = new { @class = "form-control" } })
+                        @Html.ValidationMessageFor(model => model.MasurcaPEMean, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    @*@Html.LabelFor(model => model.MasurcaPEStdev, htmlAttributes: new { @class = "control-label col-md-2" })*@
+                    <label class="control-label col-md-2">
+                        Paired-End Standard Deviation
+                    </label>
+                    <div class="col-md-10">
+                        @Html.EditorFor(model => model.MasurcaPEStdev, new { htmlAttributes = new { @class = "form-control" } })
+                        @Html.ValidationMessageFor(model => model.MasurcaPEStdev, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+            </div>
+            
             <div class="form-group">
-                <input type="button" value="Previous" class="btn btn-default" id="PreviousStep" onclick="Step3MoveBack();" />
+                @*@Html.LabelFor(model => model.MasurcaGraphKMerValue, htmlAttributes: new { @class = "control-label col-md-2" })*@
+                <label class="control-label col-md-2">
+                    k-mer Size for deBruijin Graph
+                </label>
+                <div class="col-md-10">
+                    @Html.EditorFor(model => model.MasurcaGraphKMerValue, new { htmlAttributes = new { @class = "form-control" } })
+                    @Html.ValidationMessageFor(model => model.MasurcaGraphKMerValue, "", new { @class = "text-danger" })
+                </div>
+                <div id="GraphKmerErrorMsg" class="text-danger">
+                    @* Graph KMer Size Error if any here. *@
+                </div>
             </div>
 
             <div class="form-group">
-                <input type="button" value="Next" class="btn btn-default" id="AcceptedInstructions" onclick="Step3MoveForward();" />
+                @*@Html.LabelFor(model => model.MasurcaKMerErrorCount, htmlAttributes: new { @class = "control-label col-md-2" })*@
+                <label class="control-label col-md-2">
+                    k-mer Error Correction
+                </label>
+                <div class="col-md-10">
+                    @Html.EditorFor(model => model.MasurcaKMerErrorCount, new { htmlAttributes = new { @class = "form-control" } })
+                    @Html.ValidationMessageFor(model => model.MasurcaKMerErrorCount, "", new { @class = "text-danger" })
+                </div>
+                <div id="KMerCountThresholdErrorMsg" class="text-danger">
+                    @* Graph KMer Size Error if any here. *@
+                </div>
+            </div>
+
+            <div class="form-group">
+                @*@Html.LabelFor(model => model.MasurcaThreadNum, htmlAttributes: new { @class = "control-label col-md-2" })*@
+                <label class="control-label col-md-2">
+                    CPU Threads
+                </label>
+                <div class="col-md-10">
+                    @Html.EditorFor(model => model.MasurcaThreadNum, new { htmlAttributes = new { @class = "form-control" } })
+                    @Html.ValidationMessageFor(model => model.MasurcaThreadNum, "", new { @class = "text-danger" })
+                </div>
+                <div id="ThreadNumErrorMsg" class="text-danger">
+                    @* Graph KMer Size Error if any here. *@
+                </div>
+            </div>
+
+            <div class="form-group">
+                @*@Html.LabelFor(model => model.MasurcaJellyfishHashSize, htmlAttributes: new { @class = "control-label col-md-2" })*@
+                <label class="control-label col-md-2">
+                    Jellyfish hash size
+                </label>
+                <div class="col-md-10">
+                    @Html.EditorFor(model => model.MasurcaJellyfishHashSize, new { htmlAttributes = new { @class = "form-control" } })
+                    @Html.ValidationMessageFor(model => model.MasurcaJellyfishHashSize, "", new { @class = "text-danger" })
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4">
+                    <input type="button" value="Previous" class="btn btn-default" id="PreviousStep" onclick="Step4MoveBackward();" />
+                </div>
+
+                <div class="col-md-4" style="margin-left: 40px;">
+                    <input type="button" value="Next" class="btn btn-default" id="AcceptedInstructions" onclick="Step4MoveForward();" />
+                </div>
             </div>
 
         </div>
 
-            <!-- END MASURCA DATA (STEP 3)-->
-            <!-- Confirm Data (STEP 4)-->
-        <div id="Step4" hidden="hidden">
+            <!-- END MASURCA DATA (STEP 4) -->
+            <!-- Confirm Data (FINAL STEP) -->
+        <div id="FinalStep" hidden="hidden">
             <h3>
-                Confirm Data
+                Send Data
             </h3>
             <hr />
 
@@ -295,30 +448,41 @@
                 entered by the user is their responsiblity. By Agreeing here, you accept that all the information above is correct to the best of your knowledge. Any data incorrectly entered by the user is their responsiblity.
             </p>
 
+            <br />
+
             <div class="form-group">
-                @Html.LabelFor(model => model.Agreed, htmlAttributes: new { @class = "control-label col-md-2" })
                 <div class="col-md-10">
-                    <div class="checkbox">
+                    <div class="checkbox col-md-2 col-md-offset-11">
+                        @Html.LabelFor(model => model.Agreed)
                         @Html.EditorFor(model => model.Agreed)
                         @Html.ValidationMessageFor(model => model.Agreed, "", new { @class = "text-danger" })
+
                     </div>
                 </div>
             </div>
 
-            <div class="form-group">
-                <input type="button" value="Previous" class="btn btn-default" id="PreviousStep" onclick="Step4MoveBack();" />
-            </div>
+            <div class="row">
+                <div class="col-md-1">
+                    <input type="button" value="Previous" class="btn btn-default" id="PreviousStep" onclick="FinalStepMoveBackward();" />
+                </div>
 
-            <div class="form-group">
-                <div class="col-md-offset-2 col-md-10">
-                    <input type="submit" value="Create" class="btn btn-default" onclick="concatURLs();" />
+                <div class="col-md-offset-10 col-md-1">
+                        <input type="submit" value="Create" class="btn btn-default" onclick="concatURLs();" />
                 </div>
             </div>
 
-        </div>
-
-            <!-- END CONFIRM DATA (STEP 4)-->
 
 
         </div>
+
+            <!-- END CONFIRM DATA (FINAL STEP)-->
+
+        </div>
+
+        if (ViewBag.ConnectionErrorDetails != null)
+        {
+            <script type="text/javascript">
+                DisplayFinalStepError();
+            </script>
+        }
 }
