@@ -36,13 +36,49 @@ namespace Genome.Helpers
 
             using (var client = new SshClient(ip, SSHUser, SSHPass))
             {
-                int minimumQuota = 50; // Minimum quota size (in Gb) the user can have.
+                try
+                {
+                    client.Connect();
 
-                if (LinuxCommands.CheckQuota(client, minimumQuota, out error))
-                    return true;
+                    int minimumQuota = 50; // Minimum quota size (in Gb) the user can have.
 
-                else
+                    if (string.IsNullOrEmpty(error) && LinuxCommands.CheckQuota(client, minimumQuota, out error))
+                        return true;
+
+                    else
+                        return false;
+                }
+
+                // SSH Connection couldn't be established.
+                catch (SocketException e)
+                {
+                    error = "The SSH connection couldn't be established. " + e.Message;
+
                     return false;
+                }
+
+                // Authentication failure.
+                catch (SshAuthenticationException e)
+                {
+                    error = "The credentials were entered incorrectly. " + e.Message;
+
+                    return false;
+                }
+
+                // The SSH connection was dropped.
+                catch (SshConnectionException e)
+                {
+                    error = "The connection was terminated unexpectedly. " + e.Message;
+
+                    return false;
+                }
+
+                catch (Exception e)
+                {
+                    error = "There was an uncaught exception. " + e.Message;
+
+                    return false;
+                }
             }
         }
 
@@ -53,24 +89,60 @@ namespace Genome.Helpers
 
             using (var client = new SshClient(ip, SSHUser, SSHPass))
             {
-                string testDirectory = "/scratch/tflatt/testPermissions";
-
-                LinuxCommands.CreateDirectory(client, testDirectory, out error);
-
-                // There is an error.
-                if (!string.IsNullOrEmpty(error))
+                try
                 {
-                    error = "You do not have sufficient permissions to write to the proper directories. Please contact the BigDog Linux team about addressing this problem.";
+                    client.Connect();
+
+                    string testDirectory = "/share/scratch/tflatt/testPermissions";
+
+                    LinuxCommands.CreateDirectory(client, testDirectory, out error);
+
+                    // There is an error. Here we specifically overwrite the error with our own. Since ANY write error here is a problem.
+                    if (!string.IsNullOrEmpty(error))
+                    {
+                        error = "You do not have sufficient permissions to write to the proper directories. Please contact the BigDog Linux team about addressing this problem.";
+
+                        return false;
+                    }
+
+                    else
+                    {
+                        // We want to remove the directory we just created as a test. We recursively force the deletion.
+                        LinuxCommands.RemoveFile(client, testDirectory, out error, "-rf");
+
+                        return true;
+                    }
+                }
+
+                // SSH Connection couldn't be established.
+                catch (SocketException e)
+                {
+                    error = "The SSH connection couldn't be established. " + e.Message;
 
                     return false;
                 }
 
-                else
+                // Authentication failure.
+                catch (SshAuthenticationException e)
                 {
-                    // We want to remove the directory we just created as a test. We recursively force the deletion.
-                    LinuxCommands.RemoveFile(client, testDirectory, out error, "-rf");
+                    error = "The credentials were entered incorrectly. " + e.Message;
 
-                    return true;
+                    return false;
+                }
+
+                // The SSH connection was dropped.
+                catch (SshConnectionException e)
+                {
+                    error = "The connection was terminated unexpectedly. " + e.Message;
+
+                    return false;
+                }
+
+                catch (Exception e)
+                {
+                    error = "There was an uncaught exception. " + e.Message;
+
+                    return false;
                 }
             }
         }

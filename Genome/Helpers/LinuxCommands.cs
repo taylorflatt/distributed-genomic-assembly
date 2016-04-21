@@ -49,6 +49,7 @@ namespace Genome.Helpers
         // Check whether the quota is returning in Gb or Mb.
         protected internal static string CheckQuotaType(SshClient client, out string error)
         {
+            // TODO: Parse out the \n from the return value.
             // First we need to get whether it is in gigabytes or megabytes.
             using (var cmd = client.CreateCommand("quota -vs | awk '{print $2}' | grep '[0-9][0-9]*' | grep -o '[a-zA-Z]'"))
             {
@@ -56,13 +57,19 @@ namespace Genome.Helpers
 
                 LinuxErrorHandling.CommandError(cmd, out error);
 
-                return cmd.Result.ToString();
+                // DEBUG
+                var test = cmd.Result.ToString().Substring(0, 1);
+
+                return cmd.Result.ToString().Substring(0, 1);
             }
         }
 
         // Check the actual number size of the quota being returned regardless of the type (Gb or Mb).
         protected internal static int CheckQuotaSize(SshClient client, out string error)
         {
+            // Make sure they are in their home directory so we only get a single number. Need to investigate this.
+            ChangeDirectory(client, "~", out error);
+
             // Now we need to check the number.
             using (var cmd = client.CreateCommand("quota -vs | awk '{print $2}' | grep -o '[0-9][0-9]*'"))
             {

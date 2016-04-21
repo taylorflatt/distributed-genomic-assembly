@@ -26,14 +26,38 @@ namespace Genome.Controllers
         public ActionResult VerifyBigDogAccount(string SSHUser, string SSHPass)
         {
             string error = "";
+            string permissionsError = "";
+            string quotaError = "";
 
             // Make sure there is actually information. Otherwise we just return them to the form.
-            if(SSHUser != "" && SSHPass != "")
+            if (SSHUser != "" && SSHPass != "")
             {
                 // Now we need to connect to bigdog and run the quota call and run the permissions call.
                 SSHConfig ssh = new SSHConfig("login-0-0.research.siu.edu", out error);
-                ssh.VerifyPermissions(SSHUser, SSHPass, out error);
-                ssh.VerifyQuota(SSHUser, SSHPass, out error);
+                ssh.VerifyPermissions(SSHUser, SSHPass, out permissionsError);
+                ssh.VerifyQuota(SSHUser, SSHPass, out quotaError);
+
+                // There was a problem with their permissions. Report it.
+                if(!string.IsNullOrEmpty(permissionsError))
+                    ViewBag.PermissionError = permissionsError;
+
+                else
+                    ViewBag.PermissionsSuccess = "The permissions validated successfully!";
+
+                // There was a problem with their quota. Report it.
+                if (!string.IsNullOrEmpty(quotaError))
+                    ViewBag.QuotaError = quotaError;
+
+                else
+                    ViewBag.QuotaSuccess = "You have sufficient quota!";
+
+                if(string.IsNullOrEmpty(permissionsError) && string.IsNullOrEmpty(quotaError))
+                { 
+                    var currentUser = User.Identity;
+
+                }
+
+                return View();
             }
 
             else

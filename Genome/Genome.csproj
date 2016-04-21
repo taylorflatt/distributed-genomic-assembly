@@ -214,6 +214,10 @@
     <Compile Include="Migrations\201604182328263_completeddate.Designer.cs">
       <DependentUpon>201604182328263_completeddate.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201604212016494_clustercheck.cs" />
+    <Compile Include="Migrations\201604212016494_clustercheck.Designer.cs">
+      <DependentUpon>201604212016494_clustercheck.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\AccountViewModels.cs" />
     <Compile Include="Models\GenomeModel.cs" />
@@ -320,6 +324,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201604182328263_completeddate.resx">
       <DependentUpon>201604182328263_completeddate.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201604212016494_clustercheck.resx">
+      <DependentUpon>201604212016494_clustercheck.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>
