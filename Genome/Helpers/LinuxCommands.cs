@@ -71,7 +71,7 @@ namespace Genome.Helpers
             ChangeDirectory(client, "~", out error);
 
             // Now we need to check the number.
-            using (var cmd = client.CreateCommand("quota -vs | awk '{print $2}' | grep -o '[0-9][0-9]*'"))
+            using (var cmd = client.CreateCommand("quota -vs | awk '{print $2}' | grep -o '[0-9][0-9]*' | head -1"))
             {
                 cmd.Execute();
 

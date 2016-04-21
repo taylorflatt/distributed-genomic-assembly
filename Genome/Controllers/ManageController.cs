@@ -8,6 +8,7 @@ using Microsoft.AspNet.Identity.Owin;
 using Microsoft.Owin.Security;
 using Genome.Models;
 using Genome.Helpers;
+using Microsoft.AspNet.Identity.EntityFramework;
 
 namespace Genome.Controllers
 {
@@ -23,7 +24,7 @@ namespace Genome.Controllers
         }
 
         [HttpPost]
-        public ActionResult VerifyBigDogAccount(string SSHUser, string SSHPass)
+        public async Task<ActionResult> VerifyBigDogAccount(string SSHUser, string SSHPass)
         {
             string error = "";
             string permissionsError = "";
@@ -38,7 +39,7 @@ namespace Genome.Controllers
                 ssh.VerifyQuota(SSHUser, SSHPass, out quotaError);
 
                 // There was a problem with their permissions. Report it.
-                if(!string.IsNullOrEmpty(permissionsError))
+                if (!string.IsNullOrEmpty(permissionsError))
                     ViewBag.PermissionError = permissionsError;
 
                 else
@@ -51,10 +52,16 @@ namespace Genome.Controllers
                 else
                     ViewBag.QuotaSuccess = "You have sufficient quota!";
 
-                if(string.IsNullOrEmpty(permissionsError) && string.IsNullOrEmpty(quotaError))
-                { 
-                    var currentUser = User.Identity;
+                if (string.IsNullOrEmpty(permissionsError) && string.IsNullOrEmpty(quotaError))
+                {
+                    // Get the user.
+                    ApplicationUser Model = UserManager.FindById(User.Identity.GetUserId());
 
+                    // Update the account to be verified.
+                    Model.ClusterAccountVerified = true;
+
+                    // Save the user information.
+                    IdentityResult result = await UserManager.UpdateAsync(Model);
                 }
 
                 return View();
@@ -65,8 +72,6 @@ namespace Genome.Controllers
                 ViewBag.Error = "The username and password field cannot be blank.";
                 return View();
             }
-
-            return View();
         }
 
         public ManageController()

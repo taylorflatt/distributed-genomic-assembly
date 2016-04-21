@@ -5,18 +5,25 @@
 
 <h2>Verify Account</h2>
 
-<p style="margin-left: 40px; background-color: #FFFFCD; font-size: 16px; font-family: monospace; color: #B12F2F;">
-    @ViewBag.Error
-    @ViewBag.PermissionsError
-    @ViewBag.QuotaError
-</p>
+@if (ViewBag.Error != null || ViewBag.PermissionsError != null || ViewBag.QuotaError != null)
+{
+    <p style="margin-left: 40px; background-color: #FFFFCD; font-size: 16px; font-family: monospace; color: #B12F2F;">
+        @ViewBag.Error
+        <br />
+        @ViewBag.PermissionsError
+        <br />
+        @ViewBag.QuotaError
+    </p>
+}
 
-<p style="margin-left: 40px; background-color: #FFFFCD; font-size: 16px; font-family: monospace; color: #B12F2F;">
-    @ViewBag.Error
-    @ViewBag.PermissionsSuccess
-    @ViewBag.QuotaSuccess
-</p>
-
+@if (ViewBag.PermissionsSuccess != null || ViewBag.QuotaSuccess != null)
+{
+    <p style="margin-left: 40px; background-color: #FFFFCD; font-size: 16px; font-family: monospace; color: #B12F2F;">
+        @ViewBag.PermissionsSuccess
+        <br />
+        @ViewBag.QuotaSuccess
+    </p>
+}
 
 @using (Html.BeginForm("VerifyBigDogAccount", "Manage", FormMethod.Post))
 {
@@ -68,5 +75,5 @@
 
     </div>
 }
-
+<br />
 
