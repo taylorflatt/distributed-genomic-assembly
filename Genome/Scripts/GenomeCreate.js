@@ -264,12 +264,11 @@ function removeURLBox() {
     if (x > 1)
     {
         document.getElementById("RemoveURLErrorMsg").innerHTML = "";
-        $("#lab_" + x).remove();
+        $("#lab_" + --x).remove();
         $("#row_" + x).remove();
         $("#col_" + x).remove();
         $("#url_" + x).remove();
         $("#DataSourceErrorMsg_" + x).remove();
-        x--;
     }
 
     else

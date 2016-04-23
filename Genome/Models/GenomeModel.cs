@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -9,11 +10,11 @@ namespace Genome.Models
     public class GenomeModel
     {
 
-        public GenomeModel()
-        {
-            // Initial value so the Create view will compile.
-            DataSource = "";
-        }
+        //public GenomeModel()
+        //{
+        //    // Initial value so the Create view will compile.
+        //    DataSource = "";
+        //}
 
         [Key]
         public int uuid { get; set; }
@@ -35,6 +36,7 @@ namespace Genome.Models
 
         // IF the data is PE or Jump then we will only have two files...otherwise n-files.
         [Required]
+        [DefaultValue("")]
         [Display(Name = "Sequenced Data Location")]
         public string DataSource { get; set; }
 
@@ -125,7 +127,7 @@ namespace Genome.Models
 
         [DisplayFormat(ApplyFormatInEditMode = true, DataFormatString = "{0:MM/dd/yy HH:mm}")]
         [Display(Name = "Completed Date")]
-        public DateTime CompletedDate { get; set; }
+        public DateTime? CompletedDate { get; set; }
 
         [Display(Name = "Current Status")]
         public string JobStatus { get; set; }

@@ -57,7 +57,7 @@ namespace Genome.Controllers
                     genomeModel.JobStatus = "Pending";
 
                     // THIS IS FOR SUBMITTING A JOB ONLY. IT NEEDS A VALID VALUE THAT WE WILL OVERWRITE LATER. REMOVE LATER.
-                    genomeModel.CompletedDate = DateTime.UtcNow;
+                    genomeModel.CompletedDate = null;
                     // THIS IS FOR SUBMITTING A JOB ONLY. IT NEEDS A VALID VALUE THAT WE WILL OVERWRITE LATER. REMOVE LATER.
 
                     //string path = "temp";
