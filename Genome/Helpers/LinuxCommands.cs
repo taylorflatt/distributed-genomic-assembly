@@ -57,9 +57,6 @@ namespace Genome.Helpers
 
                 LinuxErrorHandling.CommandError(cmd, out error);
 
-                // DEBUG
-                var test = cmd.Result.ToString().Substring(0, 1);
-
                 return cmd.Result.ToString().Substring(0, 1);
             }
         }
@@ -157,7 +154,7 @@ namespace Genome.Helpers
                         // We need to compress their data on bigdog prior to sending it.
                         // We need to donwload the data from bigdog back to the webserver under the public FTP.
                         // We need to add a README file or at least specify that the data located therein is not complete.
-                        // We need to make the download link accessible (or at least known) to the user.
+                        // We need to make the download link accessible (or at least known) to the user and write "Error" to the details page.
                         // We need to now notify the user that their download is complete and that an error occurred.
                         // We need to mark the job as error (job status = error).
                     }

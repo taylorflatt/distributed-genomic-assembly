@@ -6,7 +6,7 @@
 
 @if (ViewBag.Error != null || ViewBag.PermissionsError != null || ViewBag.QuotaError != null)
 {
-    <p style="margin-left: 40px; background-color: #FFFFCD; font-size: 16px; font-family: monospace; color: #B12F2F;">
+    <p class="result result-background result-error" style="margin-left: 40px;">
         @ViewBag.Error
         <br />
         @ViewBag.PermissionsError
@@ -70,7 +70,7 @@
 
             if (ViewBag.PermissionsSuccess != null || ViewBag.QuotaSuccess != null)
             {
-                <p style="margin-left: 40px; background-color: #FFFFCD; font-size: 16px; font-family: monospace; color: #238438;">
+                <p class="result result-background result-success" style="margin-left: 40px;">
                     @ViewBag.PermissionsSuccess
                     <br />
                     @ViewBag.QuotaSuccess

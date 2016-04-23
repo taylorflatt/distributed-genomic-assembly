@@ -1,2 +1,23 @@
 ﻿.jumbotron {
 }
+
+.result {
+    font-size: 16px; 
+    font-family: monospace;
+}
+
+.result-background {
+    background-color: #FFFFCD;
+}
+
+.result-normal {
+    color: #000000;
+}
+
+.result-success {
+    color: #238438;
+}
+
+.result-error {
+    color: #B12F2F;
+}

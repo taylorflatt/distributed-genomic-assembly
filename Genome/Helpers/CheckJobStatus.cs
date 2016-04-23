@@ -190,7 +190,7 @@ namespace Genome.Helpers
                         if (Convert.ToInt32(cmd.Result.ToString()) > 0)
                             currentStep = item.Key;
 
-                        if (LinuxErrorHandling.CommandError(cmd, out error) == true)
+                        if (LinuxErrorHandling.CommandError(cmd, out error) || Convert.ToInt32(cmd.Result.ToString()) <= 0)
                             break;
                     }
                 }

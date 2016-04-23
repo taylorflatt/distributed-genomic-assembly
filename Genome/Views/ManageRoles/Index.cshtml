@@ -3,20 +3,28 @@
 }
 
 <h2>Manage User Roles</h2>
-<hr />
-
-<div style="background-color:yellow; color: maroon; text-decoration: solid; font-size: 24px; font-weight: 400;">
-    @Html.ViewBag.UserSelectError
-    @Html.ViewBag.RoleSelectError
-    @Html.ViewBag.DeleteError
-    @Html.ViewBag.ResultMessage
-</div>
-
 <p>
     <em>Note: When adding a user to the admin role, they cannot be removed - only deleted from the role to prevent being locked from the system.</em>
 </p>
 
-@using (Html.BeginForm("ManageUsersRoles", "ManageRoles"))
+<hr />
+
+<div class="result result-background result-error">
+    @Html.ViewBag.UserSelectError
+    @Html.ViewBag.RoleSelectError
+    @Html.ViewBag.DeleteError
+    @Html.ViewBag.GetUsersError
+    @Html.ViewBag.AdminDeleteError
+</div>
+
+<div class="result result-background result-success">
+    @Html.ViewBag.ResultMessage
+</div>
+
+<br />
+
+
+@using (Html.BeginForm("Index", "ManageRoles"))
 {
     @Html.AntiForgeryToken()
     @Html.ValidationSummary(true)
@@ -30,6 +38,7 @@
 
     //<input type="submit" value="Add" />
 
+    <input type="submit" name="command" value="Get Users List" />
     <input type="submit" name="command" value="Add User To Role" />
     <input type="submit" name="command" value="Get User Role" />
     <input type="submit" name="command" value="Remove User from Role" />
@@ -38,10 +47,24 @@
 
     @if (ViewBag.RolesForThisUser != null)
     {
-        <div style="background-color:yellow;">
+        <div class="result-background result-normal">
             <h3>Roles for this user </h3>
             <ul>
                 <li>@ViewBag.RolesForThisUser</li>
             </ul>
         </div>
     }
+
+@if (ViewBag.UserList != null)
+{
+    <div class="result-background result-normal">
+        <h3>List of Users (User - Role)</h3>
+        @foreach (var user in ViewBag.UserList)
+        {
+            <ul>
+                <li>@user.Item1 - @user.Item2</li>
+            </ul>
+        }
+
+    </div>
+}

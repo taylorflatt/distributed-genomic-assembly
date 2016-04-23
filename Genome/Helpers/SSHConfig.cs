@@ -155,40 +155,6 @@ namespace Genome.Helpers
             this.ip = ip;
             this.genomeModel = genomeModel;
             this.path = path;
-
-            //// This is for TESTING PURPOSES ONLY. It is commented out otherwise.
-            //using (var sshClient = new SshClient("fake", genomeModel.SSHUser, genomeModel.SSHPass))
-            //{
-            //    try
-            //    {
-            //        sshClient.Connect();
-
-            //        string jobName = genomeModel.SSHUser.ToString() + genomeModel.uuid.ToString();
-            //        //string pattern = "step";
-
-            //        if (errorCount == 0) { CreateTestJob(sshClient, jobName, out error); }
-
-            //        //GetStatusOutput(sshClient, "[job_name].o[job_number]", pattern);
-            //    }
-
-            //    // SSH Connection couldn't be established.
-            //    catch (SocketException e)
-            //    {
-            //        error = "The SSH connection couldn't be established. " + e.Message;
-            //    }
-
-            //    // Authentication failure.
-            //    catch(SshAuthenticationException e)
-            //    {
-            //        error = "The credentials were entered incorrectly. " + e.Message;
-            //    }
-
-            //    // The SSH connection was dropped.
-            //    catch(SshConnectionException e)
-            //    {
-            //        error = "The connection was terminated unexpectedly. " + e.Message;
-            //    }
-            //}
         }
 
         //// Debug purposes only.
@@ -252,6 +218,7 @@ namespace Genome.Helpers
                     // This command has NOT been tested.
                     if (string.IsNullOrEmpty(error)) { LinuxCommands.DownloadFile(client, masurcaScriptUrl, out error, wgetLogParameter); }
 
+                    // This isn't needed if we are downloading data with the init script.
                     if (string.IsNullOrEmpty(error)) { LinuxCommands.ChangeDirectory(client, dataPath, out error); }
 
                     // Now we need to download each of the data files the user has supplied. Actually we don't want to do this because it will

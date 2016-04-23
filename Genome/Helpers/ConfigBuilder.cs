@@ -38,7 +38,7 @@ namespace Genome.Helpers
                 }
 
                 // These locations are not the same, used for now for development purposes
-                if (genomeModel.JumpReads)
+                else if (genomeModel.JumpReads)
                 {
                     tw.WriteLine("JUMP= sh " + genomeModel.JumpLength + " 200  " + dataString);
                 }

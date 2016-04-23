@@ -13,6 +13,7 @@ namespace Genome.Controllers
 
         public ActionResult Create()
         {
+            // Return the VerifyAccount view if their account is not verified...otherwise return this view.
             return View(new GenomeModel());
         }
 
@@ -52,8 +53,12 @@ namespace Genome.Controllers
 
 
                     genomeModel.CreatedBy = User.Identity.Name;
-                    genomeModel.CreatedDate = DateTime.Now;
+                    genomeModel.CreatedDate = DateTime.UtcNow;
                     genomeModel.JobStatus = "Pending";
+
+                    // THIS IS FOR SUBMITTING A JOB ONLY. IT NEEDS A VALID VALUE THAT WE WILL OVERWRITE LATER. REMOVE LATER.
+                    genomeModel.CompletedDate = DateTime.UtcNow;
+                    // THIS IS FOR SUBMITTING A JOB ONLY. IT NEEDS A VALID VALUE THAT WE WILL OVERWRITE LATER. REMOVE LATER.
 
                     //string path = "temp";
                     //ConfigBuilder builder = new ConfigBuilder();
@@ -73,7 +78,7 @@ namespace Genome.Controllers
                     //ssh.CreateConnection(out error);
 
                     // No error so proceed.
-                    if (error.Equals(""))
+                    if (string.IsNullOrEmpty(error))
                     {
                         db.GenomeModels.Add(genomeModel);
                         db.SaveChanges();
