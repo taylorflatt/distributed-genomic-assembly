@@ -157,18 +157,6 @@ namespace Genome.Helpers
             this.path = path;
         }
 
-        //// Debug purposes only.
-        //private void CreateTestJob(SshClient client, string jobName, out string error)
-        //{
-        //    // qsub -pe make 20 -V -e /tmp/Genome/ -o /tmp/Genome/ -b y -l hostname=compute-0-24 -N taylor1 ./HelloWorld
-        //    using (var cmd = client.CreateCommand("qub -pe make 20 -V -b y -cwd -l hostname=" + COMPUTENODE1 + " -N " + jobName + " ./HelloWorld"))
-        //    {
-        //        cmd.Execute();
-
-        //        CatchError(cmd, out error);
-        //    }
-        //}
-
         // Will return TRUE if successful connection and commands all run or FALSE if ANY error is encountered.
         public bool CreateJob(out string error)
         {

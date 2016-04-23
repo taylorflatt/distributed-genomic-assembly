@@ -259,7 +259,6 @@ function addURLBox() {
     x++;
 }
 
-// NEED TO DEBUG THIS BECAUSE IT DOESN'T ACTUALLY REMOVE THE TEXTBOXES.
 function removeURLBox() {
     if (x > 1)
     {

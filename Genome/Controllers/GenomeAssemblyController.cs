@@ -108,47 +108,23 @@ namespace Genome.Controllers
         public ActionResult Details(int? id)
         {
             if (id == null)
-            {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
-            }
+
             GenomeModel genomeModel = db.GenomeModels.Find(id);
+
             if (genomeModel == null)
-            {
                 return HttpNotFound();
-            }
-            return View(genomeModel);
+
+            string currentUser = User.Identity.Name;
+
+            // Only let the user that created the job view that job.
+            if (genomeModel.CreatedBy.Equals(currentUser))
+                return View(genomeModel);
+
+            else
+                return RedirectToAction("DetailsPermissionError", "Error");
         }
 
-        // GET: GenomeAssembly/Edit/5
-        public ActionResult Edit(int? id)
-        {
-            if (id == null)
-            {
-                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
-            }
-            GenomeModel genomeModel = db.GenomeModels.Find(id);
-            if (genomeModel == null)
-            {
-                return HttpNotFound();
-            }
-            return View(genomeModel);
-        }
-
-        // POST: GenomeAssembly/Edit/5
-        // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
-        // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Edit(GenomeModel genomeModel)
-        {
-            if (ModelState.IsValid)
-            {
-                db.Entry(genomeModel).State = EntityState.Modified;
-                db.SaveChanges();
-                return RedirectToAction("Index");
-            }
-            return View(genomeModel);
-        }
         protected override void Dispose(bool disposing)
         {
             if (disposing)
