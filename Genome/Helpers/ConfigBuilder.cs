@@ -84,7 +84,6 @@ namespace Genome.Helpers
             Directory.CreateDirectory(path);
             string fileName = "init_" + genomeModel.uuid + ".sh";
             string fullPath = path + fileName;
-
             if (!File.Exists(fullPath))
             {
                 TextWriter tw = new StreamWriter(fullPath);

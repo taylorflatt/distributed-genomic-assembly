@@ -206,17 +206,6 @@ namespace Genome.Helpers
                     // This command has NOT been tested.
                     if (string.IsNullOrEmpty(error)) { LinuxCommands.DownloadFile(client, masurcaScriptUrl, out error, wgetLogParameter); }
 
-                    // This isn't needed if we are downloading data with the init script.
-                    if (string.IsNullOrEmpty(error)) { LinuxCommands.ChangeDirectory(client, dataPath, out error); }
-
-                    // Now we need to download each of the data files the user has supplied. Actually we don't want to do this because it will
-                    // force the user to wait until the files are all downloaded (which may take a long time). So we need to pass that off to a script 
-                    // which we will run with the scheduler.
-                    //foreach(var url in dataSources)
-                    //{
-                    //    if (string.IsNullOrEmpty(error)) { LinuxCommands.DownloadFile(client, url, out error, wgetLogParameter); }
-                    //}
-
                     if (string.IsNullOrEmpty(error)) { LinuxCommands.ChangePermissions(client, workingDirectory, "777", out error, "-R"); }
 
                     if(string.IsNullOrEmpty(error))

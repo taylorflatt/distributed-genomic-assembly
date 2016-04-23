@@ -7,12 +7,16 @@ using Renci.SshNet.Common;
 using System.Net.Sockets;
 using System.Linq;
 
+// TODO: CREATE ANOTHER PARAMETER IN THE MODEL THAT REFLECTS THE DIFFERENT STATUSES OF EACH ASSEMBLER AS WELL AS THE OVERALL STATUS. THIS WILL ALL
+// NEED TO BE CHANGED.
 namespace Genome.Helpers
 {
     public class CheckJobStatus
     {
         private string ip = "";
-        private GenomeAssemblyDbContext db = new GenomeAssemblyDbContext();
+        private const string FILESERVER_FTP_URL = "UNKNOWN";
+        private const string  PUBLIC_KEY_LOCATION = "UNKNOWN";
+        //private GenomeAssemblyDbContext db = new GenomeAssemblyDbContext();
 
         public CheckJobStatus(string ip, out string error)
         {
@@ -58,18 +62,43 @@ namespace Genome.Helpers
                         //              where j.JobStatus.Equals("Running")
                         //              select j.SGEJobId);
 
-                        var jobInfo = (from j in db.GenomeModels
+                        var stepList = new List<KeyValuePair<int, string>>();
+                        stepList.Add(new KeyValuePair<int, string>(1, "FILENAME"));
+                        stepList.Add(new KeyValuePair<int, string>(2, "FILENAME"));
+                        stepList.Add(new KeyValuePair<int, string>(3, "FILENAME"));
+                        stepList.Add(new KeyValuePair<int, string>(4, "FILENAME"));
+                        stepList.Add(new KeyValuePair<int, string>(5, "FILENAME"));
+
+                        var jobList = (from j in db.GenomeModels
                                        where j.JobStatus.Equals("Running")
-                                       select new { j.uuid, j.SGEJobId });
+                                       select (new { j.uuid, j.SGEJobId }));
 
-                        List<Tuple<int, int>> list = new List<Tuple<int, int>>();
-
-                        foreach (var job in jobInfo)
+                        foreach(var job in jobList)
                         {
-                            list.Add(Tuple.Create(job.uuid, job.SGEJobId));
-                        }
+                            // Check to see if the current job is actually running.
+                            if(LinuxCommands.JobRunning(client, Convert.ToInt32(job.SGEJobId), out error))
+                            {
+                                // Get the current step of the job.
+                                if (string.IsNullOrEmpty(error))
+                                {
+                                    // Get the model that corresponds to this particular job.
+                                    GenomeModel genomeModel = db.GenomeModels.Find(job.uuid);
 
-                        GetCurrentStep(client, list, out error);
+                                    // Set the current step.
+                                    genomeModel.CurrentStep = GetCurrentStep(client, Convert.ToInt32(job.uuid), stepList, out error);
+
+                                    // Save the changes to the model in the database.
+                                    db.SaveChanges();
+                                }
+                            }
+
+                            // The job isn't running.
+                            else
+                            {
+                                // We now need to check to see if it has completed or if it has errored out.
+                                CheckJobCompleted(client, job.SGEJobId, workingDirectory, out error);
+                            }
+                        }
                     }
 
                     if (string.IsNullOrEmpty(error))
@@ -102,7 +131,6 @@ namespace Genome.Helpers
 
                     return false;
                 }
-
             }
         }
 
@@ -155,55 +183,100 @@ namespace Genome.Helpers
             }
         }
 
+        // This has NOT been tested yet.
+        private bool CheckJobCompleted(SshClient client, int jobId, string workingDirectory, out string error)
+        {
+            // We are assuming that the job has completed running. So we need to check the error file in our log directory. If that log has 
+            // ANYTHING in it, then we have an error and need to notify the user.
+
+            // If the error log is empty, then we assume that it has completed successfully and we notify the user. We follow all the basic steps 
+            // for both methods but change the notification message.
+
+            // There is an error with the job. Aka there is information written to the error log.
+            if (LinuxCommands.JobHasError(client, jobId, workingDirectory, out error))
+            {
+                string zipStoreLocation = workingDirectory + "Job" + jobId + "/Output/job" + jobId + ".zip";
+                string jobLocation = workingDirectory + "Job" + jobId;
+
+                // Let's compress the job (-y: store sym links, -r: travel recursively).
+                if (string.IsNullOrEmpty(error)) { LinuxCommands.ZipFiles(client, 9, zipStoreLocation, jobLocation, out error, "-y -r"); }
+
+                else
+                {
+                    using (GenomeAssemblyDbContext db = new GenomeAssemblyDbContext())
+                    {
+                        GenomeModel genomeModel = db.GenomeModels.Find(jobId);
+                        genomeModel.JobStatus = "Error Packaging Data";
+                        db.SaveChanges();
+                    }
+
+                }
+
+                // Now we connect to the file server FTP
+                if (string.IsNullOrEmpty(error)) { LinuxCommands.ConnectSFTP(client, FILESERVER_FTP_URL, PUBLIC_KEY_LOCATION, out error); }
+
+                // Now we need to upload our zip file.
+                if (string.IsNullOrEmpty(error))
+                {
+                    using (GenomeAssemblyDbContext db = new GenomeAssemblyDbContext())
+                    {
+                        GenomeModel genomeModel = db.GenomeModels.Find(jobId);
+                        genomeModel.JobStatus = "Transferring";
+                        db.SaveChanges();
+
+                        LinuxCommands.SftpUploadFile(client, zipStoreLocation, out error);
+
+                        genomeModel.JobStatus = "Completed";
+                        db.SaveChanges();
+
+                    }
+                }
+
+                // There was an error transferring the files.
+                else
+                {
+                    using (GenomeAssemblyDbContext db = new GenomeAssemblyDbContext())
+                    {
+                        GenomeModel genomeModel = db.GenomeModels.Find(jobId);
+                        genomeModel.JobStatus = "Error Transferring";
+                        db.SaveChanges();
+                    }
+                }
+
+                // Now we need to update the status of the job.
+            }
+        }
+
+        
+
         // This will change depending on how we approach doing the check for the status.
         // Returns the current step of the job or -1 if there was an error encountered.
-        private int GetCurrentStep(SshClient client, List<Tuple<int, int>> jobInfo, out string error)
+        private int GetCurrentStep(SshClient client, int jobUuid, List<KeyValuePair<int, string>> stepList, out string error)
         {
             error = "";
 
             // A quick and dirty way to check for specific files is to create a dictionary of known files associated with the steps
             // and then successively run through each command to see the job is.
 
-            var stepList = new List<KeyValuePair<int, string>>();
-            stepList.Add(new KeyValuePair<int, string>(1, "FILENAME"));
-            stepList.Add(new KeyValuePair<int, string>(2, "FILENAME"));
-            stepList.Add(new KeyValuePair<int, string>(3, "FILENAME"));
-            stepList.Add(new KeyValuePair<int, string>(4, "FILENAME"));
-            stepList.Add(new KeyValuePair<int, string>(5, "FILENAME"));
-
             int currentStep = 0;
 
             // Here item1 = uuid and item2 = sgejobid.
-            foreach(var job in jobInfo)
+            string workingDirectory = "/share/scratch/Genome/Job" + jobUuid;
+
+            LinuxCommands.ChangeDirectory(client, workingDirectory, out error);
+
+            foreach (var step in stepList)
             {
-                 string workingDirectory = "/share/scratch/Genome/Job" + job.Item1;
-
-                LinuxCommands.ChangeDirectory(client, workingDirectory, out error);
-
-                foreach (var item in stepList)
+                using (var cmd = client.CreateCommand("ls -l | grep " + step.Value + " | wc -l"))
                 {
-                    using (var cmd = client.CreateCommand("ls -l | grep " + item.Value + " | wc -l"))
-                    {
-                        cmd.Execute();
+                    cmd.Execute();
 
-                        // File found.
-                        if (Convert.ToInt32(cmd.Result.ToString()) > 0)
-                            currentStep = item.Key;
+                    // File found.
+                    if (Convert.ToInt32(cmd.Result.ToString()) > 0)
+                        currentStep = step.Key;
 
-                        if (LinuxErrorHandling.CommandError(cmd, out error) || Convert.ToInt32(cmd.Result.ToString()) <= 0)
-                            break;
-                    }
-                }
-
-                // If the final file set has been created, we need to check to see if the job is still running or if it has completed.
-                if (currentStep == stepList.Last().Key)
-                {
-                    // The job is NOT running we need to check the stderr file to make sure there aren't any errors. Otherwise we don't care.
-                    if (LinuxCommands.JobRunning(client, job.Item2, out error) == false)
-                        LinuxCommands.CheckJobError(client, job.Item2, workingDirectory, out error);
-
-                    else
-                        return currentStep;
+                    if (LinuxErrorHandling.CommandError(cmd, out error) || Convert.ToInt32(cmd.Result.ToString()) <= 0)
+                        break;
                 }
             }
 

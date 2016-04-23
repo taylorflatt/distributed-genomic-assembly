@@ -9,13 +9,6 @@ namespace Genome.Models
     [Serializable]
     public class GenomeModel
     {
-
-        //public GenomeModel()
-        //{
-        //    // Initial value so the Create view will compile.
-        //    DataSource = "";
-        //}
-
         [Key]
         public int uuid { get; set; }
 
@@ -131,5 +124,9 @@ namespace Genome.Models
 
         [Display(Name = "Current Status")]
         public string JobStatus { get; set; }
+
+        [Display(Name = "Current Step")]
+        [DefaultValue(1)]
+        public int CurrentStep { get; set; }
     }
 }

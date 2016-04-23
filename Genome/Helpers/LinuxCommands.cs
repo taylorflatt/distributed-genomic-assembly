@@ -100,10 +100,10 @@ namespace Genome.Helpers
         }
 
         // Returns true if the job is currently running or false if the job isn't running/if an error exists.
-        protected internal static bool JobRunning(SshClient client, int jobId, out string error)
+        protected internal static bool JobRunning(SshClient client, int sgeJobId, out string error)
         {
             // USAGE: qstat -j 5120
-            using (var cmd = client.CreateCommand("qstat -j " + jobId))
+            using (var cmd = client.CreateCommand("qstat -j " + sgeJobId))
             {
                 cmd.Execute();
 
@@ -125,13 +125,42 @@ namespace Genome.Helpers
             }
         }
 
-        protected internal static void CheckJobError(SshClient client, int jobId, string workingDirectory, out string error)
+        protected internal static void ZipFiles(SshClient client, int compressionSpeed, string outputName, string directory, out string error, string parameters = "")
+        {
+            using (var cmd = client.CreateCommand("zip " + compressionSpeed + " " + outputName + " " + directory + " " + parameters ))
+            {
+                cmd.Execute();
+
+                LinuxErrorHandling.CommandError(cmd, out error);
+            }
+        }
+
+        protected internal static bool JobHasError(SshClient client, int jobId, string workingDirectory, out string error)
+        {
+            ChangeDirectory(client, workingDirectory + "/Logs", out error);
+
+            using (var cmd = client.CreateCommand("ls -l | grep e" + jobId + " " + "| cat `awk '{print $9}'` | wc -w"))
+            {
+                cmd.Execute();
+
+                LinuxErrorHandling.CommandError(cmd, out error);
+
+                // Error log has been written to...
+                if (Convert.ToInt32(cmd.Result) == 0)
+                    return false;
+
+                else
+                    return true;
+            }
+        }
+
+        protected internal static bool CheckJobComplete(SshClient client, int jobId, string workingDirectory, out string error)
         {
             ChangeDirectory(client, workingDirectory + "/Logs", out error);
 
             // USAGE: ls -l | grep e2014 | cat `awk '{print $9}'`
             // This effectively finds the error log in the cwd then prints the word count to stdout.
-            using (var cmd = client.CreateCommand("ls -l | grep e" + jobId + " " + "| cat `awk '{print $9}'` | wc -w")) 
+            using (var cmd = client.CreateCommand("ls -l | grep e" + jobId + " " + "| cat `awk '{print $9}'` | wc -w"))
             {
                 cmd.Execute();
 
@@ -146,6 +175,8 @@ namespace Genome.Helpers
                         // We need to make the download link accessible (or at least known) to the user.
                         // We need to now notify the user that their download is complete.
                         // We need to mark the job as completed (job status = completed/finished).
+
+                        return true; // completed
                     }
 
                     // There is something in the error log, we had an unsuccessful run.
@@ -157,8 +188,34 @@ namespace Genome.Helpers
                         // We need to make the download link accessible (or at least known) to the user and write "Error" to the details page.
                         // We need to now notify the user that their download is complete and that an error occurred.
                         // We need to mark the job as error (job status = error).
+
+                        return false; // not completed
                     }
                 }
+
+                else
+                    return false; // error
+            }
+        }
+
+        // Requires a public key.
+        protected internal static void ConnectSFTP(SshClient client, string fileServerFtp, string publicKeyLocation, out string error, string parameters = "")
+        {
+            using (var cmd = client.CreateCommand("sftp -i " + publicKeyLocation + fileServerFtp))
+            {
+                cmd.Execute();
+
+                LinuxErrorHandling.CommandError(cmd, out error);
+            }
+        }
+
+        protected internal static void SftpUploadFile(SshClient client, string fileLocation, out string error, string parameters = "")
+        {
+            using (var cmd = client.CreateCommand("put " + fileLocation))
+            {
+                cmd.Execute();
+
+                LinuxErrorHandling.CommandError(cmd, out error);
             }
         }
 
