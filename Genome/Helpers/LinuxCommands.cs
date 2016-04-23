@@ -209,6 +209,27 @@ namespace Genome.Helpers
             }
         }
 
+        protected internal static bool CheckMasurcaStep(SshClient client, string workingDirectory, string filename, out string error)
+        {
+            // Change to the masurca output directory.
+            ChangeDirectory(client, workingDirectory, out error);
+
+            using (var cmd = client.CreateCommand("find " + filename + " | wc -l"))
+            {
+                cmd.Execute();
+
+                LinuxErrorHandling.CommandError(cmd, out error);
+
+                // If the file isn't in the masurca working directory, then it hasn't been created yet.
+                if (Convert.ToInt32(cmd.Result) == 0)
+                    return false;
+
+                else
+                    return true;
+
+            }
+        }
+
         protected internal static void SftpUploadFile(SshClient client, string fileLocation, out string error, string parameters = "")
         {
             using (var cmd = client.CreateCommand("put " + fileLocation))

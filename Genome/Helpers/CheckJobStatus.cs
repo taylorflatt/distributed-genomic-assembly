@@ -54,6 +54,7 @@ namespace Genome.Helpers
                     client.Connect();
 
                     string workingDirectory = "/share/scratch/Genome/";
+                    int masurcaCurrentStep = 0;
 
                     using (GenomeAssemblyDbContext db = new GenomeAssemblyDbContext())
                     {
@@ -62,15 +63,25 @@ namespace Genome.Helpers
                         //              where j.JobStatus.Equals("Running")
                         //              select j.SGEJobId);
 
-                        var stepList = new List<KeyValuePair<int, string>>();
-                        stepList.Add(new KeyValuePair<int, string>(1, "FILENAME"));
-                        stepList.Add(new KeyValuePair<int, string>(2, "FILENAME"));
-                        stepList.Add(new KeyValuePair<int, string>(3, "FILENAME"));
-                        stepList.Add(new KeyValuePair<int, string>(4, "FILENAME"));
-                        stepList.Add(new KeyValuePair<int, string>(5, "FILENAME"));
+                        var overallStepList = new List<KeyValuePair<int, string>>();
+                        overallStepList.Add(new KeyValuePair<int, string>(1, "Program Queued"));
+                        overallStepList.Add(new KeyValuePair<int, string>(2, "Data Conversion"));
+                        overallStepList.Add(new KeyValuePair<int, string>(3, "Running Assemblers"));
+                        overallStepList.Add(new KeyValuePair<int, string>(4, "Finished Assembler 1 of 1"));
+                        overallStepList.Add(new KeyValuePair<int, string>(5, "Data Analysis"));
+                        overallStepList.Add(new KeyValuePair<int, string>(6, "Compressing Data"));
+                        overallStepList.Add(new KeyValuePair<int, string>(7, "Uploading Data"));
+                        overallStepList.Add(new KeyValuePair<int, string>(8, "Complete"));
+
+                        var masurcaStepList = new List<KeyValuePair<int, string>>();
+                        masurcaStepList.Add(new KeyValuePair<int, string>(1, "FILENAME"));
+                        masurcaStepList.Add(new KeyValuePair<int, string>(2, "FILENAME"));
+                        masurcaStepList.Add(new KeyValuePair<int, string>(3, "FILENAME"));
+                        masurcaStepList.Add(new KeyValuePair<int, string>(4, "FILENAME"));
+                        masurcaStepList.Add(new KeyValuePair<int, string>(5, "FILENAME"));
 
                         var jobList = (from j in db.GenomeModels
-                                       where j.JobStatus.Equals("Running")
+                                       where j.OverallJobStatus.Equals("Running")
                                        select (new { j.uuid, j.SGEJobId }));
 
                         foreach(var job in jobList)
@@ -81,11 +92,34 @@ namespace Genome.Helpers
                                 // Get the current step of the job.
                                 if (string.IsNullOrEmpty(error))
                                 {
+                                    string masurcaWorkingDirectory = workingDirectory + "Job" + job.uuid + "/Output/Masurca";
+
+                                    // Now we need to check the current steps of the individual assemblers. 
+                                    
+
+                                    
+                                    //foreach (var step in wgsStepList)
+                                    //{
+                                    //    LinuxCommands.CheckWgsStep(client, wgsWorkingDirectory, step.Value.ToString(), out error);
+                                    //}
+
                                     // Get the model that corresponds to this particular job.
                                     GenomeModel genomeModel = db.GenomeModels.Find(job.uuid);
 
-                                    // Set the current step.
-                                    genomeModel.CurrentStep = GetCurrentStep(client, Convert.ToInt32(job.uuid), stepList, out error);
+                                    // Set the current step of the job overall.
+                                    //genomeModel.CurrentOverallStep = GetCurrentStep(client, Convert.ToInt32(job.uuid), stepList, out error);
+                                    
+                                    // Set the current step of the masurca assembler.
+                                    genomeModel.MasurcaCurrentStep = GetCurrentStep(client, masurcaWorkingDirectory, Convert.ToInt32(job.uuid), masurcaStepList, out error);
+
+                                    // Need to see if the 
+                                    if (masurcaCurrentStep == masurcaStepList.Last().Key)
+                                    {
+
+                                    }
+
+                                    // Set the current step of masurca.
+                                    genomeModel.MasurcaCurrentStep = 
 
                                     // Save the changes to the model in the database.
                                     db.SaveChanges();
@@ -206,10 +240,9 @@ namespace Genome.Helpers
                     using (GenomeAssemblyDbContext db = new GenomeAssemblyDbContext())
                     {
                         GenomeModel genomeModel = db.GenomeModels.Find(jobId);
-                        genomeModel.JobStatus = "Error Packaging Data";
+                        genomeModel.OverallJobStatus = "Error Packaging Data";
                         db.SaveChanges();
                     }
-
                 }
 
                 // Now we connect to the file server FTP
@@ -221,12 +254,12 @@ namespace Genome.Helpers
                     using (GenomeAssemblyDbContext db = new GenomeAssemblyDbContext())
                     {
                         GenomeModel genomeModel = db.GenomeModels.Find(jobId);
-                        genomeModel.JobStatus = "Transferring";
+                        genomeModel.OverallJobStatus = "Transferring";
                         db.SaveChanges();
 
                         LinuxCommands.SftpUploadFile(client, zipStoreLocation, out error);
 
-                        genomeModel.JobStatus = "Completed";
+                        genomeModel.OverallJobStatus = "Completed";
                         db.SaveChanges();
 
                     }
@@ -238,22 +271,25 @@ namespace Genome.Helpers
                     using (GenomeAssemblyDbContext db = new GenomeAssemblyDbContext())
                     {
                         GenomeModel genomeModel = db.GenomeModels.Find(jobId);
-                        genomeModel.JobStatus = "Error Transferring";
+                        genomeModel.OverallJobStatus = "Error Transferring";
                         db.SaveChanges();
                     }
                 }
 
                 // Now we need to update the status of the job.
             }
+
+            return true; //TEMP VALUE
         }
 
         
 
         // This will change depending on how we approach doing the check for the status.
         // Returns the current step of the job or -1 if there was an error encountered.
-        private int GetCurrentStep(SshClient client, int jobUuid, List<KeyValuePair<int, string>> stepList, out string error)
+        private int GetCurrentStep(SshClient client, string workingDirectory, int jobUuid, List<KeyValuePair<int, string>> stepList, out string error)
         {
-            error = "";
+            // Change to the assembler output directory.
+            LinuxCommands.ChangeDirectory(client, workingDirectory, out error);
 
             // A quick and dirty way to check for specific files is to create a dictionary of known files associated with the steps
             // and then successively run through each command to see the job is.
@@ -261,13 +297,9 @@ namespace Genome.Helpers
             int currentStep = 0;
 
             // Here item1 = uuid and item2 = sgejobid.
-            string workingDirectory = "/share/scratch/Genome/Job" + jobUuid;
-
-            LinuxCommands.ChangeDirectory(client, workingDirectory, out error);
-
             foreach (var step in stepList)
             {
-                using (var cmd = client.CreateCommand("ls -l | grep " + step.Value + " | wc -l"))
+                using (var cmd = client.CreateCommand("find " + step.Value + " | wc -l"))
                 {
                     cmd.Execute();
 

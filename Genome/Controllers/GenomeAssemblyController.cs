@@ -54,7 +54,7 @@ namespace Genome.Controllers
 
                     genomeModel.CreatedBy = User.Identity.Name;
                     genomeModel.CreatedDate = DateTime.UtcNow;
-                    genomeModel.JobStatus = "Pending";
+                    genomeModel.OverallJobStatus = "Submitted To Scheduler";
 
                     // THIS IS FOR SUBMITTING A JOB ONLY. IT NEEDS A VALID VALUE THAT WE WILL OVERWRITE LATER. REMOVE LATER.
                     genomeModel.CompletedDate = null;

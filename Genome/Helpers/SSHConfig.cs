@@ -170,6 +170,7 @@ namespace Genome.Helpers
                 string dataPath = workingDirectory + "/Data";
                 string configPath = workingDirectory + "/Config"; 
                 string outputPath = workingDirectory + "/Output";
+                string masurcaOutputPath = outputPath + "/Masurca"; // UNTESTED and unsure how to implement this. Need to think of multiple assemblers.
                 string logPath = workingDirectory + "/Logs";
 
                 // The outward facing (FTP) path to where the scripts are stored for download.

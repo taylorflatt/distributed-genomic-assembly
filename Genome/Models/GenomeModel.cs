@@ -54,6 +54,13 @@ namespace Genome.Models
         [Display(Name = "Masurca Assembler")]
         public bool UseMasurca { get; set; }
 
+        [Display(Name = "Masurca Current Status")]
+        public string MasurcaStatus { get; set; }
+
+        [Display(Name = "Masurca Current Step")]
+        [DefaultValue(1)]
+        public int MasurcaCurrentStep { get; set; }
+
         [Display(Name = "Masurca PE Mean")]
         public int? MasurcaPEMean { get; set; }
 
@@ -123,10 +130,10 @@ namespace Genome.Models
         public DateTime? CompletedDate { get; set; }
 
         [Display(Name = "Current Status")]
-        public string JobStatus { get; set; }
+        public string OverallJobStatus { get; set; }
 
         [Display(Name = "Current Step")]
         [DefaultValue(1)]
-        public int CurrentStep { get; set; }
+        public int CurrentOverallStep { get; set; }
     }
 }
