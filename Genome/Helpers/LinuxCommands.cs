@@ -135,6 +135,25 @@ namespace Genome.Helpers
             }
         }
 
+        protected internal static bool DirectoryHasFiles(SshClient client, string directory, out string error)
+        {
+            using (var cmd = client.CreateCommand("ls -A " + directory + " | wc -l"))
+            {
+                cmd.Execute();
+
+                LinuxErrorHandling.CommandError(cmd, out error);
+
+                // The directory has a file or directory
+                if (Convert.ToInt32(cmd.Result) > 0)
+                {
+                    return true;
+                }
+
+                else
+                    return false;
+            }
+        }
+
         protected internal static bool JobHasError(SshClient client, int jobId, string workingDirectory, out string error)
         {
             ChangeDirectory(client, workingDirectory + "/Logs", out error);

@@ -231,6 +231,10 @@
     <Compile Include="Migrations\201604230233286_ChangedCompletedTime.Designer.cs">
       <DependentUpon>201604230233286_ChangedCompletedTime.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201604232337158_new.cs" />
+    <Compile Include="Migrations\201604232337158_new.Designer.cs">
+      <DependentUpon>201604232337158_new.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\AccountViewModels.cs" />
     <Compile Include="Models\GenomeModel.cs" />
@@ -351,6 +355,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201604230233286_ChangedCompletedTime.resx">
       <DependentUpon>201604230233286_ChangedCompletedTime.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201604232337158_new.resx">
+      <DependentUpon>201604232337158_new.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>

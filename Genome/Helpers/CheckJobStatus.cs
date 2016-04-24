@@ -13,6 +13,25 @@ namespace Genome.Helpers
 {
     public class CheckJobStatus
     {
+        string[] overallStepList = new string[]
+        {
+            "Program Queued",
+            "Data Conversion",
+            "Running Assembly",
+            "Finished Assembler 1 of 1",
+            "Data Analysis",
+            "Compressing Data",
+            "Uploading Data",
+            "Complete"
+        };
+
+        string[] masurcaStepListDescriptions = new string[]
+        {
+            "Creating Contigs",
+            "Backing something up",
+            "Data Analysis Complete"
+        };
+
         private string ip = "";
         private const string FILESERVER_FTP_URL = "UNKNOWN";
         private const string  PUBLIC_KEY_LOCATION = "UNKNOWN";
@@ -54,7 +73,6 @@ namespace Genome.Helpers
                     client.Connect();
 
                     string workingDirectory = "/share/scratch/Genome/";
-                    int masurcaCurrentStep = 0;
 
                     using (GenomeAssemblyDbContext db = new GenomeAssemblyDbContext())
                     {
@@ -63,63 +81,108 @@ namespace Genome.Helpers
                         //              where j.JobStatus.Equals("Running")
                         //              select j.SGEJobId);
 
-                        var overallStepList = new List<KeyValuePair<int, string>>();
-                        overallStepList.Add(new KeyValuePair<int, string>(1, "Program Queued"));
-                        overallStepList.Add(new KeyValuePair<int, string>(2, "Data Conversion"));
-                        overallStepList.Add(new KeyValuePair<int, string>(3, "Running Assemblers"));
-                        overallStepList.Add(new KeyValuePair<int, string>(4, "Finished Assembler 1 of 1"));
-                        overallStepList.Add(new KeyValuePair<int, string>(5, "Data Analysis"));
-                        overallStepList.Add(new KeyValuePair<int, string>(6, "Compressing Data"));
-                        overallStepList.Add(new KeyValuePair<int, string>(7, "Uploading Data"));
-                        overallStepList.Add(new KeyValuePair<int, string>(8, "Complete"));
+                        //var overallStepList = new List<KeyValuePair<int, string>>();
+                        //overallStepList.Add(new KeyValuePair<int, string>(1, "Program Queued"));
+                        //overallStepList.Add(new KeyValuePair<int, string>(2, "Data Conversion"));
+                        //overallStepList.Add(new KeyValuePair<int, string>(3, "Running Assemblers"));
+                        //overallStepList.Add(new KeyValuePair<int, string>(5, "Data Analysis"));
+                        //overallStepList.Add(new KeyValuePair<int, string>(7, "Uploading Data"));
+                        //overallStepList.Add(new KeyValuePair<int, string>(8, "Complete"));
 
+                        // Upon completion of the masurca program, we create a file that contains all of stdout for the run in masurca_finished.log. 
+                        // So upon error or success that file will always be created.
                         var masurcaStepList = new List<KeyValuePair<int, string>>();
                         masurcaStepList.Add(new KeyValuePair<int, string>(1, "FILENAME"));
                         masurcaStepList.Add(new KeyValuePair<int, string>(2, "FILENAME"));
                         masurcaStepList.Add(new KeyValuePair<int, string>(3, "FILENAME"));
                         masurcaStepList.Add(new KeyValuePair<int, string>(4, "FILENAME"));
-                        masurcaStepList.Add(new KeyValuePair<int, string>(5, "FILENAME"));
+                        masurcaStepList.Add(new KeyValuePair<int, string>(5, "masurca_finished.olog"));
 
                         var jobList = (from j in db.GenomeModels
-                                       where j.OverallJobStatus.Equals("Running")
-                                       select (new { j.uuid, j.SGEJobId }));
+                                       where !j.CurrentOverallStep.Equals("Complete")
+                                       select j.uuid);
 
-                        foreach(var job in jobList)
+                        // If a job is currently running, then we need to check on it.
+                        foreach (var job in jobList)
                         {
+                            GenomeModel genomeModel = db.GenomeModels.Find(job);
+
                             // Check to see if the current job is actually running.
-                            if(LinuxCommands.JobRunning(client, Convert.ToInt32(job.SGEJobId), out error))
+                            if (LinuxCommands.JobRunning(client, Convert.ToInt32(genomeModel.SGEJobId), out error))
                             {
                                 // Get the current step of the job.
                                 if (string.IsNullOrEmpty(error))
                                 {
-                                    string masurcaWorkingDirectory = workingDirectory + "Job" + job.uuid + "/Output/Masurca";
+                                    string masurcaWorkingDirectory = workingDirectory + "Job" + genomeModel.uuid + "/Output/Masurca";
 
-                                    // Now we need to check the current steps of the individual assemblers. 
-                                    
-
-                                    
-                                    //foreach (var step in wgsStepList)
-                                    //{
-                                    //    LinuxCommands.CheckWgsStep(client, wgsWorkingDirectory, step.Value.ToString(), out error);
-                                    //}
-
-                                    // Get the model that corresponds to this particular job.
-                                    GenomeModel genomeModel = db.GenomeModels.Find(job.uuid);
-
-                                    // Set the current step of the job overall.
-                                    //genomeModel.CurrentOverallStep = GetCurrentStep(client, Convert.ToInt32(job.uuid), stepList, out error);
-                                    
-                                    // Set the current step of the masurca assembler.
-                                    genomeModel.MasurcaCurrentStep = GetCurrentStep(client, masurcaWorkingDirectory, Convert.ToInt32(job.uuid), masurcaStepList, out error);
-
-                                    // Need to see if the 
-                                    if (masurcaCurrentStep == masurcaStepList.Last().Key)
+                                    // Check if the job has created anything in the output directory. If it has, it has started assembly.
+                                    if (LinuxCommands.DirectoryHasFiles(client, masurcaWorkingDirectory, out error))
                                     {
+                                        // If we are on steps 1 or 2, then we need to update the status since the assembly has started.
+                                        if (genomeModel.OverallJobStatus.Equals(overallStepList.Equals("Program Queued"))
+                                            || genomeModel.OverallJobStatus.Equals(overallStepList.Equals("Data Conversion")))
+                                        {
+                                            genomeModel.CurrentOverallStep = Array.IndexOf(overallStepList, "Running Assembly") + 1;
+                                            genomeModel.OverallJobStatus = "Running Assembly";
+                                        }
+
+                                        // Right now I have a status of RUNNING ASSEMBLY
+
+                                        // If masurca is done with its assembly, then I need to update the status....otherwise I don't.
+                                        // If WGS is done with its assembly, then I need to update the status....otherwise I don't.
+
+                                        int masurcaCurrentStep = GetCurrentStep(client, masurcaWorkingDirectory, genomeModel.uuid, masurcaStepList, out error);
+
+                                        // Update masurca step/status.
+                                        genomeModel.MasurcaCurrentStep = masurcaCurrentStep;
+
+                                        // -1 because description starts at 0 and masurcaCurrentStep (relative to key) index starts at 1.
+                                        genomeModel.MasurcaStatus = masurcaStepListDescriptions[masurcaCurrentStep - 1];
+
+                                        //if (masurcaCurrentStep == masurcaStepList.Last().Key)
+                                        //{
+
+                                        //}
+
+                                        //else
+                                        //{
+                                        //    genomeModel.MasurcaCurrentStep = masurcaCurrentStep;
+                                        //    genomeModel.MasurcaStatus = masurcaStepList[masurcaCurrentStep].Value;
+                                        //}
+
+                                        //if (GetCurrentStep(client, sgaWorkingDirectory, job.uuid, sgaStepList, out error) == sgaStepList.Last().Key)
+                                        //{
+                                        //    numAssemblersFinished++;
+                                        //}
+                                        
+
+                                        // If masurca is finished...
+                                        if (masurcaCurrentStep == masurcaStepList.Last().Key) {  }
+                                        //if(wgsCurrentStep == wgsStepList.Last().Key) { numAssemblersFinished++; }
+
+                                        // If an assembler finished, this will modify the appropriate step.
 
                                     }
 
-                                    // Set the current step of masurca.
-                                    genomeModel.MasurcaCurrentStep = 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
                                     // Save the changes to the model in the database.
                                     db.SaveChanges();
