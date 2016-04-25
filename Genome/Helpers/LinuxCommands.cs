@@ -145,9 +145,9 @@ namespace Genome.Helpers
             }
         }
 
-        protected internal static bool AssemblerSuccess(SshClient client, string successLog, string workingDirectory, out string error)
+        protected internal static bool AssemblerSuccess(SshClient client, string successLog, int jobUuid, out string error)
         {
-            ChangeDirectory(client, workingDirectory + "/Logs", out error);
+            ChangeDirectory(client, Locations.GetJobLogPath(jobUuid), out error);
 
             using (var cmd = client.CreateCommand("find " + successLog))
             {

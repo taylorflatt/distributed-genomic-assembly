@@ -141,6 +141,13 @@ namespace Genome.Controllers
                 return RedirectToAction("DetailsPermissionError", "Error");
         }
 
+        [HttpPost]
+        public ActionResult Details()
+        {
+            // This is where I will handle the update for a specific job.
+            return View();
+        }
+
         protected override void Dispose(bool disposing)
         {
             if (disposing)
