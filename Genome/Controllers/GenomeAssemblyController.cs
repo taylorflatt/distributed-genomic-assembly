@@ -51,13 +51,29 @@ namespace Genome.Controllers
                     if (genomeModel.MasurcaThreadNum == null)
                         genomeModel.MasurcaThreadNum = 20;
 
+                    int numAssemblers = 0;
+
+                    if (genomeModel.UseMasurca)
+                        numAssemblers++;
+
+                    if (genomeModel.UseSGA)
+                        numAssemblers++;
+
+                    if (genomeModel.UseWGS)
+                        numAssemblers++;
+
+
+                    genomeModel.MasurcaCurrentStep = 1;
+                    genomeModel.MasurcaStatus = StepDescriptions.GetCurrentStepDescription(StepDescriptions.GetMasurcaStepList(), 1);
+
+                    genomeModel.OverallCurrentStep = 1;
+                    genomeModel.OverallStatus = StepDescriptions.GetCurrentStepDescription(StepDescriptions.GenerateOverallStepList(numAssemblers), 1);
 
                     genomeModel.CreatedBy = User.Identity.Name;
                     genomeModel.CreatedDate = DateTime.UtcNow;
-                    genomeModel.OverallJobStatus = "Submitted To Scheduler";
 
                     // THIS IS FOR SUBMITTING A JOB ONLY. IT NEEDS A VALID VALUE THAT WE WILL OVERWRITE LATER. REMOVE LATER.
-                    genomeModel.CompletedDate = null;
+                    //genomeModel.CompletedDate = null;
                     // THIS IS FOR SUBMITTING A JOB ONLY. IT NEEDS A VALID VALUE THAT WE WILL OVERWRITE LATER. REMOVE LATER.
 
                     //string path = "temp";

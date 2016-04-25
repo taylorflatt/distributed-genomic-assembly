@@ -1,5 +1,6 @@
 ﻿using Renci.SshNet;
 using System;
+using System.Collections.Generic;
 
 namespace Genome.Helpers
 {
@@ -171,6 +172,40 @@ namespace Genome.Helpers
                 else
                     return true;
             }
+        }
+
+        // Returns the current step of the job or -1 if there was an error encountered.
+        public internal static int GetCurrentStep(SshClient client, string workingDirectory, int jobUuid, HashSet<Assembler> stepList, out string error)
+        {
+            // Change to the assembler output directory.
+            LinuxCommands.ChangeDirectory(client, workingDirectory, out error);
+
+            int currentStep = 1;
+
+            foreach (var item in stepList)
+            {
+                using (var cmd = client.CreateCommand("find " + item.filename + " | wc -l"))
+                {
+                    cmd.Execute();
+
+                    // File found.
+                    if (Convert.ToInt32(cmd.Result.ToString()) > 0)
+                        currentStep = item.step;
+
+                    // Base Case: For the first step, if we don't find anything, break the loop. The assembler hasn't started.
+                    else if (item.step == 1 && Convert.ToInt32(cmd.Result.ToString()) == 0)
+                        break;
+
+                    if (LinuxErrorHandling.CommandError(cmd, out error) || Convert.ToInt32(cmd.Result.ToString()) <= 0)
+                        break;
+                }
+            }
+
+            if (string.IsNullOrEmpty(error))
+                return currentStep;
+
+            else
+                return -1;
         }
 
         protected internal static bool CheckJobComplete(SshClient client, int jobId, string workingDirectory, out string error)
