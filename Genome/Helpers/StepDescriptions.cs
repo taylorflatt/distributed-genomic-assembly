@@ -6,12 +6,21 @@ using System.Web;
 
 namespace Genome.Helpers
 {
+    /// <summary>
+    /// Create a custom type so we can create appropriate hashtables that consist of a step, the requisite filename associated with our step, and the description we attribute to the step.
+    /// </summary>
     public class Assembler
     {
         public int step { get; set; }
         public string filename { get; set; }
         public string description { get; set; }
 
+        /// <summary>
+        /// Creates an Assembler object to be used for refrencing job updates and information.
+        /// </summary>
+        /// <param name="step"> The step number.</param>
+        /// <param name="filename"> The name of the file that must exist for this step to be reached.</param>
+        /// <param name="description"> The custom description given to define the step.</param>
         public Assembler(int step, string filename, string description)
         {
             this.step = step;
@@ -22,6 +31,10 @@ namespace Genome.Helpers
 
     public class StepDescriptions
     {
+        /// <summary>
+        /// Gets the list of masurca steps.
+        /// </summary>
+        /// <returns> A hastable that consists of a key, a filename that will exist if the step has been reached, and a description of the step.</returns>
         public static HashSet<Assembler> GetMasurcaStepList()
         {
             HashSet<Assembler> masurcaStepFiles = new HashSet<Assembler>();
@@ -36,6 +49,11 @@ namespace Genome.Helpers
             return masurcaStepFiles;
         }
 
+        /// <summary>
+        /// Dynamically creates a list of steps and descriptions for a current job given the total number of assemblers.
+        /// </summary>
+        /// <param name="numAssemblers"> The total number of assemblers that the job is currently running on.</param>
+        /// <returns> Returns a hashtable that consists of a key corresponding to the step number and a description.</returns>
         public static Hashtable GenerateOverallStepList(int numAssemblers)
         {
             Hashtable stepList = new Hashtable();
@@ -44,9 +62,9 @@ namespace Genome.Helpers
             stepList.Add(2, "Data Conversion");
             stepList.Add(3, "Running Assemblers");
 
-            int offset = 4;
-            
-            for(int index = 1; index <= numAssemblers; index++)
+            int offset = 4; // From the previous key.
+
+            for (int index = 1; index <= numAssemblers; index++)
             {
                 stepList.Add(offset++, "Finished Assembler " + index + " of " + numAssemblers + ")");
             }
@@ -60,6 +78,12 @@ namespace Genome.Helpers
             return stepList;
         }
 
+        /// <summary>
+        /// This will return the particular description for the given step.
+        /// </summary>
+        /// <param name="stepList"> The particular step list.</param>
+        /// <param name="stepId"> The step id that corresponds to the description that you want.</param>
+        /// <returns> Returns the description of the associated step id or returns that it could not be found.</returns>
         public static string GetCurrentStepDescription(HashSet<Assembler> stepList, int stepId)
         {
             string stepDescription = "";
@@ -81,8 +105,12 @@ namespace Genome.Helpers
                 return stepDescription;
         }
 
-
-
+        /// <summary>
+        /// This will return the particular description for the given step.
+        /// </summary>
+        /// <param name="stepList"> The particular step list.</param>
+        /// <param name="stepId"> The step id that corresponds to the description that you want.</param>
+        /// <returns> Returns the description of the associated step id or returns that it could not be found.</returns>
         public static string GetCurrentStepDescription(Hashtable stepList, int stepId)
         {
             string stepDescription = "";

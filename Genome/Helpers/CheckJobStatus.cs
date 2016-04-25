@@ -2,7 +2,6 @@
 using Genome.Models;
 using System.Collections.Generic;
 using System;
-using System.Text.RegularExpressions;
 using Renci.SshNet.Common;
 using System.Net.Sockets;
 using System.Linq;
@@ -32,7 +31,6 @@ namespace Genome.Helpers
             methods.Add(new PrivateKeyAuthenticationMethod(username, keyFiles));
 
             return new ConnectionInfo(ip, 22, username, methods.ToArray());
-
         }
 
         // Here we need to call the method that corresponds to updating ALL jobs marked 'running' in our database.
@@ -54,6 +52,7 @@ namespace Genome.Helpers
 
                     using (GenomeAssemblyDbContext db = new GenomeAssemblyDbContext())
                     {
+                        // Get all of the jobs that aren't completed.
                         var jobList = (from j in db.GenomeModels
                                        where !j.OverallStatus.Equals("Complete")
                                        select j.uuid);
@@ -77,7 +76,8 @@ namespace Genome.Helpers
                         foreach (var job in jobList)
                         {
                             GenomeModel genomeModel = db.GenomeModels.Find(job);
-                            int id = genomeModel.uuid;
+
+                            int id = job; // current uuid.
                             int numAssemblers = 0;
 
                             #region Checking how many assemblers chosen
@@ -138,14 +138,84 @@ namespace Genome.Helpers
                             // The job isn't running according to the scheduler. So it finished either successfully or errored out.
                             else
                             {
-                                CheckJobCompleted(client, job.SGEJobId, workingDirectory, out error);
+                                #region Check if the assemblers completed successfully
+
+                                // Now I need to go through all the assemblers and see if they exited successfully or not.
+                                if (LinuxCommands.AssemblerSuccess(client, Locations.GetMasurcaErrorSuccessLogPath(id), workingDirectory, out error))
+                                {
+                                    int masurcaCurrentStep = StepDescriptions.GetMasurcaStepList().Last().step;
+
+                                    genomeModel.MasurcaCurrentStep = masurcaCurrentStep;
+                                    genomeModel.MasurcaStatus = StepDescriptions.GetCurrentStepDescription(StepDescriptions.GetMasurcaStepList(), masurcaCurrentStep);
+                                }
+
+                                else
+                                {
+                                    int masurcaCurrentStep = StepDescriptions.GetMasurcaStepList().Last().step;
+
+                                    genomeModel.MasurcaCurrentStep = masurcaCurrentStep;
+                                    genomeModel.MasurcaStatus = StepDescriptions.GetCurrentStepDescription(StepDescriptions.GetMasurcaStepList(), masurcaCurrentStep) + " - Error"; // explicitly note an error for the description.
+                                }
+
+                                #endregion
+
+                                #region Compile and ship data to FTP for download by user.
+
+                                /// PLEASE NOTE:
+                                /// This is a step that can be heavily revised. Currently, each job will take its time to upload its data if 
+                                /// it has been deemed to be finished and in need to upload. To refactor this, it might be prudent to instead 
+                                /// offload a list of jobs that need uploaded to the server that can be processed AFTER the status updates have 
+                                /// finished. We can even methodize it and run that immediately after this scheduled task. That would probably 
+                                /// be the best solution. For right now, I will keep this AS-IS because methodizing it would involve essentially 
+                                /// copying and pasting.
+                                /// 
+                                /// More to the point, these statuses won't even be seen by the user because they will be done in succession.
+                                /// So they NEED to be move to another method that will actually perform their functions individually.
+
+                                bool hasUploaded = false;
+
+                                if (string.IsNullOrEmpty(error))
+                                    LinuxCommands.ChangeDirectory(client, Locations.GetJobPath(id), out error);
+
+                                if (string.IsNullOrEmpty(error))
+                                {
+                                    LinuxCommands.ZipFiles(client, 9, Locations.GetCompressedDataPath(id), Locations.GetMasterPath(), out error, "-y -r");
+
+                                    if (string.IsNullOrEmpty(error))
+                                        genomeModel.OverallStatus = "Compressing Data";
+
+                                    else
+                                        genomeModel.OverallStatus = "Error Compressing Data";
+                                }
+
+                                if (string.IsNullOrEmpty(error))
+                                {
+                                    LinuxCommands.ConnectSFTP(client, Locations.GetFtpUrl(), PUBLIC_KEY_LOCATION, out error);
+
+                                    if (string.IsNullOrEmpty(error))
+                                        genomeModel.OverallStatus = "Connecting to SFTP";
+
+                                    else
+                                        genomeModel.OverallStatus = "Error connecting to SFTP";
+                                }
+
+                                if (string.IsNullOrEmpty(error))
+                                {
+                                    genomeModel.OverallStatus = "Uploading Data to SFTP";
+
+                                    LinuxCommands.SftpUploadFile(client, Locations.GetZipFileStoragePath(), out error);
+
+                                    if (!string.IsNullOrEmpty(error))
+                                        genomeModel.OverallStatus = "Error uploading data to SFTP";
+                                }
+                                    #endregion
                             }
-
-                            #endregion
-
-                            // Save the changes to the model in the database.
-                            db.SaveChanges();
                         }
+
+                        #endregion
+
+                        // Save the changes to the model in the database.
+                        db.SaveChanges();
                     }
 
                     if (string.IsNullOrEmpty(error))
@@ -228,72 +298,6 @@ namespace Genome.Helpers
                     return false;
                 }
             }
-        }
-
-        // This has NOT been tested yet.
-        private bool CheckJobCompleted(SshClient client, int jobId, string workingDirectory, out string error)
-        {
-            // We are assuming that the job has completed running. So we need to check the error file in our log directory. If that log has 
-            // ANYTHING in it, then we have an error and need to notify the user.
-
-            // If the error log is empty, then we assume that it has completed successfully and we notify the user. We follow all the basic steps 
-            // for both methods but change the notification message.
-
-            // There is an error with the job. Aka there is information written to the error log.
-            if (LinuxCommands.JobHasError(client, jobId, workingDirectory, out error))
-            {
-                //string zipStoreLocation = workingDirectory + "Job" + jobId + "/Output/job" + jobId + ".zip";
-                string zipLocation = Locations.GetCompressedDataPath(jobId);
-                string jobLocation = Locations.GetJobPath(jobId);
-
-                // Let's compress the job (-y: store sym links, -r: travel recursively).
-                if (string.IsNullOrEmpty(error)) { LinuxCommands.ZipFiles(client, 9, zipLocation, jobLocation, out error, "-y -r"); }
-
-                else
-                {
-                    using (GenomeAssemblyDbContext db = new GenomeAssemblyDbContext())
-                    {
-                        GenomeModel genomeModel = db.GenomeModels.Find(jobId);
-                        genomeModel.OverallStatus = "Error Packaging Data";
-                        db.SaveChanges();
-                    }
-                }
-
-                // Now we connect to the file server FTP
-                if (string.IsNullOrEmpty(error)) { LinuxCommands.ConnectSFTP(client, Locations.GetFtpUrl(), PUBLIC_KEY_LOCATION, out error); }
-
-                // Now we need to upload our zip file.
-                if (string.IsNullOrEmpty(error))
-                {
-                    using (GenomeAssemblyDbContext db = new GenomeAssemblyDbContext())
-                    {
-                        GenomeModel genomeModel = db.GenomeModels.Find(jobId);
-                        genomeModel.OverallStatus = "Transferring";
-                        db.SaveChanges();
-
-                        LinuxCommands.SftpUploadFile(client, zipLocation, out error);
-
-                        genomeModel.OverallStatus = "Completed";
-                        db.SaveChanges();
-
-                    }
-                }
-
-                // There was an error transferring the files.
-                else
-                {
-                    using (GenomeAssemblyDbContext db = new GenomeAssemblyDbContext())
-                    {
-                        GenomeModel genomeModel = db.GenomeModels.Find(jobId);
-                        genomeModel.OverallStatus = "Error Transferring";
-                        db.SaveChanges();
-                    }
-                }
-
-                // Now we need to update the status of the job.
-            }
-
-            return true; //TEMP VALUE
         }
     }
 }
