@@ -135,5 +135,9 @@ namespace Genome.Models
         [Display(Name = "Current Step")]
         [DefaultValue(1)]
         public int OverallCurrentStep { get; set; }
+
+        [DefaultValue("")]
+        [Display(Name = "DownloadLink")]
+        public string DownloadLink { get; set; }
     }
 }

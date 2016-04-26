@@ -7,6 +7,26 @@
             return "/share/scratch/tflatt/";
         }
 
+        public static string GetBigDogIp()
+        {
+            return "login-0-0.research.siu.edu";
+        }
+
+        public static string GetBigDogComputeNode1()
+        {
+            return "compute-0-24";
+        }
+
+        public static string GetBigDogComputeNode2()
+        {
+            return "compute-0-25";
+        }
+
+        public static string GetDataDownloadLink(string username, int uuid)
+        {
+            return "ROUTE TO THE FTP ON THE FILE SERVER/" + username + "Job" + uuid;
+        }
+
         public static string GetJobPath(int id)
         {
             return GetMasterPath() + "/Job" + id + "/";

@@ -11,16 +11,9 @@ namespace Genome.Helpers
 {
     public class CheckJobStatus
     {
-        private string ip = "";
         private const string  PUBLIC_KEY_LOCATION = "UNKNOWN";
 
-        public CheckJobStatus(string ip, out string error)
-        {
-            error = "";
-            this.ip = ip;
-        }
-
-        private ConnectionInfo CreatePrivateKeyConnectionInfo()
+        private static ConnectionInfo CreatePrivateKeyConnectionInfo()
         {
             var keyFile = new PrivateKeyFile(@"[ABSOLUTE PATH OF OPENSSH PRIVATE PPK KEY]");
             var keyFiles = new[] { keyFile };
@@ -29,14 +22,14 @@ namespace Genome.Helpers
             var methods = new List<AuthenticationMethod>();
             methods.Add(new PrivateKeyAuthenticationMethod(username, keyFiles));
 
-            return new ConnectionInfo(ip, 22, username, methods.ToArray());
+            return new ConnectionInfo(Locations.GetBigDogIp(), 22, username, methods.ToArray());
         }
 
         // This will be called by a scheduler on a timed basis.
         // In the main method where this is called, it will loop through all the job uuids that need to be run and then call this method 
         // successively. This allows me to use the SAME method for a single update of a batch update.
         // Returns a jobsToUpload = true if this job is ready to be uploaded.
-        protected internal void UpdateStatuses(int jobUuid, ref bool jobsToUpload, out string error)
+        protected internal static void UpdateStatuses(int jobUuid, ref bool jobsToUpload, out string error)
         {
             error = "";
 
@@ -167,7 +160,7 @@ namespace Genome.Helpers
 
         /// <summary>
         /// This will actually compress the data, initiate the sftp connection, and upload the files to the file server FTP. This should be called 
-        /// AFTER the UpdateStatuses method.
+        /// AFTER the UpdateStatuses method. This also sets the download link for the file IF it uploaded successfully.
         /// </summary>
         /// <param name="client"> Current SSH session client.</param>
         /// <param name="uuid"> The id of the current job. </param>
@@ -184,6 +177,8 @@ namespace Genome.Helpers
                 {
                     genomeModel.OverallStatus = "Compressing Data";
 
+                    db.SaveChanges();
+
                     LinuxCommands.ZipFiles(client, 9, Locations.GetCompressedDataPath(uuid), Locations.GetMasterPath(), out error, "-y -r");
 
                     if (!string.IsNullOrEmpty(error))
@@ -195,6 +190,8 @@ namespace Genome.Helpers
                 if (string.IsNullOrEmpty(error))
                 {
                     genomeModel.OverallStatus = "Connecting to SFTP";
+
+                    db.SaveChanges();
 
                     LinuxCommands.ConnectSFTP(client, Locations.GetFtpUrl(), PUBLIC_KEY_LOCATION, out error);
 
@@ -208,10 +205,15 @@ namespace Genome.Helpers
                 {
                     genomeModel.OverallStatus = "Uploading Data to SFTP";
 
+                    db.SaveChanges();
+
                     LinuxCommands.SftpUploadFile(client, Locations.GetZipFileStoragePath(), out error);
 
                     if (!string.IsNullOrEmpty(error))
                         genomeModel.OverallStatus = "Error uploading data to SFTP";
+
+                    if (string.IsNullOrEmpty(error))
+                        genomeModel.DownloadLink = Locations.GetDataDownloadLink(genomeModel.CreatedBy, uuid);
 
                     db.SaveChanges();
                 }

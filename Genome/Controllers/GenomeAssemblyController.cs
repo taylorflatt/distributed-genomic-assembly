@@ -87,7 +87,7 @@ namespace Genome.Controllers
                     string error = "";
 
                     //SSHConfig ssh = new SSHConfig("login-0-0.research.siu.edu", genomeModel, builder.InitConfigURL);
-                    SSHConfig ssh = new SSHConfig("login-0-0.research.siu.edu", genomeModel, "", out error);
+                    SSHConfig ssh = new SSHConfig(Locations.GetBigDogIp(), genomeModel, "", out error);
 
                     ssh.CreateJob(out error);
 
@@ -135,15 +135,39 @@ namespace Genome.Controllers
 
             // Only let the user that created the job view that job.
             if (genomeModel.CreatedBy.Equals(currentUser))
+            {
+                if (!string.IsNullOrEmpty(genomeModel.DownloadLink))
+                {
+                    // We need to display the download link for the user which is set in CheckJobStatus.UploadData() and stored in the model 
+                    // under DownloadLink.
+                }
+
                 return View(genomeModel);
+            }
 
             else
                 return RedirectToAction("DetailsPermissionError", "Error");
         }
 
         [HttpPost]
-        public ActionResult Details()
+        public ActionResult Details(int id, string command)
         {
+            bool jobsToUpload = false;
+            string error = "";
+
+            if (command == "Update Status")
+                CheckJobStatus.UpdateStatuses(id, ref jobsToUpload, out error);
+
+            if(string.IsNullOrEmpty(error))
+            {
+                if(jobsToUpload)
+                {
+                    // Run background task that will upload the data to the web server FTP for download by the user.
+                }
+
+                return View("Details");
+            }
+
             // This is where I will handle the update for a specific job.
             return View();
         }

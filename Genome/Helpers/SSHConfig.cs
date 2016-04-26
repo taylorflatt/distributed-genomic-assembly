@@ -15,8 +15,6 @@ namespace Genome.Helpers
 {
     public class SSHConfig
     {
-        private string error = "";
-
         private static string COMPUTENODE1 = "compute-0-24";
         private static string COMPUTENODE2 = "compute-0-25";
 
