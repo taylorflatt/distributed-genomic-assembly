@@ -24,7 +24,7 @@
             @Html.DisplayNameFor(model => model.CompletedDate)
         </th>
         <th>
-            @Html.DisplayNameFor(model => model.JobStatus)
+            @Html.DisplayNameFor(model => model.OverallStatus)
         </th>
         <th>Job Information</th>
     </tr>
@@ -44,7 +44,7 @@
             @Html.DisplayFor(modelItem => item.CompletedDate)
         </td>
         <td>
-            @Html.DisplayFor(modelItem => item.JobStatus)
+            @Html.DisplayFor(modelItem => item.OverallStatus)
         </td>
         <td>
             @Html.ActionLink("Details", "Details", "GenomeAssembly", new { id=item.uuid }, "")

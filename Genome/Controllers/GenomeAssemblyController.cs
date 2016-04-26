@@ -140,6 +140,8 @@ namespace Genome.Controllers
                 {
                     // We need to display the download link for the user which is set in CheckJobStatus.UploadData() and stored in the model 
                     // under DownloadLink.
+
+                    ViewBag.DataUploaded = "Your data has successfully uploaded and is ready for download. Using the credentials that you use to access this website, please open the link and enter those credentials to begin the data download.";
                 }
 
                 return View(genomeModel);
@@ -163,6 +165,7 @@ namespace Genome.Controllers
                 if(jobsToUpload)
                 {
                     // Run background task that will upload the data to the web server FTP for download by the user.
+                    ViewBag.DataUploading = "Your job has completed executing on BigDog and is currently being packaged and uploaded to our server so that you may access it. Please be patient as this could take some time depending on the size of the data. Once it has successfully uploaded, a link will be made available from which you will be able to download your data.";
                 }
 
                 return View("Details");
