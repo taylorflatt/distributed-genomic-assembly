@@ -14,6 +14,7 @@ namespace Genome
             //.UseSqlServerStorage("Data Source=(LocalDb)\\MSSQLLocalDB;AttachDbFilename=|DataDirectory|\aspnet-Genome-20160229104730.mdf");
 
             ConfigureAuth(app);
+            app.MapSignalR();
             //app.UseHangfireDashboard(); // Map Dashboard to the `http://<your-app>/hangfire` URL.
         }
     }
