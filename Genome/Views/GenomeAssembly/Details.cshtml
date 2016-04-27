@@ -207,7 +207,18 @@
     <table frame="box" class="table-responsive table" style="width: 100%;">
         <thead>
             <tr>
-                <td colspan="2" style="text-align: center; font-weight: bold;">Job Status</td>
+@using (Html.BeginForm("Details", "GenomeAssembly"))
+{
+                <td colspan="2" style="text-align: center; font-weight: bold;">Job Status 
+                    <button type="submit" name="command" value="Cancel Job" style="border: 0px; background: transparent; float: right;">
+                        <img src="~/Content/Images/cancel.png" style="width: 16px; height: 16px;" title="Cancel This Job" />
+                    </button>
+
+                    <button type="submit" name="command" value="Update Status" style="border: 0px; background: transparent; float: right;">
+                        <img src="~/Content/Images/refresh.png" style="width: 16px; height: 16px;" title="Update This Job's Status"/>
+                    </button>
+                </td>
+}
             </tr>
         </thead>
         <tbody>
@@ -295,106 +306,17 @@
                     }
                 </td>
             </tr>
+            @if (!string.IsNullOrEmpty(Model.DownloadLink))
+            {
+                <tr>
+                    <td>
+                        Download Link
+                    </td>
+                    <td>
+                        Download Now
+                    </td>
+                </tr>
+            }
         </tbody>
     </table>
-
-
-        @*<div style="display: inline-block; width: 40%; margin-top: 10px;">
-            <table class="table-hover table">
-                <thead>
-                    <tr>
-                        <th colspan="2" style="text-align: center;">Masurca Data</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if (Model.PEReads.Equals(true))
-                    {
-                        <tr>
-                            <td>Paired-End Mean</td>
-                            <td>@Html.DisplayFor(model => model.MasurcaPEMean)</td>
-                        </tr>
-                        <tr>
-                            <td>Paired-End Standard Deviation</td>
-                            <td>@Html.DisplayFor(model => model.MasurcaPEStdev)</td>
-                        </tr>
-                    }
-
-                    <tr>
-                        <td>deBruijin Graph k-mer values</td>
-                        <td>@Html.DisplayFor(model => model.MasurcaGraphKMerValue)</td>
-                    </tr>
-                    <tr>
-                        <td>Illumina Data</td>
-                        @if (Model.MasurcaLinkingMates.Equals(true))
-                        {
-                            <td>Yes</td>
-                        }
-
-                        else
-                        {
-                            <td>No</td>
-                        }
-                    </tr>
-                    @if (Model.JumpReads.Equals(true))
-                    {
-                        <tr>
-                            <td>Limit Jump Coverage</td>
-                            @if (Model.MasurcaLimitJumpCoverage.Equals(true))
-                            {
-                                <td>Yes</td>
-                            }
-
-                            else
-                            {
-                                <td>No</td>
-                            }
-                        </tr>
-                    }
-
-                    <tr>
-                        <td>Bacteria Genome</td>
-
-                        @if (Model.MasurcaCAParameters.Equals(true))
-                        {
-                            <td>Yes</td>
-                        }
-
-                        else
-                        {
-                            <td>No</td>
-                        }
-                    </tr>
-                    <tr>
-                        <td>k-mer Error Count Threshold</td>
-                        <td>@Html.DisplayFor(model => model.MasurcaKMerErrorCount)</td>
-                    </tr>
-                    <tr>
-                        <td>Number of CPU Threads</td>
-                        <td>@Html.DisplayFor(model => model.MasurcaThreadNum)</td>
-                    </tr>
-
-                    <tr>
-                        <td>Jellyfish Hash Size</td>
-                        <td>@Html.DisplayFor(model => model.MasurcaJellyfishHashSize)</td>
-                    </tr>
-
-                    <tr>
-                        <td>Trim Homopolymers</td>
-
-                        @if (Model.HomoTrim.Equals(true))
-                        {
-                            <td>Yes</td>
-                        }
-
-                        else
-                        {
-                            <td>No</td>
-                        }
-                    </tr>
-
-                <tbody>
-            </table>
-
-        </div>*@
-
 </div>

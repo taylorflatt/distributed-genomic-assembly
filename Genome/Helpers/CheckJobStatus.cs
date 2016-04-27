@@ -165,7 +165,7 @@ namespace Genome.Helpers
         /// <param name="client"> Current SSH session client.</param>
         /// <param name="uuid"> The id of the current job. </param>
         /// <param name="error"></param>
-        protected internal void UploadData(SshClient client, int uuid, out string error)
+        protected internal static void UploadData(SshClient client, int uuid, out string error)
         {
             using (GenomeAssemblyDbContext db = new GenomeAssemblyDbContext())
             {

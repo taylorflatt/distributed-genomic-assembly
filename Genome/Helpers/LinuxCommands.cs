@@ -145,6 +145,16 @@ namespace Genome.Helpers
             }
         }
 
+        protected internal static void CancelJob(SshClient client, int sgeId, out string error)
+        {
+            using (var cmd = client.CreateCommand("qdel " + sgeId))
+            {
+                cmd.Execute();
+
+                LinuxErrorHandling.CommandError(cmd, out error);
+            }
+        }
+
         protected internal static bool AssemblerSuccess(SshClient client, string successLog, int jobUuid, out string error)
         {
             ChangeDirectory(client, Locations.GetJobLogPath(jobUuid), out error);

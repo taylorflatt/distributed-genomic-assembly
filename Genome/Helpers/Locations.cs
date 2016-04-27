@@ -12,6 +12,11 @@
             return "login-0-0.research.siu.edu";
         }
 
+        public static string GetBigDogUpdateKeyLocation()
+        {
+            return "FILE SERVER LOCATION OF BIG DOG PRIVATE KEY LOCATION";
+        }
+
         public static string GetBigDogComputeNode1()
         {
             return "compute-0-24";
