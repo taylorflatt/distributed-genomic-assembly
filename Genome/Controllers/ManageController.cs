@@ -26,7 +26,17 @@ namespace Genome.Controllers
                               where jobs.CreatedBy.Equals(User.Identity.Name)
                               select jobs;
 
-                return View(jobList.ToList());
+                if(jobList.Count() > 0)
+                {
+                    return View(jobList.ToList());
+                }
+
+                else
+                {
+                    ViewBag.ShowJobList = false;
+                    return View();
+                }
+
             }
         }
 

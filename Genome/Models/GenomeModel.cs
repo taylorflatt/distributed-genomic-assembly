@@ -10,6 +10,7 @@ namespace Genome.Models
     public class GenomeModel
     {
         [Key]
+        [DisplayName("UUID")]
         public int uuid { get; set; }
 
         // The job ID that is seen in the scheduler of BigDog so we can use this to check for updates.
@@ -136,6 +137,7 @@ namespace Genome.Models
         [DefaultValue(1)]
         public int OverallCurrentStep { get; set; }
 
+        // WE NEED TO RESET THIS VALUE TO NULL WHEN THE DOWNLOAD IS EVENTUALLY PRUNED.
         [DefaultValue("")]
         [Display(Name = "DownloadLink")]
         public string DownloadLink { get; set; }
