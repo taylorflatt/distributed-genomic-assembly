@@ -45,11 +45,39 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Common.Logging, Version=3.0.0.0, Culture=neutral, PublicKeyToken=af08829b84f0328e, processorArchitecture=MSIL">
+      <HintPath>..\packages\Common.Logging.3.0.0\lib\net40\Common.Logging.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Common.Logging.Core, Version=3.0.0.0, Culture=neutral, PublicKeyToken=af08829b84f0328e, processorArchitecture=MSIL">
+      <HintPath>..\packages\Common.Logging.Core.3.0.0\lib\net40\Common.Logging.Core.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Hangfire.Core, Version=1.5.6.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Hangfire.Core.1.5.6\lib\net45\Hangfire.Core.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Hangfire.SqlServer, Version=1.5.6.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Hangfire.SqlServer.1.5.6\lib\net45\Hangfire.SqlServer.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.AspNet.SignalR.Core, Version=2.2.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.SignalR.Core.2.2.0\lib\net45\Microsoft.AspNet.SignalR.Core.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.AspNet.SignalR.SystemWeb, Version=2.2.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.SignalR.SystemWeb.2.2.0\lib\net45\Microsoft.AspNet.SignalR.SystemWeb.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Microsoft.CodeDom.Providers.DotNetCompilerPlatform, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.1.0.0\lib\net45\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
+    <Reference Include="MVC.Wizard.Core, Version=1.1.0.0, Culture=neutral, PublicKeyToken=d967ac793f5d2360, processorArchitecture=MSIL">
+      <HintPath>..\packages\MVC.Wizard.1.3.1\lib\MVC.Wizard.Core.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Renci.SshNet, Version=2014.4.6.0, Culture=neutral, PublicKeyToken=1cee9f8bde3db106, processorArchitecture=MSIL">
       <HintPath>..\packages\SSH.NET.2014.4.6-beta2\lib\net40\Renci.SshNet.dll</HintPath>
       <Private>True</Private>
@@ -193,6 +221,8 @@
     <Compile Include="Controllers\ManageController.cs" />
     <Compile Include="Controllers\ManageRolesController.cs" />
     <Compile Include="CustomFilters\AuthorizedLoginAttribute.cs" />
+    <Compile Include="Helpers\Locations.cs" />
+    <Compile Include="Helpers\StepDescriptions.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
@@ -203,37 +233,13 @@
     <Compile Include="Helpers\LinuxCommands.cs" />
     <Compile Include="Helpers\LinuxErrorHandling.cs" />
     <Compile Include="Helpers\SSHConfig.cs" />
-    <Compile Include="Migrations\201604032021313_test.cs" />
-    <Compile Include="Migrations\201604032021313_test.Designer.cs">
-      <DependentUpon>201604032021313_test.cs</DependentUpon>
+    <Compile Include="Migrations\201604250600145_changedNames.cs" />
+    <Compile Include="Migrations\201604250600145_changedNames.Designer.cs">
+      <DependentUpon>201604250600145_changedNames.cs</DependentUpon>
     </Compile>
-    <Compile Include="Migrations\201604180418010_sgejobid.cs" />
-    <Compile Include="Migrations\201604180418010_sgejobid.Designer.cs">
-      <DependentUpon>201604180418010_sgejobid.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\201604182328263_completeddate.cs" />
-    <Compile Include="Migrations\201604182328263_completeddate.Designer.cs">
-      <DependentUpon>201604182328263_completeddate.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\201604212016494_clustercheck.cs" />
-    <Compile Include="Migrations\201604212016494_clustercheck.Designer.cs">
-      <DependentUpon>201604212016494_clustercheck.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\201604212127329_clustercheck2.cs" />
-    <Compile Include="Migrations\201604212127329_clustercheck2.Designer.cs">
-      <DependentUpon>201604212127329_clustercheck2.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\201604212132416_clusteraccountcheck.cs" />
-    <Compile Include="Migrations\201604212132416_clusteraccountcheck.Designer.cs">
-      <DependentUpon>201604212132416_clusteraccountcheck.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\201604230233286_ChangedCompletedTime.cs" />
-    <Compile Include="Migrations\201604230233286_ChangedCompletedTime.Designer.cs">
-      <DependentUpon>201604230233286_ChangedCompletedTime.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\201604232337158_new.cs" />
-    <Compile Include="Migrations\201604232337158_new.Designer.cs">
-      <DependentUpon>201604232337158_new.cs</DependentUpon>
+    <Compile Include="Migrations\201604261802587_DownloadLink.cs" />
+    <Compile Include="Migrations\201604261802587_DownloadLink.Designer.cs">
+      <DependentUpon>201604261802587_DownloadLink.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\AccountViewModels.cs" />
@@ -248,6 +254,7 @@
     <Content Include="Content\bootstrap.min.css" />
     <Content Include="Content\customStyle.css" />
     <Content Include="Content\Images\jumbotron.jpg" />
+    <Content Include="Content\Images\refresh.png" />
     <Content Include="Content\jquery.steps.css" />
     <Content Include="favicon.ico" />
     <Content Include="fonts\glyphicons-halflings-regular.svg" />
@@ -260,6 +267,8 @@
     <Content Include="Scripts\jquery-1.10.2.js" />
     <Content Include="Scripts\jquery-1.10.2.min.js" />
     <None Include="Scripts\jquery.validate-vsdoc.js" />
+    <Content Include="Scripts\jquery.signalR-2.2.0.js" />
+    <Content Include="Scripts\jquery.signalR-2.2.0.min.js" />
     <Content Include="Scripts\jquery.steps.js" />
     <Content Include="Scripts\jquery.steps.min.js" />
     <Content Include="Scripts\jquery.unobtrusive-ajax.js" />
@@ -275,6 +284,8 @@
     <Content Include="Scripts\modernizr-2.6.2.js" />
     <Content Include="Scripts\respond.js" />
     <Content Include="Scripts\respond.min.js" />
+    <Content Include="Scripts\wizard.js" />
+    <Content Include="Scripts\wizard.min.js" />
     <Content Include="Scripts\_references.js" />
     <Content Include="Web.config">
       <SubType>Designer</SubType>
@@ -320,6 +331,7 @@
     <Content Include="Views\GenomeAssembly\Details.cshtml" />
     <Content Include="Views\Manage\VerifyBigDogAccount.cshtml" />
     <Content Include="Views\Manage\ViewJobs.cshtml" />
+    <Content Include="Views\Home\FAQ.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
@@ -335,29 +347,11 @@
     <Content Include="Scripts\jquery-1.10.2.min.map" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Migrations\201604032021313_test.resx">
-      <DependentUpon>201604032021313_test.cs</DependentUpon>
+    <EmbeddedResource Include="Migrations\201604250600145_changedNames.resx">
+      <DependentUpon>201604250600145_changedNames.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\201604180418010_sgejobid.resx">
-      <DependentUpon>201604180418010_sgejobid.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\201604182328263_completeddate.resx">
-      <DependentUpon>201604182328263_completeddate.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\201604212016494_clustercheck.resx">
-      <DependentUpon>201604212016494_clustercheck.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\201604212127329_clustercheck2.resx">
-      <DependentUpon>201604212127329_clustercheck2.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\201604212132416_clusteraccountcheck.resx">
-      <DependentUpon>201604212132416_clusteraccountcheck.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\201604230233286_ChangedCompletedTime.resx">
-      <DependentUpon>201604230233286_ChangedCompletedTime.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\201604232337158_new.resx">
-      <DependentUpon>201604232337158_new.cs</DependentUpon>
+    <EmbeddedResource Include="Migrations\201604261802587_DownloadLink.resx">
+      <DependentUpon>201604261802587_DownloadLink.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>

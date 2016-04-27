@@ -1,5 +1,6 @@
 ﻿using Renci.SshNet;
 using System;
+using System.Collections.Generic;
 
 namespace Genome.Helpers
 {
@@ -84,21 +85,6 @@ namespace Genome.Helpers
             return megabyteSize * (1 / 1024);
         }
 
-        protected internal static void CompressOutputs(SshClient client, string outputFile, string sourceFolder, out string error, string parameters = "")
-        {
-            // USAGE (optimal run): zip -9 -y -r -q file.zip folder/
-            // -9 optimal compression speed
-            // -y store symbolic links
-            // -r recursively traverse the directory
-            // -q quiet mode 
-            using (var cmd = client.CreateCommand("zip " + outputFile + sourceFolder + parameters))
-            {
-                cmd.Execute();
-
-                LinuxErrorHandling.CommandError(cmd, out error);
-            }
-        }
-
         // Returns true if the job is currently running or false if the job isn't running/if an error exists.
         protected internal static bool JobRunning(SshClient client, int sgeJobId, out string error)
         {
@@ -125,9 +111,14 @@ namespace Genome.Helpers
             }
         }
 
-        protected internal static void ZipFiles(SshClient client, int compressionSpeed, string outputName, string directory, out string error, string parameters = "")
+        protected internal static void ZipFiles(SshClient client, int compressionSpeed, string outputName, string sourceDirectory, out string error, string parameters = "")
         {
-            using (var cmd = client.CreateCommand("zip " + compressionSpeed + " " + outputName + " " + directory + " " + parameters ))
+            // USAGE (optimal run): zip -9 -y -r -q file.zip folder/
+            // -9 optimal compression speed
+            // -y store symbolic links
+            // -r recursively traverse the directory
+            // -q quiet mode 
+            using (var cmd = client.CreateCommand("zip " + "-" + compressionSpeed + " " + outputName + " " + sourceDirectory + " " + parameters ))
             {
                 cmd.Execute();
 
@@ -154,23 +145,67 @@ namespace Genome.Helpers
             }
         }
 
-        protected internal static bool JobHasError(SshClient client, int jobId, string workingDirectory, out string error)
+        protected internal static void CancelJob(SshClient client, int sgeId, out string error)
         {
-            ChangeDirectory(client, workingDirectory + "/Logs", out error);
+            using (var cmd = client.CreateCommand("qdel " + sgeId))
+            {
+                cmd.Execute();
 
-            using (var cmd = client.CreateCommand("ls -l | grep e" + jobId + " " + "| cat `awk '{print $9}'` | wc -w"))
+                LinuxErrorHandling.CommandError(cmd, out error);
+            }
+        }
+
+        protected internal static bool AssemblerSuccess(SshClient client, string successLog, int jobUuid, out string error)
+        {
+            ChangeDirectory(client, Locations.GetJobLogPath(jobUuid), out error);
+
+            using (var cmd = client.CreateCommand("find " + successLog))
             {
                 cmd.Execute();
 
                 LinuxErrorHandling.CommandError(cmd, out error);
 
-                // Error log has been written to...
-                if (Convert.ToInt32(cmd.Result) == 0)
+                // We couldn't find the success file.
+                if (cmd.Result.ToString().Contains("No such file or directory"))
                     return false;
 
                 else
                     return true;
             }
+        }
+
+        // Returns the current step of the job or -1 if there was an error encountered.
+        protected internal static int GetCurrentStep(SshClient client, string workingDirectory, int jobUuid, HashSet<Assembler> stepList, out string error)
+        {
+            // Change to the assembler output directory.
+            ChangeDirectory(client, workingDirectory, out error);
+
+            int currentStep = 1;
+
+            foreach (var item in stepList)
+            {
+                using (var cmd = client.CreateCommand("find " + item.filename + " | wc -l"))
+                {
+                    cmd.Execute();
+
+                    // File found.
+                    if (Convert.ToInt32(cmd.Result.ToString()) > 0)
+                        currentStep = item.step;
+
+                    // Base Case: For the first step, if we don't find anything, break the loop. The assembler hasn't started.
+                    else if (item.step == 1 && Convert.ToInt32(cmd.Result.ToString()) == 0)
+                        break;
+
+                    if (LinuxErrorHandling.CommandError(cmd, out error) || Convert.ToInt32(cmd.Result.ToString()) <= 0)
+                        break;
+                }
+            }
+
+            if (string.IsNullOrEmpty(error))
+                return currentStep;
+
+            else
+                return -1;
         }
 
         protected internal static bool CheckJobComplete(SshClient client, int jobId, string workingDirectory, out string error)
@@ -228,6 +263,16 @@ namespace Genome.Helpers
             }
         }
 
+        protected internal static void SftpUploadFile(SshClient client, string fileLocation, out string error, string parameters = "")
+        {
+            using (var cmd = client.CreateCommand("put " + fileLocation))
+            {
+                cmd.Execute();
+
+                LinuxErrorHandling.CommandError(cmd, out error);
+            }
+        }
+
         protected internal static bool CheckMasurcaStep(SshClient client, string workingDirectory, string filename, out string error)
         {
             // Change to the masurca output directory.
@@ -246,16 +291,6 @@ namespace Genome.Helpers
                 else
                     return true;
 
-            }
-        }
-
-        protected internal static void SftpUploadFile(SshClient client, string fileLocation, out string error, string parameters = "")
-        {
-            using (var cmd = client.CreateCommand("put " + fileLocation))
-            {
-                cmd.Execute();
-
-                LinuxErrorHandling.CommandError(cmd, out error);
             }
         }
 

@@ -15,8 +15,6 @@ namespace Genome.Helpers
 {
     public class SSHConfig
     {
-        private string error = "";
-
         private static string COMPUTENODE1 = "compute-0-24";
         private static string COMPUTENODE2 = "compute-0-25";
 
@@ -164,24 +162,12 @@ namespace Genome.Helpers
             // UUID is not being assigned before it hits this method so we have a problem. We need to save it to the DB prior to hitting this method but that causes other problems.......need to look into this. We can probably find a work around by checking the db and seeing the previous uuid and just incrementing the previous uuid.
 
             // The init.sh script will contain all the basic logic to download the data and initiate the job on the assembler(s).
-            using (var client = new SshClient(ip, genomeModel.SSHUser, genomeModel.SSHPass))
+            using (var client = new SshClient(Locations.GetBigDogIp(), genomeModel.SSHUser, genomeModel.SSHPass))
             {
-                string workingDirectory = "/share/scratch/tflatt/Job" + genomeModel.uuid; // this will eventually be /share/scratch/Genome/Job
-                string dataPath = workingDirectory + "/Data";
-                string configPath = workingDirectory + "/Config"; 
-                string outputPath = workingDirectory + "/Output";
-                string masurcaOutputPath = outputPath + "/Masurca"; // UNTESTED and unsure how to implement this. Need to think of multiple assemblers.
-                string logPath = workingDirectory + "/Logs";
-
-                // The outward facing (FTP) path to where the scripts are stored for download.
-                string initScriptUrl = "PUBLIC PATH TO THE LOCATION WHERE THE INIT SCRIPT WILL BE STORED.";
-                string masurcaScriptUrl = "PUBLIC PATH TO THE LOCATION WHERE THE MASUCRA SCRIPT WILL BE STORED.";
-
-                string initName = "init" + genomeModel.uuid;
-                string masurcaName = "masurca" + genomeModel.uuid;
+                int id = genomeModel.uuid;
 
                 // Location we store the wget error log.
-                string wgetLogParameter = "-O " + logPath + "wget.error";
+                string wgetLogParameter = "-O " + Locations.GetJobLogPath(id) + "wget.error";
 
                 string jobName = genomeModel.SSHUser.ToString() + genomeModel.uuid.ToString();
                 string node = COMPUTENODE1; // default  
@@ -193,21 +179,21 @@ namespace Genome.Helpers
                 {
                     client.Connect();
 
-                    if (string.IsNullOrEmpty(error)) { LinuxCommands.CreateDirectory(client, workingDirectory, out error, "-p"); }
-                    if (string.IsNullOrEmpty(error)) { LinuxCommands.CreateDirectory(client, dataPath, out error, "-p"); }
-                    if (string.IsNullOrEmpty(error)) { LinuxCommands.CreateDirectory(client, configPath, out error, "-p"); }
-                    if (string.IsNullOrEmpty(error)) { LinuxCommands.CreateDirectory(client, outputPath, out error, "-p"); }
-                    if (string.IsNullOrEmpty(error)) { LinuxCommands.CreateDirectory(client, logPath, out error, "-p"); }
+                    if (string.IsNullOrEmpty(error)) { LinuxCommands.CreateDirectory(client, Locations.GetJobPath(id), out error, "-p"); }
+                    if (string.IsNullOrEmpty(error)) { LinuxCommands.CreateDirectory(client, Locations.GetJobDataPath(id), out error, "-p"); }
+                    if (string.IsNullOrEmpty(error)) { LinuxCommands.CreateDirectory(client, Locations.GetJobConfigPath(id), out error, "-p"); }
+                    if (string.IsNullOrEmpty(error)) { LinuxCommands.CreateDirectory(client, Locations.GetJobOutputPath(id), out error, "-p"); }
+                    if (string.IsNullOrEmpty(error)) { LinuxCommands.CreateDirectory(client, Locations.GetJobLogPath(id), out error, "-p"); }
 
-                    if (string.IsNullOrEmpty(error)) { LinuxCommands.ChangeDirectory(client, configPath, out error); }
-
-                    // This command has NOT been tested.
-                    if (string.IsNullOrEmpty(error)) { LinuxCommands.DownloadFile(client, initScriptUrl, out error, wgetLogParameter); }
+                    if (string.IsNullOrEmpty(error)) { LinuxCommands.ChangeDirectory(client, Locations.GetJobConfigPath(id), out error); }
 
                     // This command has NOT been tested.
-                    if (string.IsNullOrEmpty(error)) { LinuxCommands.DownloadFile(client, masurcaScriptUrl, out error, wgetLogParameter); }
+                    if (string.IsNullOrEmpty(error)) { LinuxCommands.DownloadFile(client, Locations.GetInitScriptPath(), out error, wgetLogParameter); }
 
-                    if (string.IsNullOrEmpty(error)) { LinuxCommands.ChangePermissions(client, workingDirectory, "777", out error, "-R"); }
+                    // This command has NOT been tested.
+                    if (string.IsNullOrEmpty(error)) { LinuxCommands.DownloadFile(client, Locations.GetMasurcaScriptPath(), out error, wgetLogParameter); }
+
+                    if (string.IsNullOrEmpty(error)) { LinuxCommands.ChangePermissions(client, Locations.GetJobPath(id), "777", out error, "-R"); }
 
                     if(string.IsNullOrEmpty(error))
                     {
@@ -222,10 +208,10 @@ namespace Genome.Helpers
                     // May need to investigate this. But I'm fairly certain you need to be in the current directory or we can always call it 
                     // via its absolute path but this is probably easier. It is late, but I am pretty sure you aren't able to do a qsub on 
                     // anything but the login node. So we might need to investigate the way in which we store the information.
-                    if(string.IsNullOrEmpty(error)) { LinuxCommands.ChangeDirectory(client, outputPath, out error); }
+                    if(string.IsNullOrEmpty(error)) { LinuxCommands.ChangeDirectory(client, Locations.GetJobOutputPath(id), out error); }
 
                     // This command has NOT been tested. We may need an absolute path rather than the relative one that we reference in this method since we switch directories to the output path directory.
-                    if (string.IsNullOrEmpty(error)) { LinuxCommands.AddJobToScheduler(client, logPath, node, jobName, out error); }
+                    if (string.IsNullOrEmpty(error)) { LinuxCommands.AddJobToScheduler(client, Locations.GetJobLogPath(id), node, jobName, out error); }
 
                     if (string.IsNullOrEmpty(error)) { SetJobNumber(client, jobName, out error); }
 

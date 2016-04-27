@@ -114,12 +114,12 @@ function Step2MoveForward() {
         }
     }
 
-
     if (invalidData == 0)
     {
         document.getElementById("PELengthErrorMsg").innerHTML = "";
         document.getElementById("JumpLengthErrorMsg").innerHTML = "";
         document.getElementById("WizardErrors").innerHTML = "";
+        document.getElementById("RemoveURLErrorMsg").innerHTML = "";
 
         // Move to the next step.
         document.getElementById('Step2').style.display = "none";

@@ -2,49 +2,18 @@
 using Genome.Models;
 using System.Collections.Generic;
 using System;
-using System.Text.RegularExpressions;
 using Renci.SshNet.Common;
 using System.Net.Sockets;
 using System.Linq;
+using System.Collections;
 
-// TODO: CREATE ANOTHER PARAMETER IN THE MODEL THAT REFLECTS THE DIFFERENT STATUSES OF EACH ASSEMBLER AS WELL AS THE OVERALL STATUS. THIS WILL ALL
-// NEED TO BE CHANGED.
 namespace Genome.Helpers
 {
     public class CheckJobStatus
     {
-        string[] overallStepList = new string[]
-        {
-            "Program Queued",
-            "Data Conversion",
-            "Running Assembly",
-            "Finished Assembler 1 of 1",
-            "Data Analysis",
-            "Compressing Data",
-            "Uploading Data",
-            "Complete"
-        };
-
-        string[] masurcaStepListDescriptions = new string[]
-        {
-            "Creating Contigs",
-            "Backing something up",
-            "Data Analysis Complete"
-        };
-
-        private string ip = "";
-        private const string FILESERVER_FTP_URL = "UNKNOWN";
         private const string  PUBLIC_KEY_LOCATION = "UNKNOWN";
-        //private GenomeAssemblyDbContext db = new GenomeAssemblyDbContext();
 
-        public CheckJobStatus(string ip, out string error)
-        {
-            error = "";
-
-            this.ip = ip;
-        }
-
-        private ConnectionInfo CreatePrivateKeyConnectionInfo()
+        private static ConnectionInfo CreatePrivateKeyConnectionInfo()
         {
             var keyFile = new PrivateKeyFile(@"[ABSOLUTE PATH OF OPENSSH PRIVATE PPK KEY]");
             var keyFiles = new[] { keyFile };
@@ -53,13 +22,14 @@ namespace Genome.Helpers
             var methods = new List<AuthenticationMethod>();
             methods.Add(new PrivateKeyAuthenticationMethod(username, keyFiles));
 
-            return new ConnectionInfo(ip, 22, username, methods.ToArray());
-
+            return new ConnectionInfo(Locations.GetBigDogIp(), 22, username, methods.ToArray());
         }
 
-        // Here we need to call the method that corresponds to updating ALL jobs marked 'running' in our database.
-        // This will be called by our scheduler with updateAll as a true value.
-        protected internal bool UpdateAllJobStatuses(out string error)
+        // This will be called by a scheduler on a timed basis.
+        // In the main method where this is called, it will loop through all the job uuids that need to be run and then call this method 
+        // successively. This allows me to use the SAME method for a single update of a batch update.
+        // Returns a jobsToUpload = true if this job is ready to be uploaded.
+        protected internal static void UpdateStatuses(int jobUuid, ref bool jobsToUpload, out string error)
         {
             error = "";
 
@@ -72,314 +42,184 @@ namespace Genome.Helpers
                 {
                     client.Connect();
 
-                    string workingDirectory = "/share/scratch/Genome/";
-
                     using (GenomeAssemblyDbContext db = new GenomeAssemblyDbContext())
                     {
-                        // Find all of the jobs that are currently running and return their SGEJobId.
-                        //var jobIds = (from j in db.GenomeModels
-                        //              where j.JobStatus.Equals("Running")
-                        //              select j.SGEJobId);
+                        GenomeModel genomeModel = db.GenomeModels.Find(jobUuid);
 
-                        //var overallStepList = new List<KeyValuePair<int, string>>();
-                        //overallStepList.Add(new KeyValuePair<int, string>(1, "Program Queued"));
-                        //overallStepList.Add(new KeyValuePair<int, string>(2, "Data Conversion"));
-                        //overallStepList.Add(new KeyValuePair<int, string>(3, "Running Assemblers"));
-                        //overallStepList.Add(new KeyValuePair<int, string>(5, "Data Analysis"));
-                        //overallStepList.Add(new KeyValuePair<int, string>(7, "Uploading Data"));
-                        //overallStepList.Add(new KeyValuePair<int, string>(8, "Complete"));
+                        #region Checking how many assemblers chosen
 
-                        // Upon completion of the masurca program, we create a file that contains all of stdout for the run in masurca_finished.log. 
-                        // So upon error or success that file will always be created.
-                        var masurcaStepList = new List<KeyValuePair<int, string>>();
-                        masurcaStepList.Add(new KeyValuePair<int, string>(1, "FILENAME"));
-                        masurcaStepList.Add(new KeyValuePair<int, string>(2, "FILENAME"));
-                        masurcaStepList.Add(new KeyValuePair<int, string>(3, "FILENAME"));
-                        masurcaStepList.Add(new KeyValuePair<int, string>(4, "FILENAME"));
-                        masurcaStepList.Add(new KeyValuePair<int, string>(5, "masurca_finished.olog"));
+                        int numAssemblers = 0;
 
-                        var jobList = (from j in db.GenomeModels
-                                       where !j.CurrentOverallStep.Equals("Complete")
-                                       select j.uuid);
+                        // Check which assemblers the user chose to use.
+                        if (genomeModel.UseMasurca) numAssemblers++;
+                        if (genomeModel.UseSGA) numAssemblers++;
+                        if (genomeModel.UseWGS) numAssemblers++;
 
-                        // If a job is currently running, then we need to check on it.
-                        foreach (var job in jobList)
+                        // Get the overallstep list generated from the number of assemblers the user chose to use.
+                        Hashtable overallStepList = StepDescriptions.GenerateOverallStepList(numAssemblers);
+
+                        // Get the masurca step list.
+                        HashSet<Assembler> masurcaStepList = StepDescriptions.GetMasurcaStepList();
+
+                        #endregion
+
+                        #region Check if the job is currently running
+
+                        // Checks to see if the job is running.
+                        if (LinuxCommands.JobRunning(client, Convert.ToInt32(genomeModel.SGEJobId), out error))
                         {
-                            GenomeModel genomeModel = db.GenomeModels.Find(job);
-
-                            // Check to see if the current job is actually running.
-                            if (LinuxCommands.JobRunning(client, Convert.ToInt32(genomeModel.SGEJobId), out error))
+                            // Now we need to check the status of EACH assembler, updating their statuses before we know the overall status.
+                            if (string.IsNullOrEmpty(error))
                             {
-                                // Get the current step of the job.
-                                if (string.IsNullOrEmpty(error))
+                                #region Check if Masurca is running
+
+                                if (LinuxCommands.DirectoryHasFiles(client, Locations.GetMasurcaOutputPath(jobUuid), out error))
                                 {
-                                    string masurcaWorkingDirectory = workingDirectory + "Job" + genomeModel.uuid + "/Output/Masurca";
+                                    // Now we need to check if it has completed those assembly jobs.
+                                    int masurcaCurrentStep = LinuxCommands.GetCurrentStep(client, Locations.GetMasurcaOutputPath(jobUuid), jobUuid, StepDescriptions.GetMasurcaStepList(), out error);
 
-                                    // Check if the job has created anything in the output directory. If it has, it has started assembly.
-                                    if (LinuxCommands.DirectoryHasFiles(client, masurcaWorkingDirectory, out error))
+                                    // Now we need to set the step/status values for masurca.
+                                    if (masurcaCurrentStep != -1)
                                     {
-                                        // If we are on steps 1 or 2, then we need to update the status since the assembly has started.
-                                        if (genomeModel.OverallJobStatus.Equals(overallStepList.Equals("Program Queued"))
-                                            || genomeModel.OverallJobStatus.Equals(overallStepList.Equals("Data Conversion")))
-                                        {
-                                            genomeModel.CurrentOverallStep = Array.IndexOf(overallStepList, "Running Assembly") + 1;
-                                            genomeModel.OverallJobStatus = "Running Assembly";
-                                        }
-
-                                        // Right now I have a status of RUNNING ASSEMBLY
-
-                                        // If masurca is done with its assembly, then I need to update the status....otherwise I don't.
-                                        // If WGS is done with its assembly, then I need to update the status....otherwise I don't.
-
-                                        int masurcaCurrentStep = GetCurrentStep(client, masurcaWorkingDirectory, genomeModel.uuid, masurcaStepList, out error);
-
-                                        // Update masurca step/status.
                                         genomeModel.MasurcaCurrentStep = masurcaCurrentStep;
-
-                                        // -1 because description starts at 0 and masurcaCurrentStep (relative to key) index starts at 1.
-                                        genomeModel.MasurcaStatus = masurcaStepListDescriptions[masurcaCurrentStep - 1];
-
-                                        //if (masurcaCurrentStep == masurcaStepList.Last().Key)
-                                        //{
-
-                                        //}
-
-                                        //else
-                                        //{
-                                        //    genomeModel.MasurcaCurrentStep = masurcaCurrentStep;
-                                        //    genomeModel.MasurcaStatus = masurcaStepList[masurcaCurrentStep].Value;
-                                        //}
-
-                                        //if (GetCurrentStep(client, sgaWorkingDirectory, job.uuid, sgaStepList, out error) == sgaStepList.Last().Key)
-                                        //{
-                                        //    numAssemblersFinished++;
-                                        //}
-                                        
-
-                                        // If masurca is finished...
-                                        if (masurcaCurrentStep == masurcaStepList.Last().Key) {  }
-                                        //if(wgsCurrentStep == wgsStepList.Last().Key) { numAssemblersFinished++; }
-
-                                        // If an assembler finished, this will modify the appropriate step.
-
+                                        genomeModel.MasurcaStatus = StepDescriptions.GetCurrentStepDescription(StepDescriptions.GetMasurcaStepList(), masurcaCurrentStep);
                                     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                                    // Save the changes to the model in the database.
-                                    db.SaveChanges();
                                 }
-                            }
 
-                            // The job isn't running.
-                            else
-                            {
-                                // We now need to check to see if it has completed or if it has errored out.
-                                CheckJobCompleted(client, job.SGEJobId, workingDirectory, out error);
+                                #endregion
+
+                                #region Check if SGA is running.
+                                // Similar code to the masurca check.
+                                #endregion
+
+                                #region Check if WGS is running.
+                                // Similar code to the masurca check.
+                                #endregion
                             }
                         }
+
+                        #endregion
+
+                        #region Check if the job has completed successfully or errored out
+
+                        // The job isn't running according to the scheduler. So it finished either successfully or errored out.
+                        else
+                        {
+                            #region Check if the assemblers completed successfully
+
+                            // Now I need to go through all the assemblers and see if they exited successfully or not.
+                            if (LinuxCommands.AssemblerSuccess(client, Locations.GetMasurcaErrorSuccessLogPath(jobUuid), jobUuid, out error))
+                            {
+                                int masurcaCurrentStep = StepDescriptions.GetMasurcaStepList().Last().step;
+
+                                genomeModel.MasurcaCurrentStep = masurcaCurrentStep;
+                                genomeModel.MasurcaStatus = StepDescriptions.GetCurrentStepDescription(StepDescriptions.GetMasurcaStepList(), masurcaCurrentStep);
+                            }
+
+                            else
+                            {
+                                int masurcaCurrentStep = StepDescriptions.GetMasurcaStepList().Last().step;
+
+                                genomeModel.MasurcaCurrentStep = masurcaCurrentStep;
+                                genomeModel.MasurcaStatus = StepDescriptions.GetCurrentStepDescription(StepDescriptions.GetMasurcaStepList(), masurcaCurrentStep) + " - Error"; // explicitly note an error for the description.
+                            }
+
+                            // Add the job to the list of jobs to upload to the file server FTP.
+                            jobsToUpload = true;
+
+                            #endregion
+                        }
+
+                        db.SaveChanges(); // Save the changes to the model in the database.
                     }
 
-                    if (string.IsNullOrEmpty(error))
-                        return true;
-
-                    else
-                        return false;
+                    #endregion
                 }
 
                 // SSH Connection couldn't be established.
                 catch (SocketException e)
                 {
                     error = "The SSH connection couldn't be established. " + e.Message;
-
-                    return false;
                 }
 
                 // Authentication failure.
                 catch (SshAuthenticationException e)
                 {
                     error = "The credentials were entered incorrectly. " + e.Message;
-
-                    return false;
                 }
 
                 // The SSH connection was dropped.
                 catch (SshConnectionException e)
                 {
                     error = "The connection was terminated unexpectedly. " + e.Message;
-
-                    return false;
                 }
             }
         }
 
-        protected internal bool UpdateJobStatus(int uuid, out string error)
+        #region Compile and ship data to FTP for download by user.
+
+        /// <summary>
+        /// This will actually compress the data, initiate the sftp connection, and upload the files to the file server FTP. This should be called 
+        /// AFTER the UpdateStatuses method. This also sets the download link for the file IF it uploaded successfully.
+        /// </summary>
+        /// <param name="client"> Current SSH session client.</param>
+        /// <param name="uuid"> The id of the current job. </param>
+        /// <param name="error"></param>
+        protected internal static void UploadData(SshClient client, int uuid, out string error)
         {
-            error = "";
-
-            using (var client = new SshClient(CreatePrivateKeyConnectionInfo()))
+            using (GenomeAssemblyDbContext db = new GenomeAssemblyDbContext())
             {
-                try
-                {
-                    client.Connect();
+                GenomeModel genomeModel = db.GenomeModels.Find(uuid);
 
-                    string workingDirectory = "/share/scratch/Genome/Job" + uuid;
+                LinuxCommands.ChangeDirectory(client, Locations.GetJobPath(uuid), out error);
 
-                    LinuxCommands.ChangeDirectory(client, workingDirectory + uuid, out error);
-                    
-                    //GetCurrentStep(client, out error);
-
-                    if (string.IsNullOrEmpty(error))
-                        return true;
-
-                    else
-                        return false;
-                }
-
-                // SSH Connection couldn't be established.
-                catch (SocketException e)
-                {
-                    error = "The SSH connection couldn't be established. " + e.Message;
-
-                    return false;
-                }
-
-                // Authentication failure.
-                catch (SshAuthenticationException e)
-                {
-                    error = "The credentials were entered incorrectly. " + e.Message;
-
-                    return false;
-                }
-
-                // The SSH connection was dropped.
-                catch (SshConnectionException e)
-                {
-                    error = "The connection was terminated unexpectedly. " + e.Message;
-
-                    return false;
-                }
-            }
-        }
-
-        // This has NOT been tested yet.
-        private bool CheckJobCompleted(SshClient client, int jobId, string workingDirectory, out string error)
-        {
-            // We are assuming that the job has completed running. So we need to check the error file in our log directory. If that log has 
-            // ANYTHING in it, then we have an error and need to notify the user.
-
-            // If the error log is empty, then we assume that it has completed successfully and we notify the user. We follow all the basic steps 
-            // for both methods but change the notification message.
-
-            // There is an error with the job. Aka there is information written to the error log.
-            if (LinuxCommands.JobHasError(client, jobId, workingDirectory, out error))
-            {
-                string zipStoreLocation = workingDirectory + "Job" + jobId + "/Output/job" + jobId + ".zip";
-                string jobLocation = workingDirectory + "Job" + jobId;
-
-                // Let's compress the job (-y: store sym links, -r: travel recursively).
-                if (string.IsNullOrEmpty(error)) { LinuxCommands.ZipFiles(client, 9, zipStoreLocation, jobLocation, out error, "-y -r"); }
-
-                else
-                {
-                    using (GenomeAssemblyDbContext db = new GenomeAssemblyDbContext())
-                    {
-                        GenomeModel genomeModel = db.GenomeModels.Find(jobId);
-                        genomeModel.OverallJobStatus = "Error Packaging Data";
-                        db.SaveChanges();
-                    }
-                }
-
-                // Now we connect to the file server FTP
-                if (string.IsNullOrEmpty(error)) { LinuxCommands.ConnectSFTP(client, FILESERVER_FTP_URL, PUBLIC_KEY_LOCATION, out error); }
-
-                // Now we need to upload our zip file.
                 if (string.IsNullOrEmpty(error))
                 {
-                    using (GenomeAssemblyDbContext db = new GenomeAssemblyDbContext())
-                    {
-                        GenomeModel genomeModel = db.GenomeModels.Find(jobId);
-                        genomeModel.OverallJobStatus = "Transferring";
-                        db.SaveChanges();
+                    genomeModel.OverallStatus = "Compressing Data";
 
-                        LinuxCommands.SftpUploadFile(client, zipStoreLocation, out error);
+                    db.SaveChanges();
 
-                        genomeModel.OverallJobStatus = "Completed";
-                        db.SaveChanges();
+                    LinuxCommands.ZipFiles(client, 9, Locations.GetCompressedDataPath(uuid), Locations.GetMasterPath(), out error, "-y -r");
 
-                    }
+                    if (!string.IsNullOrEmpty(error))
+                        genomeModel.OverallStatus = "Error Compressing Data";
+
+                    db.SaveChanges();
                 }
 
-                // There was an error transferring the files.
-                else
+                if (string.IsNullOrEmpty(error))
                 {
-                    using (GenomeAssemblyDbContext db = new GenomeAssemblyDbContext())
-                    {
-                        GenomeModel genomeModel = db.GenomeModels.Find(jobId);
-                        genomeModel.OverallJobStatus = "Error Transferring";
-                        db.SaveChanges();
-                    }
+                    genomeModel.OverallStatus = "Connecting to SFTP";
+
+                    db.SaveChanges();
+
+                    LinuxCommands.ConnectSFTP(client, Locations.GetFtpUrl(), PUBLIC_KEY_LOCATION, out error);
+
+                    if (!string.IsNullOrEmpty(error))
+                        genomeModel.OverallStatus = "Error connecting to SFTP";
+
+                    db.SaveChanges();
                 }
 
-                // Now we need to update the status of the job.
-            }
-
-            return true; //TEMP VALUE
-        }
-
-        
-
-        // This will change depending on how we approach doing the check for the status.
-        // Returns the current step of the job or -1 if there was an error encountered.
-        private int GetCurrentStep(SshClient client, string workingDirectory, int jobUuid, List<KeyValuePair<int, string>> stepList, out string error)
-        {
-            // Change to the assembler output directory.
-            LinuxCommands.ChangeDirectory(client, workingDirectory, out error);
-
-            // A quick and dirty way to check for specific files is to create a dictionary of known files associated with the steps
-            // and then successively run through each command to see the job is.
-
-            int currentStep = 0;
-
-            // Here item1 = uuid and item2 = sgejobid.
-            foreach (var step in stepList)
-            {
-                using (var cmd = client.CreateCommand("find " + step.Value + " | wc -l"))
+                if (string.IsNullOrEmpty(error))
                 {
-                    cmd.Execute();
+                    genomeModel.OverallStatus = "Uploading Data to SFTP";
 
-                    // File found.
-                    if (Convert.ToInt32(cmd.Result.ToString()) > 0)
-                        currentStep = step.Key;
+                    db.SaveChanges();
 
-                    if (LinuxErrorHandling.CommandError(cmd, out error) || Convert.ToInt32(cmd.Result.ToString()) <= 0)
-                        break;
+                    LinuxCommands.SftpUploadFile(client, Locations.GetZipFileStoragePath(), out error);
+
+                    if (!string.IsNullOrEmpty(error))
+                        genomeModel.OverallStatus = "Error uploading data to SFTP";
+
+                    if (string.IsNullOrEmpty(error))
+                        genomeModel.DownloadLink = Locations.GetDataDownloadLink(genomeModel.CreatedBy, uuid);
+
+                    db.SaveChanges();
                 }
             }
-
-            if (string.IsNullOrEmpty(error))
-                return currentStep;
-
-            else
-                return -1;
         }
+
+        #endregion
     }
 }

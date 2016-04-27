@@ -5,7 +5,15 @@
 <div class="jumbotron">
     <h1>Genome Assembly Platform</h1>
     <p class="lead">Genome Assembly made quick and easy. You can get started today in three easy steps!</p>
-    <p><a href="~/Views/Manage/VerifyBigDogAccount.cshtml" class="btn btn-primary btn-lg">Get Started &raquo;</a></p>
+    @if (string.IsNullOrEmpty(ViewBag.ShowCreateButton))
+    {
+        <p><a href="~/Manage/VerifyBigDogAccount" class="btn btn-primary btn-lg">Get Started &raquo;</a></p>
+    }
+
+    else
+    {
+        <p><a href="~/GenomeAssembly/Create" class="btn btn-primary btn-lg">Get Started &raquo;</a></p>
+    }
 </div>
 
 <div class="row">
@@ -14,18 +22,18 @@
         <p>
             First we must make sure that your account on the BigDog cluster has all the necessary tools prior to creating a job. In short, we need to make sure you have enough space and permissions to run the job. It is a quick and painless check.
         </p>
-        <p><a class="btn btn-default" href="~/Views/Manage/VerifyBigDogAccount.cshtml">Verify Account &raquo;</a></p>
+        <p><a class="btn btn-default" href="~/Manage/VerifyBigDogAccount">Verify Account  &raquo;</a></p>
     </div>
     <div class="col-md-4">
         <h2>Step 2 - Create</h2>
         <p>
             Now that we know everything is in order, you can create a job! The only information you need is about your data and where it is stored. Simply follow the job creation wizard to easily submit your job.
         </p>
-        <p><a class="btn btn-default" href="~/Views/GenomeAssembly/Create.cshtml">Create a Job &raquo;</a></p>
+        <p><a class="btn btn-default" href="~/GenomeAssembly/Create">Create a Job  &raquo;</a></p>
     </div>
     <div class="col-md-4">
         <h2>Step 3 - View</h2>
         <p>After initialing a job, you may view the current status of the assembly. You can also cancel the job and download the finished information from this location as well. It is a handy tool to keep track of how long the assembly is taking.</p>
-        <p><a class="btn btn-default" href="~/Views/Account//ViewJobs.cshtml">See Jobs &raquo;</a></p>
+        <p><a class="btn btn-default" href="~/Manage/ViewJobs">See Jobs  &raquo;</a></p>
     </div>
 </div>

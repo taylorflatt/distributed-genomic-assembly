@@ -7,49 +7,67 @@
 <h2>My Jobs</h2>
 
 <p>
-    @Html.ActionLink("Create New", "Create")
+    @Html.ActionLink("Create New", "Create", "GenomeAssembly")
 </p>
-<table class="table">
-    <tr>
-        <th>
-            @Html.DisplayNameFor(model => model.SGEJobId)
-        </th>
-        <th>
-            @Html.DisplayNameFor(model => model.DataSource)
-        </th>
-        <th>
-            @Html.DisplayNameFor(model => model.CreatedDate)
-        </th>
-        <th>
-            @Html.DisplayNameFor(model => model.CompletedDate)
-        </th>
-        <th>
-            @Html.DisplayNameFor(model => model.JobStatus)
-        </th>
-        <th>Job Information</th>
-    </tr>
+@if (HttpContext.Current.User.Identity.IsAuthenticated)
+{
+    <table class="table">
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.uuid)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.DataSource)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CreatedDate)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CompletedDate)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.OverallStatus)
+            </th>
+            <th>Job Information</th>
+        </tr>
 
-@foreach (var item in Model) {
-    <tr>
-        <td>
-            @Html.DisplayFor(modelItem => item.SGEJobId)
-        </td>
-        <td>
-            @Html.DisplayFor(modelItem => item.DataSource)
-        </td>
-        <td>
-            @Html.DisplayFor(modelItem => item.CreatedDate)
-        </td>
-        <td>
-            @Html.DisplayFor(modelItem => item.CompletedDate)
-        </td>
-        <td>
-            @Html.DisplayFor(modelItem => item.JobStatus)
-        </td>
-        <td>
-            @Html.ActionLink("Details", "Details", "GenomeAssembly", new { id=item.uuid }, "")
-        </td>
-    </tr>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.uuid)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.DataSource)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.CreatedDate)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.CompletedDate)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.OverallStatus)
+                </td>
+                <td>
+                    @Html.ActionLink("Details", "Details", "GenomeAssembly", new { id = item.uuid }, "")
+
+                    @if (!string.IsNullOrEmpty(item.DownloadLink))
+                    {
+                        <charset>|</charset>
+                        <a href="@item.DownloadLink">Download</a>
+                    }
+                </td>
+
+            </tr>
+        }
+
+    </table>
 }
 
-</table>
+else
+{
+    <p>
+        You currently do not have any jobs to show!
+    </p>
+}

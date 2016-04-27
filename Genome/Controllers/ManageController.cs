@@ -26,7 +26,16 @@ namespace Genome.Controllers
                               where jobs.CreatedBy.Equals(User.Identity.Name)
                               select jobs;
 
-                return View(jobList.ToList());
+                if(jobList.Count() > 0)
+                {
+                    return View(jobList.ToList());
+                }
+
+                else
+                {
+                    ViewBag.ShowJobList = false;
+                    return View();
+                }
             }
         }
 
@@ -144,15 +153,51 @@ namespace Genome.Controllers
                 : "";
 
             var userId = User.Identity.GetUserId();
-            var model = new IndexViewModel
+
+            /// I really need to extend the Identity class to add a get for the verifiedclusteraccount rather than this. BUt it will do for now.
+            using (GenomeAssemblyDbContext db = new GenomeAssemblyDbContext())
             {
-                HasPassword = HasPassword(),
-                PhoneNumber = await UserManager.GetPhoneNumberAsync(userId),
-                TwoFactor = await UserManager.GetTwoFactorEnabledAsync(userId),
-                Logins = await UserManager.GetLoginsAsync(userId),
-                BrowserRemembered = await AuthenticationManager.TwoFactorBrowserRememberedAsync(userId)
-            };
-            return View(model);
+                string username = HttpContext.User.Identity.GetUserName();
+                bool verifiedClusterAccount = false;
+
+                var temp = from u in db.Users
+                           where u.UserName.Equals(username)
+                           select u;
+
+                // This should only ever be iterated through once.
+                foreach (var user in temp)
+                {
+                    if (user.ClusterAccountVerified)
+                        verifiedClusterAccount = true;
+                }
+
+
+                var model = new IndexViewModel
+                {
+                    HasPassword = HasPassword(),
+                    PhoneNumber = await UserManager.GetPhoneNumberAsync(userId),
+                    ClusterAccountVerified = verifiedClusterAccount,
+                    TwoFactor = await UserManager.GetTwoFactorEnabledAsync(userId),
+                    Logins = await UserManager.GetLoginsAsync(userId),
+                    BrowserRemembered = await AuthenticationManager.TwoFactorBrowserRememberedAsync(userId)
+                };
+
+                var createdJobs = from j in db.GenomeModels
+                                  where j.CreatedBy.Equals(username)
+                                  select j;
+
+                ViewBag.JobsCreated = createdJobs.Count().ToString();
+
+                var finishedJobs = from j in db.GenomeModels
+                                  where j.CreatedBy.Equals(username)
+                                  where !string.IsNullOrEmpty(j.DownloadLink)
+                                  select j;
+
+                ViewBag.JobsFinished = finishedJobs.Count().ToString();
+                ViewBag.JobsFinishedStat = Convert.ToString(100 * finishedJobs.Count() / createdJobs.Count()) + "%";
+
+                return View(model);
+            }
         }
 
         //
