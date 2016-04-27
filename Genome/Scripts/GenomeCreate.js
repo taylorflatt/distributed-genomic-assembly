@@ -114,7 +114,6 @@ function Step2MoveForward() {
         }
     }
 
-
     if (invalidData == 0)
     {
         document.getElementById("PELengthErrorMsg").innerHTML = "";

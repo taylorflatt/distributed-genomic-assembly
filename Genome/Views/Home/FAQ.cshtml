@@ -1,0 +1,140 @@
+﻿
+@{
+    ViewBag.Title = "FAQ";
+}
+
+<h2>FAQ</h2>
+
+<table>
+    <tr>
+        <td class="col-md-4" style="vertical-align:top;">
+            <strong><a href="#generalTitle" style="text-decoration: none; color:inherit;">General</a></strong>
+            <ul>
+                <li><a href="#project_description">What is this project?</a></li>
+                <li><a href="#cost">How much does it cost me to use this service?</a></li>
+                <li><a href="#job_status">How do I check the current status of one of my jobs?</a></li>
+                <li><a href="#knowledge">What kind of things do I need to know to use this?</a></li>
+                <li><a href="#students">Can my students use this program?</a></li>
+            </ul>
+        </td>
+
+        <td class="col-md-4" style="vertical-align:top;">
+            <strong><a href="#masurcaTitle" style="text-decoration: none; color:inherit;">Masurca Information</a></strong>
+            <ul>
+                <li><a href="#masurca_data_requirement">What kind of data does Masurca require?</a></li>
+                <li><a href="#masurca_limitations">What are the limitations of Masurca?</a></li>
+                <li><a href="#masurca_output">What is the output I will get from Masurca?</a></li>
+            </ul>
+        </td>
+</table>
+
+<hr />
+
+<h3 id="generalTitle">General FAQ</h3>
+
+
+<h3></h3>
+<div class="panel panel-info">
+
+    <div class="panel-heading">
+        <h4 id="software">What is this project?</h4>
+    </div>
+
+    <div class="panel-body">
+        <p>In short, the purpose of this platform is to create an easy-to-use interface around the immense resources of the BigDog cluster. We accomplish that by creating a parallelized pipeline whereing genomic data is run through a multitude of assemblers concurrently and ultimately combined to provide the most accurate results possible.</p>
+        <p>
+            To get a more detailed look at what our project is really about, you can <a href="#">download our abstract</a> or view the <a href="~/Home/About">About page</a>.
+        </p>
+    </div>
+</div>
+
+<div class="panel panel-info">
+
+    <div class="panel-heading">
+        <h4 id="cost">How much does this service cost?</h4>
+    </div>
+
+    <div class="panel-body">
+        <p>
+            Currently there is no charge associated with the use of this system. 
+        </p>
+    </div>
+</div>
+
+<div class="panel panel-info">
+
+    <div class="panel-heading">
+        <h4 id="knowledge">How do I check the status of my job?</h4>
+    </div>
+
+    <div class="panel-body">
+        <p>
+            You really only need to know the information about your data. For instance, you need to know how your data is formatted (i.e paired-end). Any other information that we will ask is clearly explained and doesn't require more knowledge than you'll have on hand.
+        </p>
+    </div>
+</div>
+
+<div class="panel panel-info">
+
+    <div class="panel-heading">
+        <h4 id="students">Can my students use this program?</h4>
+    </div>
+
+    <div class="panel-body">
+        <p>
+            As it stands now, every user of this program must have an account in order to access the resources of big dog. Furthermore, an SSH account is required for access to BigDog which means that either you (the instructor) will need an account that the students may use on BigDog and/or an account for them to use to access this platform.
+        </p>
+
+        <p>
+            We don't currently have any sort of framework setup for a "student access". Short of than letting them login to a "student" account, there isn't a way to manage this. They will also need a BigDog account to use the cluster's resources and by extension this program. Right now, there is nothing setup specifically for this. However, we plan on something in the future to allow students to run some simple tests.
+        </p>
+    </div>
+</div>
+
+<h3 id="masurcaTitle"> Masurca Assembler FAQ</h3>
+
+<hr />
+
+<div class="panel panel-info">
+
+    <div class="panel-heading">
+        <h4 id="masurca_data_requirement">What kind of data does Masurca require?</h4>
+    </div>
+
+    <div class="panel-body">
+        <p>
+            Masurca expects either paired-end or jump-reads in *.fastq format. It will also accept another type specified as "other" of data type *.FRG.
+        </p>
+    </div>
+</div>
+
+<div class="panel panel-info">
+
+    <div class="panel-heading">
+        <h4 id="masurca_limitations">What are the limitations of Masurca?</h4>
+    </div>
+
+    <div class="panel-body">
+        <p>
+            Masurca doesn't run parallelized so it will only run on a single node. Although, for most jobs, this isn't a problem. Since BigDog is so powerful, the increase in efficiency wouldn't be too staggering.</p>
+        <p>
+            Masurca only accepts a small number of formats. Those being *.fastq and *.FRG. So that means that you may have to run conversions on the data prior to actually running the data through the assembler.
+        </p>
+        <p>
+            More to come...
+        </p>
+    </div>
+</div>
+
+<div class="panel panel-info">
+
+    <div class="panel-heading">
+        <h4 id="masurca_output">What is the output I will get from Masurca?</h4>
+    </div>
+
+    <div class="panel-body">
+        <p>
+            More to come...
+        </p>
+    </div>
+</div>
