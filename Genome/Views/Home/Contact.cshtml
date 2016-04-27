@@ -1,25 +1,9 @@
 ﻿@{
     ViewBag.Title = "Contact";
 }
-@using Renci.SshNet;
-<h2>@ViewBag.Title.</h2>
-<h3>@ViewBag.Message</h3>
+
+<h2>Contact Us</h2>
 
 <address>
-    One Microsoft Way<br />
-    Redmond, WA 98052-6399<br />
-    <abbr title="Phone">P:</abbr>
-    425.555.0100
-</address>
-
-@using (var client = new SshClient("hostnameOrIp", "username", "password"))
-{
-    client.Connect();
-    client.RunCommand("etc/init.d/networking restart");
-    client.Disconnect();
-}
-
-<address>
-    <strong>Support:</strong>   <a href="mailto:Support@example.com">Support@example.com</a><br />
-    <strong>Marketing:</strong> <a href="mailto:Marketing@example.com">Marketing@example.com</a>
+    <strong>Support:</strong>   <a href="mailto:Support@example.com">Support@siu.edu</a><br />
 </address>
