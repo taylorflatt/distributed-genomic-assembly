@@ -160,12 +160,23 @@ namespace Genome.Controllers
                 string username = HttpContext.User.Identity.GetUserName();
                 bool verifiedClusterAccount = false;
 
-                var temp = from u in db.Users
+                var usernameLookup = from u in db.Users
                            where u.UserName.Equals(username)
                            select u;
 
+                var dawgTagLookup = from u in db.Users
+                              where u.UserName.Equals(username)
+                              select u.DawgTag;
+
+                int dawgTag = 0;
+
+                foreach (var user in dawgTagLookup)
+                {
+                    dawgTag = user;
+                }
+
                 // This should only ever be iterated through once.
-                foreach (var user in temp)
+                foreach (var user in usernameLookup)
                 {
                     if (user.ClusterAccountVerified)
                         verifiedClusterAccount = true;
@@ -177,6 +188,7 @@ namespace Genome.Controllers
                     HasPassword = HasPassword(),
                     PhoneNumber = await UserManager.GetPhoneNumberAsync(userId),
                     ClusterAccountVerified = verifiedClusterAccount,
+                    DawgTag = dawgTag,
                     TwoFactor = await UserManager.GetTwoFactorEnabledAsync(userId),
                     Logins = await UserManager.GetLoginsAsync(userId),
                     BrowserRemembered = await AuthenticationManager.TwoFactorBrowserRememberedAsync(userId)
