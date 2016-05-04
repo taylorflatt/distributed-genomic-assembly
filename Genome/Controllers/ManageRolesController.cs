@@ -267,7 +267,7 @@ namespace Genome.Controllers
                 ViewBag.RoleSelectError = "That user is not in the database.";
         }
 
-        private async void DeleteRoleForUser(string UserName)
+        private void DeleteRoleForUser(string UserName)
         {
             ApplicationUser user = context.Users.FirstOrDefault(u => u.UserName.Equals(UserName, StringComparison.CurrentCultureIgnoreCase));
 
@@ -285,22 +285,28 @@ namespace Genome.Controllers
                     // Get all the user roles (will only be 1).
                     var oldRole = (string)UserManager.GetRoles(user.Id).ElementAt(0);
 
-                    // Assign the user's current role.
-                    //string oldRole = rolesList.FirstOrDefault();
-
                     // Get the list of roles.
                     Dictionary<int, string> roleList = CustomRoles.Roles();
 
                     // Get the key associated with the role name.
                     var key = roleList.Keys.Single(k => roleList[k] == oldRole);
 
-                    // Remove the user from their previous role.
-                    UserManager.RemoveFromRole(user.Id, oldRole);
+                    // If they are already the lowest user role, then we cannot remove them from that role.
+                    if(key == roleList.Count - 1)
+                    {
+                        ViewBag.ResultMessageError = "Role was unsuccessfully removed from " + oldRole + " because that is the lowest role possible. If you like, you may delete them instead. ";
+                    }
 
-                    // Now we add the user to the role right below their old role.
-                    AddUserToRole(UserName, roleList[key + 1]);
+                    else
+                    {
+                        // Remove the user from their previous role.
+                        UserManager.RemoveFromRole(user.Id, oldRole);
 
-                    ViewBag.ResultMessage = "Role removed from this user successfully! User has been added to the " + roleList[key + 1] + " role.";
+                        // Now we add the user to the role right below their old role.
+                        AddUserToRole(UserName, roleList[key + 1]);
+
+                        ViewBag.ResultMessage = "Role removed from this user successfully! User has been added to the " + roleList[key + 1] + " role.";
+                    }
                 }
             }
 

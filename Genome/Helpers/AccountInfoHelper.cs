@@ -1,13 +1,6 @@
-﻿using System;
-using System.Data;
+﻿using System.Data;
 using System.Linq;
-using System.Web;
-using System.Web.Mvc;
 using Genome.Models;
-using Microsoft.AspNet.Identity;
-using Microsoft.AspNet.Identity.Owin;
-using Genome.CustomFilters;
-using System.Threading.Tasks;
 using Microsoft.AspNet.Identity.EntityFramework;
 using System.Collections.Generic;
 
@@ -24,15 +17,17 @@ namespace Genome.Helpers
 
             using (var context = new IdentityDbContext())
             {
+                Dictionary<int, string> roleList = CustomRoles.Roles();
+
                 // Select all the users in the database.
-                var roles = context.Users
-                    .Select(u => new { Username = u.UserName, Role = u.Roles }).ToList();
+                var users = context.Users
+                    .Select(u => new { Username = u.UserName, Role = u.Roles}).ToList();
 
                 // Populate the username list.
-                foreach (var user in roles)
+                foreach (var user in users)
                 {
-                    user.Role.Equals("Admin");
-                    adminCount++;
+                    if (user.Role.ElementAt(0).RoleId.Equals(roleList.Keys.Single(k => roleList[k] == "Admin").ToString()))
+                        adminCount++;
                 }
 
                 return adminCount;
