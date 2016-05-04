@@ -160,12 +160,23 @@ namespace Genome.Controllers
                 string username = HttpContext.User.Identity.GetUserName();
                 bool verifiedClusterAccount = false;
 
-                var temp = from u in db.Users
+                var usernameLookup = from u in db.Users
                            where u.UserName.Equals(username)
                            select u;
 
+                var dawgTagLookup = from u in db.Users
+                              where u.UserName.Equals(username)
+                              select u.DawgTag;
+
+                int dawgTag = 0;
+
+                foreach (var user in dawgTagLookup)
+                {
+                    dawgTag = user;
+                }
+
                 // This should only ever be iterated through once.
-                foreach (var user in temp)
+                foreach (var user in usernameLookup)
                 {
                     if (user.ClusterAccountVerified)
                         verifiedClusterAccount = true;
@@ -177,6 +188,7 @@ namespace Genome.Controllers
                     HasPassword = HasPassword(),
                     PhoneNumber = await UserManager.GetPhoneNumberAsync(userId),
                     ClusterAccountVerified = verifiedClusterAccount,
+                    DawgTag = dawgTag,
                     TwoFactor = await UserManager.GetTwoFactorEnabledAsync(userId),
                     Logins = await UserManager.GetLoginsAsync(userId),
                     BrowserRemembered = await AuthenticationManager.TwoFactorBrowserRememberedAsync(userId)
@@ -365,6 +377,54 @@ namespace Genome.Controllers
             }
             AddErrors(result);
             return View(model);
+        }
+
+        private async Task DeleteUser()
+        {
+            try
+            {
+                using (var context = new IdentityDbContext())
+                {
+                    string username = User.Identity.Name;
+
+                    if (User.IsInRole("Admin") && AccountInfoHelper.NumberAdminsLeft() == 1)
+                        ViewBag.DeleteError = "Cannot delete this user because they are the last admin. That would result in being locked out.";
+
+                    else
+                    {
+                        var user = await UserManager.FindByNameAsync(username);
+                        var logins = user.Logins;
+
+                        // Remove the logins if any.
+                        foreach (var login in logins.ToList())
+                        {
+                            await _userManager.RemoveLoginAsync(login.UserId, new UserLoginInfo(login.LoginProvider, login.ProviderKey));
+                        }
+
+                        var rolesForUser = await UserManager.GetRolesAsync(user.Id);
+
+                        // Remove the user roles if any.
+                        if (rolesForUser.Count() > 0)
+                        {
+                            foreach (var role in rolesForUser.ToList())
+                            {
+                                var result = await UserManager.RemoveFromRoleAsync(user.Id, role);
+                            }
+                        }
+
+                        // Finally remove the user.
+                        await UserManager.DeleteAsync(user);
+
+                        ViewBag.ResultMessage = "User successfully removed.";
+                    }
+
+                }
+            }
+
+            catch (Exception e)
+            {
+                ViewBag.DeleteError = "The user was unable to be removed from the system. Error Message: " + e.Message;
+            }
         }
 
         //

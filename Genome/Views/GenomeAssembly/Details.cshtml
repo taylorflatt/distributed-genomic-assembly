@@ -207,24 +207,25 @@
     <table frame="box" class="table-responsive table" style="width: 100%;">
         <thead>
             <tr>
-                @if (string.IsNullOrEmpty(Model.DownloadLink))
-                {
-                    @*
-                        Only show the update/cancel job if it isn't completed.
-                    *@
+                <td colspan="2" style="text-align: center; font-weight: bold;">
+                    Job Status
+                    @if (string.IsNullOrEmpty(Model.DownloadLink))
+                    {
+                        @*
+                            Only show the update/cancel job if it isn't completed.
+                        *@
                     using (Html.BeginForm("Details", "GenomeAssembly"))
                     {
-                        <td colspan="2" style="text-align: center; font-weight: bold;">Job Status 
-                            <button type="submit" name="command" value="Cancel Job" style="border: 0px; background: transparent; float: right;">
-                                <img src="~/Content/Images/cancel.png" style="width: 16px; height: 16px;" title="Cancel This Job" />
-                            </button>
+                        <button type="submit" name="command" value="Cancel Job" style="border: 0px; background: transparent; float: right;">
+                            <img src="~/Content/Images/cancel.png" style="width: 16px; height: 16px;" title="Cancel This Job" />
+                        </button>
 
-                            <button type="submit" name="command" value="Update Status" style="border: 0px; background: transparent; float: right;">
-                                <img src="~/Content/Images/refresh.png" style="width: 16px; height: 16px;" title="Update This Job's Status"/>
-                            </button>
-                        </td>   
+                        <button type="submit" name="command" value="Update Status" style="border: 0px; background: transparent; float: right;">
+                            <img src="~/Content/Images/refresh.png" style="width: 16px; height: 16px;" title="Update This Job's Status" />
+                        </button>
+                        }
                     }
-                }
+                </td>
             </tr>
         </thead>
         <tbody>

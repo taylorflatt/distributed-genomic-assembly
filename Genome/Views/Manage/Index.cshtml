@@ -6,10 +6,15 @@
 <h2>@ViewBag.Title.</h2>
 
 <p class="text-success">@ViewBag.StatusMessage</p>
+<p class="text-danger">@ViewBag.DeleteError</p>
 <div>
     <h4>Change your account settings</h4>
     <hr />
     <dl class="dl-horizontal">
+        <dt>Dawgtag:</dt>
+        <dd>
+            <text>SIU</text>@Model.DawgTag 
+        </dd>
         <dt>Password:</dt>
         <dd>
             [
