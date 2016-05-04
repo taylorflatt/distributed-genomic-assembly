@@ -221,6 +221,7 @@
     <Compile Include="Controllers\ManageController.cs" />
     <Compile Include="Controllers\ManageRolesController.cs" />
     <Compile Include="CustomFilters\AuthorizedLoginAttribute.cs" />
+    <Compile Include="Helpers\AccountInfoHelper.cs" />
     <Compile Include="Helpers\Locations.cs" />
     <Compile Include="Helpers\StepDescriptions.cs" />
     <Compile Include="Global.asax.cs">

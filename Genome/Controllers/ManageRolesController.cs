@@ -10,6 +10,8 @@ using Genome.CustomFilters;
 using System.Threading.Tasks;
 using Microsoft.AspNet.Identity.EntityFramework;
 using System.Collections.Generic;
+using Genome.Helpers;
+using System.Collections;
 
 namespace Genome.Controllers
 {
@@ -34,6 +36,7 @@ namespace Genome.Controllers
             var list = context.Roles.OrderBy(r => r.Name).ToList().Select(rr => new SelectListItem { Value = rr.Name.ToString(), Text = rr.Name }).ToList();
 
             ViewBag.Roles = list;
+            ViewBag.Test = AccountInfoHelper.NumberAdminsLeft().ToString();
 
             return View();
         }
@@ -50,7 +53,7 @@ namespace Genome.Controllers
                 GetAllUserRoles(UserName);
 
             else if (command == "Remove User from Role")
-                DeleteRoleForUser(UserName, RoleName);
+                DeleteRoleForUser(UserName);
 
             else if (command == "Delete User")
                 await DeleteUser(UserName);
@@ -95,34 +98,34 @@ namespace Genome.Controllers
             }
         }
 
-        private int NumberAdminsLeft()
-        {
-            int adminCount = 0;
+        //protected int NumberAdminsLeft()
+        //{
+        //    int adminCount = 0;
 
-            using (var context = new IdentityDbContext())
-            {
-                // Select all the users in the database.
-                var temp = context.Users
-                    .Select(u => new { Username = u.UserName }).ToList();
+        //    using (var context = new IdentityDbContext())
+        //    {
+        //        // Select all the users in the database.
+        //        var temp = context.Users
+        //            .Select(u => new { Username = u.UserName }).ToList();
 
-                // Populate the username list.
-                foreach (var user in temp)
-                {
-                    if (GetUserRole(user.Username).Equals("Admin"))
-                        adminCount++;
-                }
+        //        // Populate the username list.
+        //        foreach (var user in temp)
+        //        {
+        //            if (GetUserRole(user.Username).Equals("Admin"))
+        //                adminCount++;
+        //        }
 
-                return adminCount;
+        //        return adminCount;
 
-            }
-        }
+        //    }
+        //}
 
         private async Task DeleteUser(string UserName)
         {
             try
             {
                 // If we are trying to remove an admin and there is only a single admin left, we CANNOT remove that admin. We don't want to get locked out.
-                if (GetUserRole(UserName).Equals("Admin") && NumberAdminsLeft() == 1)
+                if (GetUserRole(UserName).Equals("Admin") && AccountInfoHelper.NumberAdminsLeft() == 1)
                     ViewBag.DeleteError = "Cannot delete this user because they are the last admin. That would result in being locked out.";
 
                 else
@@ -264,35 +267,42 @@ namespace Genome.Controllers
                 ViewBag.RoleSelectError = "That user is not in the database.";
         }
 
-        private void DeleteRoleForUser(string UserName, string RoleName)
+        private async void DeleteRoleForUser(string UserName)
         {
-            //Make sure valid information is entered/selected.
-            RoleChangeValidation(UserName, RoleName);
-
             ApplicationUser user = context.Users.FirstOrDefault(u => u.UserName.Equals(UserName, StringComparison.CurrentCultureIgnoreCase));
 
             if(user == null)
                 ViewBag.UserSelectError = "That user is not in the database.";
 
-            else if(RoleName.Equals(""))
-                ViewBag.RoleSelectError = "Please select a valid role.";
-
-            else if (UserManager.IsInRole(user.Id, RoleName))
+            else
             {
                 // Don't let them be removed from the admin role to prevent lockout.
-                
-                if (UserManager.GetRoles(user.Id).Contains("Admin"))
-                    ViewBag.AdminDeleteError = "This user is an admin and cannot be removed from the role. The user must be deleted instead.";
+                if (UserManager.GetRoles(user.Id).Contains("Admin") && AccountInfoHelper.NumberAdminsLeft() == 1)
+                    ViewBag.AdminDeleteError = "This user is an admin and the only admin remaining. The user must be deleted instead.";
 
                 else
                 {
-                    UserManager.RemoveFromRole(user.Id, RoleName);
-                    ViewBag.ResultMessage = "Role removed from this user successfully !";
+                    // Get all the user roles (will only be 1).
+                    var oldRole = (string)UserManager.GetRoles(user.Id).ElementAt(0);
+
+                    // Assign the user's current role.
+                    //string oldRole = rolesList.FirstOrDefault();
+
+                    // Get the list of roles.
+                    Dictionary<int, string> roleList = CustomRoles.Roles();
+
+                    // Get the key associated with the role name.
+                    var key = roleList.Keys.Single(k => roleList[k] == oldRole);
+
+                    // Remove the user from their previous role.
+                    UserManager.RemoveFromRole(user.Id, oldRole);
+
+                    // Now we add the user to the role right below their old role.
+                    AddUserToRole(UserName, roleList[key + 1]);
+
+                    ViewBag.ResultMessage = "Role removed from this user successfully! User has been added to the " + roleList[key + 1] + " role.";
                 }
             }
-
-            else
-                ViewBag.ResultMessage = "This user doesn't belong to selected role.";
 
             // Populate the roles for a dropdown.
             var list = context.Roles.OrderBy(r => r.Name).ToList().Select(rr => new SelectListItem { Value = rr.Name.ToString(), Text = rr.Name }).ToList();
