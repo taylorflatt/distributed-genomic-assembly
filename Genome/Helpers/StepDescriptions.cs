@@ -29,13 +29,16 @@ namespace Genome.Helpers
         }
     }
 
-    ///
-    /// TODO: ADD THE ERROR STEP DESCRIPTION NAMES SO THEY ARE ALL IN ONE PLACE RATHER THAN THROUGHOUT THE PROGRAM.
-    /// 
     public class StepDescriptions
     {
         public const string COMPRESSION_ERROR = "Error compressing data";
+        public const string SFTP_CONNECTION_ERROR = "Error connecting to SFTP";
+        public const string UPLOAD_TO_FTP_ERROR = "Error uploading data to SFTP";
+
         public const string INITIAL_STEP = "Program Queued";
+        public const string FINAL_STEP = "Completed";
+
+        public static int offset = 1;
 
         /// <summary>
         /// Gets the list of masurca steps.
@@ -60,11 +63,9 @@ namespace Genome.Helpers
         /// </summary>
         /// <param name="numAssemblers"> The total number of assemblers that the job is currently running on.</param>
         /// <returns> Returns a hashtable that consists of a key corresponding to the step number and a description.</returns>
-        public static Hashtable GenerateOverallStepList(int numAssemblers, out int offset)
+        public static Hashtable GenerateOverallStepList(int numAssemblers)
         {
             Hashtable stepList = new Hashtable();
-
-            offset = 1;
 
             stepList.Add(offset++, INITIAL_STEP);
             stepList.Add(offset++, "Data Conversion");
@@ -81,32 +82,32 @@ namespace Genome.Helpers
             stepList.Add(offset++, "Uploading Data to FTP");            // offset - 1
 
             // If you change this, you MUST change it in the CheckJobStatus.cs file in the jobList variable.
-            stepList.Add(offset, "Complete");                           // offset - 0
+            stepList.Add(offset, FINAL_STEP);                           // offset - 0
 
             return stepList;
         }
 
-        public static int GetCompletedStepNum(int numAssemblers, int offset)
+        public static int GetOffset(int numAssemblers)
         {
-            return offset;
+            return numAssemblers + offset;
         }
 
-        public static int GetUploadDataStepNum(int numAssemblers, int offset)
+        public static int GetUploadDataStepNum(int offset)
         {
             return offset - 1;
         }
 
-        public static int GetConnectingToSftpStepNum(int numAssemblers, int offset)
+        public static int GetConnectingToSftpStepNum(int offset)
         {
             return offset - 2;
         }
 
-        public static int GetCompressingDataStepNum(int numAssemblers, int offset)
+        public static int GetCompressingDataStepNum(int offset)
         {
             return offset - 3;
         }
 
-        public static int GetDataAnalysisStepNum(int numAssemblers, int offset)
+        public static int GetDataAnalysisStepNum(int offset)
         {
             return offset - 4;
         }

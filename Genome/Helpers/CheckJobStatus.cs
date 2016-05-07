@@ -48,15 +48,8 @@ namespace Genome.Helpers
 
                         #region Checking how many assemblers chosen
 
-                        int numAssemblers = 0;
-
-                        // Check which assemblers the user chose to use.
-                        if (genomeModel.UseMasurca) numAssemblers++;
-                        if (genomeModel.UseSGA) numAssemblers++;
-                        if (genomeModel.UseWGS) numAssemblers++;
-
                         // Get the overallstep list generated from the number of assemblers the user chose to use.
-                        Hashtable overallStepList = StepDescriptions.GenerateOverallStepList(numAssemblers);
+                        Hashtable overallStepList = StepDescriptions.GenerateOverallStepList(genomeModel.NumAssemblers);
 
                         // Get the masurca step list.
                         HashSet<Assembler> masurcaStepList = StepDescriptions.GetMasurcaStepList();
@@ -173,60 +166,69 @@ namespace Genome.Helpers
 
                 LinuxCommands.ChangeDirectory(client, Locations.GetJobPath(uuid), out error);
 
-                int offset;
-
-                Hashtable overallStepList = StepDescriptions.GenerateOverallStepList(genomeModel.NumAssemblers, out offset);
+                Hashtable overallStepList = StepDescriptions.GenerateOverallStepList(genomeModel.NumAssemblers);
 
                 if (string.IsNullOrEmpty(error))
                 {
-                    int stepNum = StepDescriptions.GetCompressingDataStepNum(genomeModel.NumAssemblers, offset);
+                    // Get the compressing data step number.
+                    int stepNum = StepDescriptions.GetCompressingDataStepNum(StepDescriptions.GetOffset(genomeModel.NumAssemblers));
 
-                    // Compressing Data
+                    // Set the overall status compressing.
                     genomeModel.OverallStatus = StepDescriptions.GetCurrentStepDescription(overallStepList, stepNum);
 
                     db.SaveChanges();
 
+                    // Compress Data.
                     LinuxCommands.ZipFiles(client, 9, Locations.GetCompressedDataPath(uuid), Locations.GetMasterPath(), out error, "-y -r");
 
                     if (!string.IsNullOrEmpty(error))
                     {
-                        genomeModel.OverallStatus = "Error Compressing Data";
+                        genomeModel.OverallStatus = StepDescriptions.COMPRESSION_ERROR;
                         db.SaveChanges();
                     }
                 }
 
                 if (string.IsNullOrEmpty(error))
                 {
-                    genomeModel.OverallStatus = "Connecting to SFTP";
+                    // Get the connecting to sftp data step number.
+                    int stepNum = StepDescriptions.GetConnectingToSftpStepNum(StepDescriptions.GetOffset(genomeModel.NumAssemblers));
+
+                    // Set the overall status to connecting to sftp.
+                    genomeModel.OverallStatus = StepDescriptions.GetCurrentStepDescription(overallStepList, stepNum);
 
                     db.SaveChanges();
 
+                    // Connect to SFTP.
                     LinuxCommands.ConnectSFTP(client, Locations.GetFtpUrl(), PUBLIC_KEY_LOCATION, out error);
 
                     if (!string.IsNullOrEmpty(error))
                     {
-                        genomeModel.OverallStatus = "Error connecting to SFTP";
+                        genomeModel.OverallStatus = StepDescriptions.SFTP_CONNECTION_ERROR;
                         db.SaveChanges();
                     }
-
                 }
 
                 if (string.IsNullOrEmpty(error))
                 {
-                    genomeModel.OverallStatus = "Uploading Data to FTP";
+                    // Get the upload data step number.
+                    int stepNum = StepDescriptions.GetUploadDataStepNum(StepDescriptions.GetOffset(genomeModel.NumAssemblers));
+
+                    // Set the overall status to uploading data.
+                    genomeModel.OverallStatus = StepDescriptions.GetCurrentStepDescription(overallStepList, stepNum);
 
                     db.SaveChanges();
 
+                    // Upload files.
                     LinuxCommands.SftpUploadFile(client, Locations.GetZipFileStoragePath(), out error);
 
                     if (!string.IsNullOrEmpty(error))
-                        genomeModel.OverallStatus = "Error uploading data to SFTP";
+                        genomeModel.OverallStatus = StepDescriptions.UPLOAD_TO_FTP_ERROR;
 
                     else
                     {
                         genomeModel.DownloadLink = Locations.GetDataDownloadLink(genomeModel.CreatedBy, uuid);
                         genomeModel.CompletedDate = DateTime.UtcNow; // Set the completed date of the job.
-                        genomeModel.OverallStatus = StepDescriptions.GetCurrentStepDescription(StepDescriptions.GenerateOverallStepList(genomeModel.numberOfSteps), StepDescriptions.STEP1);
+                        genomeModel.OverallStatus = StepDescriptions.FINAL_STEP;
                     }
 
                     db.SaveChanges();
