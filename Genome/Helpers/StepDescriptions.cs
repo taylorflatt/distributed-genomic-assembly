@@ -35,6 +35,7 @@ namespace Genome.Helpers
     public class StepDescriptions
     {
         public const string COMPRESSION_ERROR = "Error compressing data";
+        public const string INITIAL_STEP = "Program Queued";
 
         /// <summary>
         /// Gets the list of masurca steps.
@@ -65,7 +66,7 @@ namespace Genome.Helpers
 
             offset = 1;
 
-            stepList.Add(offset++, "Program Queued");
+            stepList.Add(offset++, INITIAL_STEP);
             stepList.Add(offset++, "Data Conversion");
             stepList.Add(offset++, "Running Assemblers");
 
