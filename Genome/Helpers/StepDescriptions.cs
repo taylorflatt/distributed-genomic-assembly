@@ -29,8 +29,13 @@ namespace Genome.Helpers
         }
     }
 
+    ///
+    /// TODO: ADD THE ERROR STEP DESCRIPTION NAMES SO THEY ARE ALL IN ONE PLACE RATHER THAN THROUGHOUT THE PROGRAM.
+    /// 
     public class StepDescriptions
     {
+        public const string COMPRESSION_ERROR = "Error compressing data";
+
         /// <summary>
         /// Gets the list of masurca steps.
         /// </summary>
@@ -54,28 +59,55 @@ namespace Genome.Helpers
         /// </summary>
         /// <param name="numAssemblers"> The total number of assemblers that the job is currently running on.</param>
         /// <returns> Returns a hashtable that consists of a key corresponding to the step number and a description.</returns>
-        public static Hashtable GenerateOverallStepList(int numAssemblers)
+        public static Hashtable GenerateOverallStepList(int numAssemblers, out int offset)
         {
             Hashtable stepList = new Hashtable();
 
-            stepList.Add(1, "Program Queued");
-            stepList.Add(2, "Data Conversion");
-            stepList.Add(3, "Running Assemblers");
+            offset = 1;
 
-            int offset = 4; // From the previous key.
+            stepList.Add(offset++, "Program Queued");
+            stepList.Add(offset++, "Data Conversion");
+            stepList.Add(offset++, "Running Assemblers");
 
             for (int index = 1; index <= numAssemblers; index++)
             {
                 stepList.Add(offset++, "Finished Assembler " + index + " of " + numAssemblers + ")");
             }
 
-            stepList.Add(offset++, "Data Analysis");
-            stepList.Add(offset++, "Uploading Data");
+            stepList.Add(offset++, "Data Analysis");                    // offset - 4
+            stepList.Add(offset++, "Compressing Data");                 // offset - 3
+            stepList.Add(offset++, "Connecting to SFTP");               // offset - 2
+            stepList.Add(offset++, "Uploading Data to FTP");            // offset - 1
 
             // If you change this, you MUST change it in the CheckJobStatus.cs file in the jobList variable.
-            stepList.Add(offset++, "Complete");
+            stepList.Add(offset, "Complete");                           // offset - 0
 
             return stepList;
+        }
+
+        public static int GetCompletedStepNum(int numAssemblers, int offset)
+        {
+            return offset;
+        }
+
+        public static int GetUploadDataStepNum(int numAssemblers, int offset)
+        {
+            return offset - 1;
+        }
+
+        public static int GetConnectingToSftpStepNum(int numAssemblers, int offset)
+        {
+            return offset - 2;
+        }
+
+        public static int GetCompressingDataStepNum(int numAssemblers, int offset)
+        {
+            return offset - 3;
+        }
+
+        public static int GetDataAnalysisStepNum(int numAssemblers, int offset)
+        {
+            return offset - 4;
         }
 
         /// <summary>
@@ -86,23 +118,13 @@ namespace Genome.Helpers
         /// <returns> Returns the description of the associated step id or returns that it could not be found.</returns>
         public static string GetCurrentStepDescription(HashSet<Assembler> stepList, int stepId)
         {
-            string stepDescription = "";
-
             foreach (var item in stepList)
             {
                 if (item.step == stepId)
-                {
-                    stepDescription = item.description;
-                    break;
-                }
+                    return item.description;
             }
 
-            // Our description was never assigned so we never found the given step.
-            if (string.IsNullOrEmpty(stepDescription))
-                return "We could not find that step. " + stepId;
-
-            else
-                return stepDescription;
+            return "We could not find that step. " + stepId;
         }
 
         /// <summary>
@@ -113,23 +135,13 @@ namespace Genome.Helpers
         /// <returns> Returns the description of the associated step id or returns that it could not be found.</returns>
         public static string GetCurrentStepDescription(Hashtable stepList, int stepId)
         {
-            string stepDescription = "";
-
             foreach (DictionaryEntry item in stepList)
             {
                 if (Convert.ToInt32(item.Key) == stepId)
-                {
-                    stepDescription = item.Value.ToString();
-                    break;
-                }
+                    return item.Value.ToString();
             }
 
-            // Our description was never assigned so we never found the given step.
-            if (string.IsNullOrEmpty(stepDescription))
-                return "We could not find that step. " + stepId;
-
-            else
-                return stepDescription;
+            return "We could not find that step. " + stepId;
         }
     }
 }

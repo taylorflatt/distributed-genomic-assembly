@@ -52,17 +52,16 @@ namespace Genome.Controllers
                     if (genomeModel.MasurcaThreadNum == null)
                         genomeModel.MasurcaThreadNum = 20;
 
-                    int numAssemblers = 0;
-
                     if (genomeModel.UseMasurca)
-                        numAssemblers++;
+                        genomeModel.NumAssemblers++;
 
                     if (genomeModel.UseSGA)
-                        numAssemblers++;
+                        genomeModel.NumAssemblers++;
 
                     if (genomeModel.UseWGS)
-                        numAssemblers++;
+                        genomeModel.NumAssemblers++;
 
+                    genomeModel.OverallStepList = StepDescriptions.GenerateOverallStepList(numAssemblers);
 
                     genomeModel.MasurcaCurrentStep = 1;
                     genomeModel.MasurcaStatus = StepDescriptions.GetCurrentStepDescription(StepDescriptions.GetMasurcaStepList(), 1);

@@ -173,18 +173,26 @@ namespace Genome.Helpers
 
                 LinuxCommands.ChangeDirectory(client, Locations.GetJobPath(uuid), out error);
 
+                int offset;
+
+                Hashtable overallStepList = StepDescriptions.GenerateOverallStepList(genomeModel.NumAssemblers, out offset);
+
                 if (string.IsNullOrEmpty(error))
                 {
-                    genomeModel.OverallStatus = "Compressing Data";
+                    int stepNum = StepDescriptions.GetCompressingDataStepNum(genomeModel.NumAssemblers, offset);
+
+                    // Compressing Data
+                    genomeModel.OverallStatus = StepDescriptions.GetCurrentStepDescription(overallStepList, stepNum);
 
                     db.SaveChanges();
 
                     LinuxCommands.ZipFiles(client, 9, Locations.GetCompressedDataPath(uuid), Locations.GetMasterPath(), out error, "-y -r");
 
                     if (!string.IsNullOrEmpty(error))
+                    {
                         genomeModel.OverallStatus = "Error Compressing Data";
-
-                    db.SaveChanges();
+                        db.SaveChanges();
+                    }
                 }
 
                 if (string.IsNullOrEmpty(error))
@@ -196,14 +204,16 @@ namespace Genome.Helpers
                     LinuxCommands.ConnectSFTP(client, Locations.GetFtpUrl(), PUBLIC_KEY_LOCATION, out error);
 
                     if (!string.IsNullOrEmpty(error))
+                    {
                         genomeModel.OverallStatus = "Error connecting to SFTP";
+                        db.SaveChanges();
+                    }
 
-                    db.SaveChanges();
                 }
 
                 if (string.IsNullOrEmpty(error))
                 {
-                    genomeModel.OverallStatus = "Uploading Data to SFTP";
+                    genomeModel.OverallStatus = "Uploading Data to FTP";
 
                     db.SaveChanges();
 
@@ -212,8 +222,12 @@ namespace Genome.Helpers
                     if (!string.IsNullOrEmpty(error))
                         genomeModel.OverallStatus = "Error uploading data to SFTP";
 
-                    if (string.IsNullOrEmpty(error))
+                    else
+                    {
                         genomeModel.DownloadLink = Locations.GetDataDownloadLink(genomeModel.CreatedBy, uuid);
+                        genomeModel.CompletedDate = DateTime.UtcNow; // Set the completed date of the job.
+                        genomeModel.OverallStatus = StepDescriptions.GetCurrentStepDescription(StepDescriptions.GenerateOverallStepList(genomeModel.numberOfSteps), StepDescriptions.STEP1);
+                    }
 
                     db.SaveChanges();
                 }

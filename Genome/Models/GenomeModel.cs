@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -23,6 +23,8 @@ namespace Genome.Models
         [NotMapped]
         [Display(Name = "Big Dog Password:")]
         public string SSHPass { get; set; }
+
+        public int NumAssemblers { get; set; }
 
         //////////////////////////////
         // Data specific parameters //
