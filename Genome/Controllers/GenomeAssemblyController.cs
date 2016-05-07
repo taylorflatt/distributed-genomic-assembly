@@ -52,22 +52,24 @@ namespace Genome.Controllers
                     if (genomeModel.MasurcaThreadNum == null)
                         genomeModel.MasurcaThreadNum = 20;
 
+                    int numAssemblers = 0;
+
                     if (genomeModel.UseMasurca)
-                        genomeModel.NumAssemblers++;
+                        numAssemblers++;
 
                     if (genomeModel.UseSGA)
-                        genomeModel.NumAssemblers++;
+                        numAssemblers++;
 
                     if (genomeModel.UseWGS)
-                        genomeModel.NumAssemblers++;
+                        numAssemblers++;
 
-                    genomeModel.OverallStepList = StepDescriptions.GenerateOverallStepList(numAssemblers);
+                    genomeModel.NumAssemblers = numAssemblers;
 
                     genomeModel.MasurcaCurrentStep = 1;
                     genomeModel.MasurcaStatus = StepDescriptions.GetCurrentStepDescription(StepDescriptions.GetMasurcaStepList(), 1);
 
                     genomeModel.OverallCurrentStep = 1;
-                    genomeModel.OverallStatus = StepDescriptions.GetCurrentStepDescription(StepDescriptions.GenerateOverallStepList(numAssemblers), 1);
+                    genomeModel.OverallStatus = StepDescriptions.INITIAL_STEP;
 
                     genomeModel.CreatedBy = User.Identity.Name;
                     genomeModel.CreatedDate = DateTime.UtcNow;
