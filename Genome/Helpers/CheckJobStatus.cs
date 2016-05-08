@@ -168,6 +168,7 @@ namespace Genome.Helpers
                 // Move to the overall job directory.
                 LinuxCommands.ChangeDirectory(client, Locations.GetJobPath(uuid), out error);
 
+                // Grab the unique list of steps for this particular model.
                 Hashtable overallStepList = StepDescriptions.GenerateOverallStepList(genomeModel.NumAssemblers);
 
                 if (string.IsNullOrEmpty(error))

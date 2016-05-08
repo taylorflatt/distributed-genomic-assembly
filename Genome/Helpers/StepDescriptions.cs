@@ -31,15 +31,18 @@ namespace Genome.Helpers
 
     public class StepDescriptions
     {
+        /// <summary>
+        /// List of errors for the steps.
+        /// </summary>
         public const string COMPRESSION_ERROR = "Error compressing data";
         public const string SFTP_CONNECTION_ERROR = "Error connecting to SFTP";
         public const string UPLOAD_TO_FTP_ERROR = "Error uploading data to SFTP";
 
+        /// <summary>
+        /// The two steps that will always be static. 
+        /// </summary>
         public const string INITIAL_STEP = "Program Queued";
         public const string FINAL_STEP = "Completed";
-
-        // Offset for the overall step list.
-        public static int offset = 1;
 
         /// <summary>
         /// Gets the list of masurca steps.
@@ -68,6 +71,8 @@ namespace Genome.Helpers
         {
             Hashtable stepList = new Hashtable();
 
+            int offset = 1;
+
             stepList.Add(offset++, INITIAL_STEP);
             stepList.Add(offset++, "Data Conversion");
             stepList.Add(offset++, "Running Assemblers");
@@ -88,24 +93,44 @@ namespace Genome.Helpers
             return stepList;
         }
 
-        public static int GetUploadDataStepNum(int offset)
+        /// <summary>
+        /// Gets the upload data step number for the job.
+        /// </summary>
+        /// <param name="listSize">The size of the list containing the job steps.</param>
+        /// <returns>Returns locations of the step in the list. </returns>
+        public static int GetUploadDataStepNum(int listSize)
         {
-            return offset - 1;
+            return listSize - 1;
         }
 
-        public static int GetConnectingToSftpStepNum(int offset)
+        /// <summary>
+        /// Gets the connecting to SFTP step number for the job.
+        /// </summary>
+        /// <param name="listSize">The size of the list containing the job steps.</param>
+        /// <returns>Returns locations of the step in the list. </returns>
+        public static int GetConnectingToSftpStepNum(int listSize)
         {
-            return offset - 2;
+            return listSize - 2;
         }
 
-        public static int GetCompressingDataStepNum(int offset)
+        /// <summary>
+        /// Gets the compressing data step number for the job.
+        /// </summary>
+        /// <param name="listSize">The size of the list containing the job steps.</param>
+        /// <returns>Returns locations of the step in the list. </returns>
+        public static int GetCompressingDataStepNum(int listSize)
         {
-            return offset - 3;
+            return listSize - 3;
         }
 
-        public static int GetDataAnalysisStepNum(int offset)
+        /// <summary>
+        /// Gets the data analysis step number for the job.
+        /// </summary>
+        /// <param name="listSize">The size of the list containing the job steps.</param>
+        /// <returns>Returns locations of the step in the list. </returns>
+        public static int GetDataAnalysisStepNum(int listSize)
         {
-            return offset - 4;
+            return listSize - 4;
         }
 
         /// <summary>
