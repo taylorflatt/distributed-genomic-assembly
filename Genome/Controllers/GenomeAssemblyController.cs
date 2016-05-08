@@ -24,59 +24,20 @@ namespace Genome.Controllers
         {
             if (ModelState.IsValid)
             {
-                // TODO: Consider the JELLYFISH SIZE. Rec size is est_genome_size  * estimated coverage.
+                // TODO: Consider the JELLYFISH SIZE. Rec size is est_genome_size  * estimated coverage. (This should be done in Javascript).
                 // Should that be a field that we include in the model so we can calculate a safe size or just
                 // have them do it? I think just have them do it with a tooltip and make it a required field.
                 try
                 {
-                    // If they don't have jump reads.
-                    if (genomeModel.JumpReads == false)
-                        genomeModel.JumpLength = 0;
+                    HelperMethods.SetDefaultMasurcaValues(genomeModel);
 
-                    // If they don't have paired-end reads.
-                    if (genomeModel.PEReads == false)
-                        genomeModel.PairedEndLength = 0;
-
-                    if (genomeModel.MasurcaPEMean == null)
-                        // Set Mean default value.
-
-                    if (genomeModel.MasurcaPEStdev == null)
-                        // Set std dev default value.
-
-                    if (genomeModel.MasurcaGraphKMerValue == null)
-                        // Set graph kmer default value.
-
-                    if (genomeModel.MasurcaKMerErrorCount == null)
-                        // Set masurca kmer error threshold value.
-
-                    if (genomeModel.MasurcaThreadNum == null)
-                        genomeModel.MasurcaThreadNum = 20;
-
-                    int numAssemblers = 0;
-
-                    if (genomeModel.UseMasurca)
-                        numAssemblers++;
-
-                    if (genomeModel.UseSGA)
-                        numAssemblers++;
-
-                    if (genomeModel.UseWGS)
-                        numAssemblers++;
-
-                    genomeModel.NumAssemblers = numAssemblers;
-
-                    genomeModel.MasurcaCurrentStep = 1;
-                    genomeModel.MasurcaStatus = StepDescriptions.GetCurrentStepDescription(StepDescriptions.GetMasurcaStepList(), 1);
+                    genomeModel.NumAssemblers = HelperMethods.NumberOfAssemblers(genomeModel);
 
                     genomeModel.OverallCurrentStep = 1;
                     genomeModel.OverallStatus = StepDescriptions.INITIAL_STEP;
 
                     genomeModel.CreatedBy = User.Identity.Name;
                     genomeModel.CreatedDate = DateTime.UtcNow;
-
-                    // THIS IS FOR SUBMITTING A JOB ONLY. IT NEEDS A VALID VALUE THAT WE WILL OVERWRITE LATER. REMOVE LATER.
-                    //genomeModel.CompletedDate = null;
-                    // THIS IS FOR SUBMITTING A JOB ONLY. IT NEEDS A VALID VALUE THAT WE WILL OVERWRITE LATER. REMOVE LATER.
 
                     //string path = "temp";
                     //ConfigBuilder builder = new ConfigBuilder();
@@ -89,7 +50,7 @@ namespace Genome.Controllers
                     string error = "";
 
                     //SSHConfig ssh = new SSHConfig("login-0-0.research.siu.edu", genomeModel, builder.InitConfigURL);
-                    SSHConfig ssh = new SSHConfig(Locations.GetBigDogIp(), genomeModel, "", out error);
+                    SSHConfig ssh = new SSHConfig(Locations.BD_IP, genomeModel, "", out error);
 
                     ssh.CreateJob(out error);
 
@@ -162,11 +123,11 @@ namespace Genome.Controllers
             string error = "";
 
             if (command == "Update Status")
-                CheckJobStatus.UpdateStatuses(id, ref jobsToUpload, out error);
+                CheckJobStatus.UpdateStatus(id, ref jobsToUpload, out error);
 
             if (command == "Cancel Job")
             {
-                using (var client = new SshClient(Locations.GetBigDogIp(), Locations.GetBigDogUpdateKeyLocation()))
+                using (var client = new SshClient(Locations.BD_IP, Locations.BD_UPDATE_KEY_PATH))
                 {
                     client.Connect();
 
@@ -201,9 +162,8 @@ namespace Genome.Controllers
         protected override void Dispose(bool disposing)
         {
             if (disposing)
-            {
                 db.Dispose();
-            }
+
             base.Dispose(disposing);
         }
     }

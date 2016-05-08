@@ -162,7 +162,7 @@ namespace Genome.Helpers
             // UUID is not being assigned before it hits this method so we have a problem. We need to save it to the DB prior to hitting this method but that causes other problems.......need to look into this. We can probably find a work around by checking the db and seeing the previous uuid and just incrementing the previous uuid.
 
             // The init.sh script will contain all the basic logic to download the data and initiate the job on the assembler(s).
-            using (var client = new SshClient(Locations.GetBigDogIp(), genomeModel.SSHUser, genomeModel.SSHPass))
+            using (var client = new SshClient(Locations.BD_IP, genomeModel.SSHUser, genomeModel.SSHPass))
             {
                 int id = genomeModel.uuid;
 
@@ -188,10 +188,10 @@ namespace Genome.Helpers
                     if (string.IsNullOrEmpty(error)) { LinuxCommands.ChangeDirectory(client, Locations.GetJobConfigPath(id), out error); }
 
                     // This command has NOT been tested.
-                    if (string.IsNullOrEmpty(error)) { LinuxCommands.DownloadFile(client, Locations.GetInitScriptPath(), out error, wgetLogParameter); }
+                    if (string.IsNullOrEmpty(error)) { LinuxCommands.DownloadFile(client, Locations.INIT_SCRIPT_PATH, out error, wgetLogParameter); }
 
                     // This command has NOT been tested.
-                    if (string.IsNullOrEmpty(error)) { LinuxCommands.DownloadFile(client, Locations.GetMasurcaScriptPath(), out error, wgetLogParameter); }
+                    if (string.IsNullOrEmpty(error)) { LinuxCommands.DownloadFile(client, Locations.MASURCA_SCRIPT_PATH, out error, wgetLogParameter); }
 
                     if (string.IsNullOrEmpty(error)) { LinuxCommands.ChangePermissions(client, Locations.GetJobPath(id), "777", out error, "-R"); }
 

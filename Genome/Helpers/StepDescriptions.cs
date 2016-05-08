@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Web;
 
 namespace Genome.Helpers
 {
@@ -29,13 +27,20 @@ namespace Genome.Helpers
         }
     }
 
-    ///
-    /// TODO: ADD THE ERROR STEP DESCRIPTION NAMES SO THEY ARE ALL IN ONE PLACE RATHER THAN THROUGHOUT THE PROGRAM.
-    /// 
     public class StepDescriptions
     {
+        /// <summary>
+        /// List of errors for the steps.
+        /// </summary>
         public const string COMPRESSION_ERROR = "Error compressing data";
+        public const string SFTP_CONNECTION_ERROR = "Error connecting to SFTP";
+        public const string UPLOAD_TO_FTP_ERROR = "Error uploading data to SFTP";
+
+        /// <summary>
+        /// The two steps that will always be static.
+        /// </summary>
         public const string INITIAL_STEP = "Program Queued";
+        public const string FINAL_STEP = "Completed";
 
         /// <summary>
         /// Gets the list of masurca steps.
@@ -60,11 +65,11 @@ namespace Genome.Helpers
         /// </summary>
         /// <param name="numAssemblers"> The total number of assemblers that the job is currently running on.</param>
         /// <returns> Returns a hashtable that consists of a key corresponding to the step number and a description.</returns>
-        public static Hashtable GenerateOverallStepList(int numAssemblers, out int offset)
+        public static Hashtable GenerateOverallStepList(int numAssemblers)
         {
             Hashtable stepList = new Hashtable();
 
-            offset = 1;
+            int offset = 1;
 
             stepList.Add(offset++, INITIAL_STEP);
             stepList.Add(offset++, "Data Conversion");
@@ -81,34 +86,49 @@ namespace Genome.Helpers
             stepList.Add(offset++, "Uploading Data to FTP");            // offset - 1
 
             // If you change this, you MUST change it in the CheckJobStatus.cs file in the jobList variable.
-            stepList.Add(offset, "Complete");                           // offset - 0
+            stepList.Add(offset, FINAL_STEP);                           // offset - 0 = 8 + numAssemblers
 
             return stepList;
         }
 
-        public static int GetCompletedStepNum(int numAssemblers, int offset)
+        /// <summary>
+        /// Gets the upload data step number for the job.
+        /// </summary>
+        /// <param name="listSize">The size of the list containing the job steps.</param>
+        /// <returns>Returns locations of the step in the list. </returns>
+        public static int GetUploadDataStepNum(int listSize)
         {
-            return offset;
+            return listSize - 1;
         }
 
-        public static int GetUploadDataStepNum(int numAssemblers, int offset)
+        /// <summary>
+        /// Gets the connecting to SFTP step number for the job.
+        /// </summary>
+        /// <param name="listSize">The size of the list containing the job steps.</param>
+        /// <returns>Returns locations of the step in the list. </returns>
+        public static int GetConnectingToSftpStepNum(int listSize)
         {
-            return offset - 1;
+            return listSize - 2;
         }
 
-        public static int GetConnectingToSftpStepNum(int numAssemblers, int offset)
+        /// <summary>
+        /// Gets the compressing data step number for the job.
+        /// </summary>
+        /// <param name="listSize">The size of the list containing the job steps.</param>
+        /// <returns>Returns locations of the step in the list. </returns>
+        public static int GetCompressingDataStepNum(int listSize)
         {
-            return offset - 2;
+            return listSize - 3;
         }
 
-        public static int GetCompressingDataStepNum(int numAssemblers, int offset)
+        /// <summary>
+        /// Gets the data analysis step number for the job.
+        /// </summary>
+        /// <param name="listSize">The size of the list containing the job steps.</param>
+        /// <returns>Returns locations of the step in the list. </returns>
+        public static int GetDataAnalysisStepNum(int listSize)
         {
-            return offset - 3;
-        }
-
-        public static int GetDataAnalysisStepNum(int numAssemblers, int offset)
-        {
-            return offset - 4;
+            return listSize - 4;
         }
 
         /// <summary>

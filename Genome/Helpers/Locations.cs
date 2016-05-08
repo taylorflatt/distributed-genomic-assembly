@@ -1,160 +1,145 @@
 ﻿namespace Genome.Helpers
 {
+    /// <summary>
+    /// Contains a list of public locations for different items that are used throughout the program.
+    /// </summary>
     public class Locations
     {
-        public static string GetMasterPath()
-        {
-            return "/share/scratch/tflatt/";
-        }
+        /// <summary>
+        /// List of constants. Here, BigDog is referred to as BD for brevity.
+        /// </summary>
+        protected internal const string PUBLIC_KEY_PATH = "UNKNOWN";
+        protected internal const string GET_MASTER_PATH = "/share/scratch/tflatt/";
+        protected internal const string BD_IP = "login-0-0.research.siu.edu";
+        protected internal const string BD_UPDATE_KEY_PATH = "FILE SERVER LOCATION OF BIG DOG PRIVATE KEY LOCATION";
+        protected internal const string BD_COMPUTE_NODE1 = "compute-0-24";
+        protected internal const string BD_COMPUTE_NODE2 = "compute-0-25";
+        protected internal const string INIT_SCRIPT_PATH = "LOCATION ON THE FTP SERVER";
+        protected internal const string MASURCA_SCRIPT_PATH = "LOCATION ON THE FTP SERVER";
+        protected internal const string ZIP_STORAGE_PATH = "LOCATION ON THE FTP SERVER";
+        protected internal const string FTP_URL =  "URL TO THE FTP";
 
-        public static string GetBigDogIp()
-        {
-            return "login-0-0.research.siu.edu";
-        }
-
-        public static string GetBigDogUpdateKeyLocation()
-        {
-            return "FILE SERVER LOCATION OF BIG DOG PRIVATE KEY LOCATION";
-        }
-
-        public static string GetBigDogComputeNode1()
-        {
-            return "compute-0-24";
-        }
-
-        public static string GetBigDogComputeNode2()
-        {
-            return "compute-0-25";
-        }
-
-        public static string GetDataDownloadLink(string username, int uuid)
+        /// <summary>
+        /// Get the link for the data download for the user.
+        /// </summary>
+        /// <param name="username">Username of the user (without the @).</param>
+        /// <param name="uuid">The unique ID for the job.</param>
+        /// <returns>The path to the download link on the FTP server.</returns>
+        protected internal static string GetDataDownloadLink(string username, int uuid)
         {
             return "ROUTE TO THE FTP ON THE FILE SERVER/" + username + "Job" + uuid;
         }
 
-        public static string GetJobPath(int id)
+        /// <summary>
+        /// Grabs the working directory of the entire job.
+        /// </summary>
+        /// <param name="id">The unique ID for the job.</param>
+        /// <returns>Returns a string path to the working directory.</returns>
+        protected internal static string GetJobPath(int id)
         {
-            return GetMasterPath() + "/Job" + id + "/";
+            return GET_MASTER_PATH + "/Job" + id + "/";
         }
 
-        public static string GetJobDataPath(int id)
+        /// <summary>
+        /// Grabs the data directory of the job.
+        /// </summary>
+        /// <param name="id">The unique ID for the job.</param>
+        /// <returns>Returns a string path to the data directory.</returns>
+        protected internal static string GetJobDataPath(int id)
         {
             return GetJobPath(id) + "Data/";
         }
 
-        public static string GetJobConfigPath(int id)
+        /// <summary>
+        /// Grabs the config directory of the job.
+        /// </summary>
+        /// <param name="id">The unique ID for the job.</param>
+        /// <returns>Returns a string path to the config directory.</returns>
+        protected internal static string GetJobConfigPath(int id)
         {
             return GetJobPath(id) + "Config/";
         }
 
-        public static string GetJobOutputPath(int id)
+        /// <summary>
+        /// Grabs the output directory of the job.
+        /// </summary>
+        /// <param name="id">The unique ID for the job.</param>
+        /// <returns>Returns a string path to the output directory.</returns>
+        protected internal static string GetJobOutputPath(int id)
         {
             return GetJobPath(id) + "Output/";
         }
 
-        public static string GetJobLogPath(int id)
+        /// <summary>
+        /// Grabs the log directory of the job.
+        /// </summary>
+        /// <param name="id">The unique ID for the job.</param>
+        /// <returns>Returns a string path to the log directory.</returns>
+        protected internal static string GetJobLogPath(int id)
         {
             return GetJobPath(id) + "Log/";
         }
 
-        public static string GetMasurcaOutputPath(int id)
+        /// <summary>
+        /// Grabs the masurca output directory of the job.
+        /// </summary>
+        /// <param name="id">The unique ID for the job.</param>
+        /// <returns>Returns a string path to the masurca output directory.</returns>
+        protected internal static string GetMasurcaOutputPath(int id)
         {
             return GetJobOutputPath(id) + "/Masurca/";
         }
 
-        public static string GetSgaOutputPath(int id)
+        /// <summary>
+        /// Grabs the sga output directory of the job.
+        /// </summary>
+        /// <param name="id">The unique ID for the job.</param>
+        /// <returns>Returns a string path to the sga output directory.</returns>
+        protected internal static string GetSgaOutputPath(int id)
         {
             return GetJobOutputPath(id) + "/SGA/";
         }
 
-        public static string GetWgsOutputPath(int id)
+        /// <summary>
+        /// Grabs the wgs output directory of the job.
+        /// </summary>
+        /// <param name="id">The unique ID for the job.</param>
+        /// <returns>Returns a string path to the wgs output directory.</returns>
+        protected internal static string GetWgsOutputPath(int id)
         {
             return GetJobOutputPath(id) + "/WGS/";
         }
 
-        public static string GetInitScriptPath()
-        {
-            return "LOCATION ON THE FTP SERVER";
-        }
-
-        public static string GetMasurcaScriptPath()
-        {
-            return "LOCATION ON THE FTP SERVER";
-        }
-
-        public static string GetZipFileStoragePath()
-        {
-            return "LOCATION ON THE FTP SERVER";
-        }
-
-        public static string GetFtpUrl()
-        {
-            return "URL TO THE FTP";
-        }
-
-        public static string GetCompressedDataPath(int id)
+        /// <summary>
+        /// Gets the location of the compressed data on BD.
+        /// </summary>
+        /// <param name="id">The unique ID for the job.</param>
+        /// <returns>Returns a string path to the zip file.</returns>
+        protected internal static string GetCompressedDataPath(int id)
         {
             return GetJobOutputPath(id) + "job" + id + ".zip";
         }
 
-        public static string GetMasurcaErrorSuccessLogPath(int id)
+        /// <summary>
+        /// Gets the success log path for masurca. Default log is the output log. Set errorLog to true if the error log is desired instead.
+        /// </summary>
+        /// <param name="id">The unique ID for the job.</param>
+        /// <param name="errorLog">Flag as to whether or not you want the error log instead of the output log.</param>
+        /// <returns>Returns a string path to the success log.</returns>
+        protected internal static string GetMasurcaSuccessLogPath(int id, bool errorLog = false)
         {
-            return GetJobLogPath(id) + "masurca_success.elog";
+            return errorLog ? GetMasurcaOutputPath(id) + "masurca_success.elog" : GetMasurcaOutputPath(id) + "masurca_success.olog";
         }
 
-        public static string GetMasurcaOutputSuccessLogPath(int id)
+        /// <summary>
+        /// Gets the failure log path for masurca. Default log is the output log. Set errorLog to true if the error log is desired instead.
+        /// </summary>
+        /// <param name="id">The unique ID for the job.</param>
+        /// <param name="errorLog">Flag as to whether or not you want the error log instead of the output log.</param>
+        /// <returns>Returns a string path to the failure log.</returns>
+        protected internal static string GetMasurcaFailureLogPath(int id, bool errorLog = false)
         {
-            return GetJobLogPath(id) + "masurca_success.olog";
-        }
-
-        public static string GetMasurcaErrorFailureLogPath(int id)
-        {
-            return GetJobLogPath(id) + "masurca_failure.elog";
-        }
-
-        public static string GetMasurcaOutputFailureLogPath(int id)
-        {
-            return GetJobLogPath(id) + "masurca_failure.olog";
-        }
-
-        public static string GetSgaErrorSuccessLogPath(int id)
-        {
-            return GetJobLogPath(id) + "sga_success.elog";
-        }
-
-        public static string GetSgaOutputSuccessLogPath(int id)
-        {
-            return GetJobLogPath(id) + "sga_success.olog";
-        }
-
-        public static string GetSgaErrorFailureLogPath(int id)
-        {
-            return GetJobLogPath(id) + "sga_failure.elog";
-        }
-
-        public static string GetSgaOutputLogPath(int id)
-        {
-            return GetJobLogPath(id) + "sga_failure.olog";
-        }
-
-        public static string GetWgsErrorSuccessLogPath(int id)
-        {
-            return GetJobLogPath(id) + "wgs_success.elog";
-        }
-
-        public static string GetWgsOutputSuccessLogPath(int id)
-        {
-            return GetJobLogPath(id) + "wgs_success.olog";
-        }
-
-        public static string GetWgsErrorFailureLogPath(int id)
-        {
-            return GetJobLogPath(id) + "wgs_failure.elog";
-        }
-
-        public static string GetWgsOutputFailureLogPath(int id)
-        {
-            return GetJobLogPath(id) + "wgs_failure.olog";
+            return errorLog ? GetMasurcaOutputPath(id) + "masurca_failure.elog" : GetMasurcaOutputPath(id) + "masurca_failure.olog";
         }
     }
 }
