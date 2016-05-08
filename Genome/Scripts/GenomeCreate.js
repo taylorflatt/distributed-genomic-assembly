@@ -90,7 +90,7 @@ function Step2MoveForward() {
     }
 
     // Jump read validation is only done if Jump reads is checked.
-    if (document.getElementById("JumpReads").checked)
+    else if (document.getElementById("JumpReads").checked)
     {
         var input = document.getElementById("JumpLengthInput").value;
 
@@ -114,12 +114,22 @@ function Step2MoveForward() {
         }
     }
 
+    // If neither box was checked, then we need to stop them from moving to the next step.
+    else
+    {
+        document.getElementById("PEReadsErrorMsg").innerHTML = "You need to at least check one of these boxes!";
+        document.getElementById("JumpReadsErrorMsg").innerHTML = "You need to check at least one of these boxes!";
+        invalidData++;
+    }
+
     if (invalidData == 0)
     {
         document.getElementById("PELengthErrorMsg").innerHTML = "";
         document.getElementById("JumpLengthErrorMsg").innerHTML = "";
         document.getElementById("WizardErrors").innerHTML = "";
         document.getElementById("RemoveURLErrorMsg").innerHTML = "";
+        document.getElementById("PEReadsErrorMsg").innerHTML = "";
+        document.getElementById("JumpReadsErrorMsg").innerHTML = "";
 
         // Move to the next step.
         document.getElementById('Step2').style.display = "none";

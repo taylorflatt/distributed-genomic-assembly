@@ -120,7 +120,6 @@
             return GetJobOutputPath(id) + "job" + id + ".zip";
         }
 
-
         /// <summary>
         /// Gets the success log path for masurca. Default log is the output log. Set errorLog to true if the error log is desired instead.
         /// </summary>

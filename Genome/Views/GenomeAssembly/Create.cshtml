@@ -126,9 +126,12 @@
                 @Html.LabelFor(model => model.PEReads, htmlAttributes: new { @class = "control-label col-md-2" })
                 <div class="col-md-10">
                     <div class="checkbox">
-                        @Html.EditorFor(model => model.PEReads, "", new { @id = "PEReads" })
+                        @Html.EditorFor(model => model.PEReads, "", new { @id = "PEReads"})
                         @Html.ValidationMessageFor(model => model.PEReads, "", new { @class = "text-danger" })
                     </div>
+                </div>
+                <div id="PEReadsErrorMsg" class="text-danger">
+                    @* Error message goes here if any. *@
                 </div>
             </div>
 
@@ -154,6 +157,9 @@
                         @Html.EditorFor(model => model.JumpReads, "", new { @id = "JumpReads" })
                         @Html.ValidationMessageFor(model => model.JumpReads, "", new { @class = "text-danger" })
                     </div>
+                </div>
+                <div id="JumpReadsErrorMsg" class="text-danger">
+                    @* Error message goes here if any. *@
                 </div>
             </div>
 
