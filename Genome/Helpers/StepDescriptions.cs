@@ -38,6 +38,7 @@ namespace Genome.Helpers
         public const string INITIAL_STEP = "Program Queued";
         public const string FINAL_STEP = "Completed";
 
+        // Offset for the overall step list.
         public static int offset = 1;
 
         /// <summary>
@@ -82,14 +83,9 @@ namespace Genome.Helpers
             stepList.Add(offset++, "Uploading Data to FTP");            // offset - 1
 
             // If you change this, you MUST change it in the CheckJobStatus.cs file in the jobList variable.
-            stepList.Add(offset, FINAL_STEP);                           // offset - 0
+            stepList.Add(offset, FINAL_STEP);                           // offset - 0 = 8 + numAssemblers
 
             return stepList;
-        }
-
-        public static int GetOffset(int numAssemblers)
-        {
-            return numAssemblers + offset;
         }
 
         public static int GetUploadDataStepNum(int offset)

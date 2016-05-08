@@ -162,8 +162,10 @@ namespace Genome.Helpers
         {
             using (GenomeAssemblyDbContext db = new GenomeAssemblyDbContext())
             {
+                // Pull the model data.
                 GenomeModel genomeModel = db.GenomeModels.Find(uuid);
 
+                // Move to the overall job directory.
                 LinuxCommands.ChangeDirectory(client, Locations.GetJobPath(uuid), out error);
 
                 Hashtable overallStepList = StepDescriptions.GenerateOverallStepList(genomeModel.NumAssemblers);
@@ -171,7 +173,7 @@ namespace Genome.Helpers
                 if (string.IsNullOrEmpty(error))
                 {
                     // Get the compressing data step number.
-                    int stepNum = StepDescriptions.GetCompressingDataStepNum(StepDescriptions.GetOffset(genomeModel.NumAssemblers));
+                    int stepNum = StepDescriptions.GetCompressingDataStepNum(overallStepList.Count);
 
                     // Set the overall status compressing.
                     genomeModel.OverallStatus = StepDescriptions.GetCurrentStepDescription(overallStepList, stepNum);
@@ -191,7 +193,7 @@ namespace Genome.Helpers
                 if (string.IsNullOrEmpty(error))
                 {
                     // Get the connecting to sftp data step number.
-                    int stepNum = StepDescriptions.GetConnectingToSftpStepNum(StepDescriptions.GetOffset(genomeModel.NumAssemblers));
+                    int stepNum = StepDescriptions.GetConnectingToSftpStepNum(overallStepList.Count);
 
                     // Set the overall status to connecting to sftp.
                     genomeModel.OverallStatus = StepDescriptions.GetCurrentStepDescription(overallStepList, stepNum);
@@ -211,7 +213,7 @@ namespace Genome.Helpers
                 if (string.IsNullOrEmpty(error))
                 {
                     // Get the upload data step number.
-                    int stepNum = StepDescriptions.GetUploadDataStepNum(StepDescriptions.GetOffset(genomeModel.NumAssemblers));
+                    int stepNum = StepDescriptions.GetUploadDataStepNum(overallStepList.Count);
 
                     // Set the overall status to uploading data.
                     genomeModel.OverallStatus = StepDescriptions.GetCurrentStepDescription(overallStepList, stepNum);
