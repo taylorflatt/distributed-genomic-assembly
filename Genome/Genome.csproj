@@ -234,6 +234,7 @@
     <Compile Include="Helpers\LinuxCommands.cs" />
     <Compile Include="Helpers\LinuxErrorHandling.cs" />
     <Compile Include="Helpers\SSHConfig.cs" />
+    <Compile Include="Helpers\Unique.cs" />
     <Compile Include="Migrations\201604250600145_changedNames.cs" />
     <Compile Include="Migrations\201604250600145_changedNames.Designer.cs">
       <DependentUpon>201604250600145_changedNames.cs</DependentUpon>
