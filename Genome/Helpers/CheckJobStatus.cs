@@ -11,10 +11,13 @@ namespace Genome.Helpers
 {
     public class CheckJobStatus
     {
-        private const string  PUBLIC_KEY_LOCATION = "UNKNOWN";
-
+        /// <summary>
+        /// Creates the private key connection that we use to do the updates to jobs.
+        /// </summary>
+        /// <returns>A connection information needed to make an SSH connection.</returns>
         private static ConnectionInfo CreatePrivateKeyConnectionInfo()
         {
+            // Reference for key: http://www.jokecamp.com/blog/connecting-to-sftp-with-key-file-and-password-using-ssh-net/
             var keyFile = new PrivateKeyFile(@"[ABSOLUTE PATH OF OPENSSH PRIVATE PPK KEY]");
             var keyFiles = new[] { keyFile };
             var username = "[USERNAME FOR UPDATE ACCOUNT]"; // This is the account name we will use to run the updates for jobs.
@@ -22,19 +25,23 @@ namespace Genome.Helpers
             var methods = new List<AuthenticationMethod>();
             methods.Add(new PrivateKeyAuthenticationMethod(username, keyFiles));
 
-            return new ConnectionInfo(Locations.GetBigDogIp(), 22, username, methods.ToArray());
+            return new ConnectionInfo(Locations.BD_IP, 22, username, methods.ToArray());
         }
 
         // This will be called by a scheduler on a timed basis.
         // In the main method where this is called, it will loop through all the job uuids that need to be run and then call this method 
         // successively. This allows me to use the SAME method for a single update of a batch update.
         // Returns a jobsToUpload = true if this job is ready to be uploaded.
-        protected internal static void UpdateStatuses(int jobUuid, ref bool jobsToUpload, out string error)
+        /// <summary>
+        /// Updates the status of a single job. But it does not perform the upload if that needs to happen.
+        /// </summary>
+        /// <param name="jobUuid">The unique ID of the job.</param>
+        /// <param name="jobsToUpload">Returns, by reference, a flag indicating whether or not the job needs to be uploaded.</param>
+        /// <param name="error">Returns, by value, a string that indicates whether there has been an error. </param>
+        protected internal static void UpdateStatus(int jobUuid, ref bool jobsToUpload, out string error)
         {
             error = "";
 
-            // We want to cat <job_name>.o<job_number> | grep "Status" and see where we are.
-            // Reference for key: http://www.jokecamp.com/blog/connecting-to-sftp-with-key-file-and-password-using-ssh-net/
 
             using (var client = new SshClient(CreatePrivateKeyConnectionInfo()))
             {
@@ -101,7 +108,7 @@ namespace Genome.Helpers
                             #region Check if the assemblers completed successfully
 
                             // Now I need to go through all the assemblers and see if they exited successfully or not.
-                            if (LinuxCommands.AssemblerSuccess(client, Locations.GetMasurcaErrorSuccessLogPath(jobUuid), jobUuid, out error))
+                            if (LinuxCommands.AssemblerSuccess(client, Locations.GetMasurcaSuccessLogPath(jobUuid), jobUuid, out error))
                             {
                                 int masurcaCurrentStep = StepDescriptions.GetMasurcaStepList().Last().step;
 
@@ -109,6 +116,7 @@ namespace Genome.Helpers
                                 genomeModel.MasurcaStatus = StepDescriptions.GetCurrentStepDescription(StepDescriptions.GetMasurcaStepList(), masurcaCurrentStep);
                             }
 
+                            // Error.
                             else
                             {
                                 int masurcaCurrentStep = StepDescriptions.GetMasurcaStepList().Last().step;
@@ -182,7 +190,7 @@ namespace Genome.Helpers
                     db.SaveChanges();
 
                     // Compress Data.
-                    LinuxCommands.ZipFiles(client, 9, Locations.GetCompressedDataPath(uuid), Locations.GetMasterPath(), out error, "-y -r");
+                    LinuxCommands.ZipFiles(client, 9, Locations.GetCompressedDataPath(uuid), Locations.GET_MASTER_PATH, out error, "-y -r");
 
                     if (!string.IsNullOrEmpty(error))
                     {
@@ -202,7 +210,7 @@ namespace Genome.Helpers
                     db.SaveChanges();
 
                     // Connect to SFTP.
-                    LinuxCommands.ConnectSFTP(client, Locations.GetFtpUrl(), PUBLIC_KEY_LOCATION, out error);
+                    LinuxCommands.ConnectSFTP(client, Locations.FTP_URL, Locations.PUBLIC_KEY_PATH, out error);
 
                     if (!string.IsNullOrEmpty(error))
                     {
@@ -222,7 +230,7 @@ namespace Genome.Helpers
                     db.SaveChanges();
 
                     // Upload files.
-                    LinuxCommands.SftpUploadFile(client, Locations.GetZipFileStoragePath(), out error);
+                    LinuxCommands.SftpUploadFile(client, Locations.ZIP_STORAGE_PATH, out error);
 
                     if (!string.IsNullOrEmpty(error))
                         genomeModel.OverallStatus = StepDescriptions.UPLOAD_TO_FTP_ERROR;

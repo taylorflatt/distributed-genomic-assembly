@@ -85,7 +85,7 @@ namespace Genome.Controllers
                     string error = "";
 
                     //SSHConfig ssh = new SSHConfig("login-0-0.research.siu.edu", genomeModel, builder.InitConfigURL);
-                    SSHConfig ssh = new SSHConfig(Locations.GetBigDogIp(), genomeModel, "", out error);
+                    SSHConfig ssh = new SSHConfig(Locations.BD_IP, genomeModel, "", out error);
 
                     ssh.CreateJob(out error);
 
@@ -158,11 +158,11 @@ namespace Genome.Controllers
             string error = "";
 
             if (command == "Update Status")
-                CheckJobStatus.UpdateStatuses(id, ref jobsToUpload, out error);
+                CheckJobStatus.UpdateStatus(id, ref jobsToUpload, out error);
 
             if (command == "Cancel Job")
             {
-                using (var client = new SshClient(Locations.GetBigDogIp(), Locations.GetBigDogUpdateKeyLocation()))
+                using (var client = new SshClient(Locations.BD_IP, Locations.BD_UPDATE_KEY_PATH))
                 {
                     client.Connect();
 

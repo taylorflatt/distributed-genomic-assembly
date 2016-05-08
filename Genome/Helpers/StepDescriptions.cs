@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Web;
 
 namespace Genome.Helpers
 {
@@ -39,7 +37,7 @@ namespace Genome.Helpers
         public const string UPLOAD_TO_FTP_ERROR = "Error uploading data to SFTP";
 
         /// <summary>
-        /// The two steps that will always be static. 
+        /// The two steps that will always be static.
         /// </summary>
         public const string INITIAL_STEP = "Program Queued";
         public const string FINAL_STEP = "Completed";
