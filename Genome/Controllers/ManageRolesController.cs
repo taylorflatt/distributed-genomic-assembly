@@ -36,7 +36,6 @@ namespace Genome.Controllers
             var list = context.Roles.OrderBy(r => r.Name).ToList().Select(rr => new SelectListItem { Value = rr.Name.ToString(), Text = rr.Name }).ToList();
 
             ViewBag.Roles = list;
-            ViewBag.Test = AccountInfoHelper.NumberAdminsLeft().ToString();
 
             return View();
         }
@@ -97,28 +96,6 @@ namespace Genome.Controllers
                 ViewBag.GetUsersError = e.Message; 
             }
         }
-
-        //protected int NumberAdminsLeft()
-        //{
-        //    int adminCount = 0;
-
-        //    using (var context = new IdentityDbContext())
-        //    {
-        //        // Select all the users in the database.
-        //        var temp = context.Users
-        //            .Select(u => new { Username = u.UserName }).ToList();
-
-        //        // Populate the username list.
-        //        foreach (var user in temp)
-        //        {
-        //            if (GetUserRole(user.Username).Equals("Admin"))
-        //                adminCount++;
-        //        }
-
-        //        return adminCount;
-
-        //    }
-        //}
 
         private async Task DeleteUser(string UserName)
         {

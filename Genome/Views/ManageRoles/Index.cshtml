@@ -6,25 +6,42 @@
 <p>
     <em>Note: When adding a user to the admin role, they cannot be removed - only deleted from the role to prevent being locked from the system.</em>
 </p>
-@ViewBag.Test
 <hr />
 
-<div class="result result-background result-error">
-    @Html.ViewBag.UserSelectError
-    @Html.ViewBag.RoleSelectError
-    @Html.ViewBag.DeleteError
-    @Html.ViewBag.GetUsersError
-    @Html.ViewBag.AdminDeleteError
-</div>
+@if (!string.IsNullOrEmpty(ViewBag.UserSelectError) ||
+                !string.IsNullOrEmpty(ViewBag.RoleSelectError) ||
+                !string.IsNullOrEmpty(ViewBag.DeleteError) ||
+                !string.IsNullOrEmpty(ViewBag.GetUsersError) ||
+                !string.IsNullOrEmpty(ViewBag.AdminDeleteError))
+{
+    <div class="result result-background result-error">
+        @ViewBag.UserSelectError
+        @ViewBag.RoleSelectError
+        @ViewBag.DeleteError
+        @ViewBag.GetUsersError
+        @ViewBag.AdminDeleteError
+    </div>
 
-<div class="result result-background result-success">
-    @Html.ViewBag.ResultMessage
-</div>
-<div class="result result-background result-error">
-    @Html.ViewBag.ResultMessageError
-</div>
+    <br />
+}
 
-<br />
+@if (!string.IsNullOrEmpty(ViewBag.ResultMessage))
+{
+    <div class="result result-background result-success">
+        @ViewBag.ResultMessage
+    </div>
+
+    <br />
+}
+
+@if (!string.IsNullOrEmpty(ViewBag.ResultMessageError))
+{
+    <div class="result result-background result-error">
+        @ViewBag.ResultMessageError
+    </div>
+
+    <br />
+}
 
 
 @using (Html.BeginForm("Index", "ManageRoles"))
