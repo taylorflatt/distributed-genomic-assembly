@@ -98,28 +98,6 @@ namespace Genome.Controllers
             }
         }
 
-        //protected int NumberAdminsLeft()
-        //{
-        //    int adminCount = 0;
-
-        //    using (var context = new IdentityDbContext())
-        //    {
-        //        // Select all the users in the database.
-        //        var temp = context.Users
-        //            .Select(u => new { Username = u.UserName }).ToList();
-
-        //        // Populate the username list.
-        //        foreach (var user in temp)
-        //        {
-        //            if (GetUserRole(user.Username).Equals("Admin"))
-        //                adminCount++;
-        //        }
-
-        //        return adminCount;
-
-        //    }
-        //}
-
         private async Task DeleteUser(string UserName)
         {
             try
