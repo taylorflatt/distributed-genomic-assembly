@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Data.Entity;
 using System.Net;
 using System.Web.Mvc;
 using Genome.Models;
@@ -140,8 +139,6 @@ namespace Genome.Controllers
                         ViewBag.JobCancelFailure = "Your job has not been successfully cancelled with the following error: " + error;
                 }
             }
-                
-                // Need to run the qdel command on bigdog. Needs to take the SGEID of the job and should be good to go.
 
             if(string.IsNullOrEmpty(error))
             {
