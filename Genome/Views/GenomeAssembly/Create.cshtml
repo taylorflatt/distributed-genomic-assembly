@@ -65,7 +65,7 @@
             <div class="form-group">
                 <div class="col-md-9">
 
-                    <label class="control-label col-md-3" id="north-east" title="This is a test title.">
+                    <label class="control-label col-md-3">
                         Data Location (URL):
                     </label>
 
@@ -91,7 +91,8 @@
                     </div>
 
                     <!-- Where the new URL text box will appear. -->
-                    <div id="addUrlBtn"></div>
+                    <div id="addUrlRow"></div>
+
                     <br />
 
                     <div class="row">
@@ -177,11 +178,15 @@
                 </div>
             </div>
 
+            @*
+                Upon checking the box, we show the sequential-length text box for them to enter the data. Otherwise we leave the data null
+                and handle that in the config creator. (If model.sequentialReads == "" then sequential_reads = 0) for instance.
+            *@
             <div class="form-group" id="SequentialReadsGroup">
                 @Html.LabelFor(model => model.SequentialReads, htmlAttributes: new { @class = "control-label col-md-2" })
-                <div class="col-md-10">c
+                <div class="col-md-10">
                     <div class="checkbox">
-                        @Html.EditorFor(model => model.SequentialReads, "", new { @id = "JumpReads" })
+                        @Html.EditorFor(model => model.SequentialReads, "", new { @id = "SequentialReads" })
                         @Html.ValidationMessageFor(model => model.SequentialReads, "", new { @class = "text-danger" })
                     </div>
                 </div>
@@ -193,7 +198,7 @@
             <div class="form-group" id="SequentialLength" hidden="hidden">
                 @Html.LabelFor(model => model.SequentialLength, htmlAttributes: new { @class = "control-label col-md-2" })
                 <div class="col-md-10">
-                    @Html.EditorFor(model => model.SequentialLength, new { htmlAttributes = new { @class = "form-control", @id = "JumpLengthInput" } })
+                    @Html.EditorFor(model => model.SequentialLength, new { htmlAttributes = new { @class = "form-control", @id = "SequentialLengthInput" } })
                     @Html.ValidationMessageFor(model => model.SequentialLength, "", new { @class = "text-danger" })
                     <div id="SequentialLengthErrorMsg" class="text-danger">
                         @* Error message goes here if any *@

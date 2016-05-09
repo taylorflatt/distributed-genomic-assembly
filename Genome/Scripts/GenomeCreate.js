@@ -69,7 +69,7 @@ function Step2MoveForward() {
     {
         var input = document.getElementById("PELengthInput").value;
 
-        addURLBox();
+        //addURLBox();
 
         if (input == "")
         {
@@ -292,7 +292,15 @@ function DisplayFinalStepError() {
 // Need to fix the styling issue on the textbox so it isn't static. On time crunch so I'm statically assigning values.
 function addURLBox() {
     document.getElementById("RemoveURLErrorMsg").innerHTML = "";
-    $('#addUrlBtn').append("<label id='lab_" + x + "' class='control-label col-md-3' style='padding-top: 8px;'> Data Location (URL): </label><div class='row' id='row_" + x + "' style='padding-top: 8px;'><div class='col-md-4' id='col_" + x + "'><input type='text' id='url_" + x + "' class='form-control text-box single-line' style='width: 229.984px;' type='text'></div><div id='DataSourceErrorMsg_" + x + "' class='col-md-4 text-danger'></div></div>");
+
+    $('#addUrlRow').append(
+        "<label id='lab_" + x + "' class='control-label col-md-3' style='padding-top: 8px;'> Data Location (URL): </label>"
+        + "<div class='row' id='row_" + x + "' style='padding-top: 8px;'>"
+        +   "<div class='col-md-4'><input type='text' id='url_l_" + x + "' class='form-control text-box single-line' type='text' placeholder='Left read'></div>"
+        +   "<div class='col-md-4'><input type='text' id='url_r_" + x + "' class='form-control text-box single-line' type='text' placeholder='Right read'></div>"
+        + "</div>"
+        + "<div id='DataSourceErrorMsg_" + x + "' class='col-md-4 text-danger'>");
+
     x++;
 }
 
@@ -349,11 +357,13 @@ $(function ()
         {
             $("#PELength").show();
             $("#JumpReadsGroup").hide();
+            $("#SequentialReadsGroup").hide();
             $("#MasurcaPEGroup").show();
         }
 
         else{
             $("#PELength").hide();
+            $("#SequentialReadsGroup").show();
             $("#JumpReadsGroup").show();
             $("#MasurcaPEGroup").hide();
         }
@@ -366,13 +376,34 @@ $(function ()
         {
             $("#JumpLength").show();
             $("#PEReadsGroup").hide();
+            $("#SequentialReadsGroup").hide();
             $("#MasurcaJumpGroup").show();
         }
 
         else {
             $("#JumpLength").hide();
+            $("#SequentialReadsGroup").show();
             $("#PEReadsGroup").show();
             $("#MasurcaJumpGroup").hide();
+        }
+    });
+
+    // Hide Jump Reads box if checkbox is left unchecked.
+    $("#SequentialReads").click(function () {
+        if ($(this).is(':checked')) {
+            $("#JumpLength").hide();
+            $("#PEReadsGroup").hide();
+            $("#JumpReadsGroup").hide();
+            $("#SequentialReadsGroup").show();
+            $("#SequentialLength").show();
+            $("#MasurcaPEGroup").hide();
+        }
+
+        else {
+            $("#SequentialLength").hide();
+            $("#JumpReadsGroup").show();
+            $("#PEReadsGroup").show();
+            $("#MasurcaJumpGroup").show();
         }
     });
 });
