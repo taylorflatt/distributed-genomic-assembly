@@ -76,8 +76,6 @@ function Step2MoveForward() {
     {
         var input = document.getElementById("PELengthInput").value;
 
-        addURLBox();
-
         if (input == "")
         {
             document.getElementById("PELengthErrorMsg").innerHTML = "The value you entered was invalid. You must enter a number from 0-100!";
@@ -303,10 +301,10 @@ function addURLBox(singleURL) {
     if (singleURL)
     {
         $('#addUrlRow').append(
-            "<label id='lab_" + x + "' class='control-label col-md-3' style='padding-top: 8px;'> Data Location (URL): </label>"
+            "<label id='lab_" + x + "' class='control-label col-md-2' style='padding-top: 8px;'> Data Location (URL): </label>"
             + "<div class='row' id='row_" + x + "' style='padding-top: 8px;'>"
             + "<div class='col-md-4'><input type='text' id='url_l_" + x + "' class='form-control text-box single-line' type='text' placeholder='Single Read URL'></div>"
-            + "<div id='DataSourceErrorMsg_" + x + "' class='col-md-4 text-danger'></div>"
+            + "<div id='DataSourceErrorMsg_" + x + "' class='col-md-3 text-danger'></div>"
             + "</div>");
 
         x++;
@@ -315,11 +313,11 @@ function addURLBox(singleURL) {
     else
     {
         $('#addUrlRow').append(
-            "<label id='lab_" + x + "' class='control-label col-md-3' style='padding-top: 8px;'> Data Location: </label>"
+            "<label id='lab_" + x + "' class='control-label col-md-2' style='padding-top: 8px;'> Data Location: </label>"
             + "<div class='row' id='row_" + x + "' style='padding-top: 8px;'>"
             + "<div class='col-md-3'><input type='text' id='url_l_" + x + "' class='form-control text-box single-line' type='text' placeholder='Left Read URL'></div>"
             + "<div class='col-md-3'><input type='text' id='url_r_" + x + "' class='form-control text-box single-line' type='text' placeholder='Right Read URL'></div>"
-            + "<div id='DataSourceErrorMsg_" + x + "' class='col-md-4 text-danger'></div>"
+            + "<div id='DataSourceErrorMsg_" + x + "' class='col-md-3 text-danger'></div>"
             + "</div>");
 
         x++;
@@ -332,11 +330,11 @@ function addURLButtons() {
     $('#addUrlBtns').append(
         "<div class='row'>"
 
-        +   "<div class='col-md-3 col-md-offset-5'>"
+        +   "<div class='col-md-3 col-md-offset-3'>"
         +       "<button type='button' id='UrlBtn' onclick='addURLBox()' value='Add Row'>Add URL</button>"
         +   "</div>"
 
-        +   "<div id='removeUrlBtn' class='col-md-2'>"
+        +   "<div id='removeUrlBtn' class='col-md-3'>"
         +       "<button type='button' id='UrlBtn' onclick='removeURLBox()' value='Remove Row'>Remove URL</button>"
         +   "</div>"
 
