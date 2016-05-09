@@ -50,6 +50,12 @@ namespace Genome.Models
         [Display(Name = "Jump Length")]
         public int? JumpLength { get; set; }
 
+        [Display(Name = "Sequential Reads")]
+        public bool SequentialReads { get; set; }
+
+        [Display(Name = "Sequential Length")]
+        public int? SequentialLength { get; set; }
+
         /////////////////////////////////
         // Masurca specific parameters //
         /////////////////////////////////

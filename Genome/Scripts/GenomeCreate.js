@@ -69,6 +69,8 @@ function Step2MoveForward() {
     {
         var input = document.getElementById("PELengthInput").value;
 
+        addURLBox();
+
         if (input == "")
         {
             document.getElementById("PELengthErrorMsg").innerHTML = "The value you entered was invalid. You must enter a number from 0-100!";
@@ -114,11 +116,34 @@ function Step2MoveForward() {
         }
     }
 
+        // Jump read validation is only done if Jump reads is checked.
+    else if (document.getElementById("SequentialReads").checked)
+    {
+        var input = document.getElementById("SequentialLengthInput").value;
+
+        if (input == "") {
+            document.getElementById("SequentialLengthErrorMsg").innerHTML = "The value you entered was invalid. You must enter a number from 0-100!";
+            invalidData++;
+        }
+
+            // Make sure the value of the box is between 0 and 100. (TEST - MAY REMOVE) (WORKS)
+        else if (input < 0 || input > 100) {
+            document.getElementById("SequentialLengthErrorMsg").innerHTML = "The value you entered was invalid. You may only enter numbers from 0-100!";
+            invalidData++;
+        }
+
+        else {
+            // We can remove the error if they have corrected it but not ALL errors.
+            document.getElementById("SequentialLengthErrorMsg").innerHTML = "";
+        }
+    }
+
     // If neither box was checked, then we need to stop them from moving to the next step.
     else
     {
         document.getElementById("PEReadsErrorMsg").innerHTML = "You need to at least check one of these boxes!";
         document.getElementById("JumpReadsErrorMsg").innerHTML = "You need to check at least one of these boxes!";
+        document.getElementById("SequentialReadsErrorMsg").innerHTML = "You need to check at least one of these boxes!";
         invalidData++;
     }
 
@@ -130,6 +155,8 @@ function Step2MoveForward() {
         document.getElementById("RemoveURLErrorMsg").innerHTML = "";
         document.getElementById("PEReadsErrorMsg").innerHTML = "";
         document.getElementById("JumpReadsErrorMsg").innerHTML = "";
+        document.getElementById("SequentialReadsErrorMsg").innerHTML = "";
+        document.getElementById("SequentialLengthErrorMsg").innerHTML = "";
 
         // Move to the next step.
         document.getElementById('Step2').style.display = "none";

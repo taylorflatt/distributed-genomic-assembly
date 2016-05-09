@@ -105,8 +105,6 @@
                     </div>
 
                     <!-- End dynamically created list of URL textboxes -->
-
-
                 </div>
             </div>
 
@@ -174,6 +172,30 @@
                     @Html.EditorFor(model => model.JumpLength, new { htmlAttributes = new { @class = "form-control", @id = "JumpLengthInput" } })
                     @Html.ValidationMessageFor(model => model.JumpLength, "", new { @class = "text-danger" })
                     <div id="JumpLengthErrorMsg" class="text-danger">
+                        @* Error message goes here if any *@
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group" id="SequentialReadsGroup">
+                @Html.LabelFor(model => model.SequentialReads, htmlAttributes: new { @class = "control-label col-md-2" })
+                <div class="col-md-10">c
+                    <div class="checkbox">
+                        @Html.EditorFor(model => model.SequentialReads, "", new { @id = "JumpReads" })
+                        @Html.ValidationMessageFor(model => model.SequentialReads, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+                <div id="SequentialReadsErrorMsg" class="text-danger">
+                    @* Error message goes here if any. *@
+                </div>
+            </div>
+
+            <div class="form-group" id="SequentialLength" hidden="hidden">
+                @Html.LabelFor(model => model.SequentialLength, htmlAttributes: new { @class = "control-label col-md-2" })
+                <div class="col-md-10">
+                    @Html.EditorFor(model => model.SequentialLength, new { htmlAttributes = new { @class = "form-control", @id = "JumpLengthInput" } })
+                    @Html.ValidationMessageFor(model => model.SequentialLength, "", new { @class = "text-danger" })
+                    <div id="SequentialLengthErrorMsg" class="text-danger">
                         @* Error message goes here if any *@
                     </div>
                 </div>
