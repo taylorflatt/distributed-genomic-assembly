@@ -298,8 +298,8 @@ function addURLBox() {
         + "<div class='row' id='row_" + x + "' style='padding-top: 8px;'>"
         +   "<div class='col-md-4'><input type='text' id='url_l_" + x + "' class='form-control text-box single-line' type='text' placeholder='Left read'></div>"
         +   "<div class='col-md-4'><input type='text' id='url_r_" + x + "' class='form-control text-box single-line' type='text' placeholder='Right read'></div>"
-        + "</div>"
-        + "<div id='DataSourceErrorMsg_" + x + "' class='col-md-4 text-danger'>");
+        +  "<div id='DataSourceErrorMsg_" + x + "' class='col-md-4 text-danger'></div>"
+        + "</div>");
 
     x++;
 }
