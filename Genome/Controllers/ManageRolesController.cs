@@ -36,7 +36,6 @@ namespace Genome.Controllers
             var list = context.Roles.OrderBy(r => r.Name).ToList().Select(rr => new SelectListItem { Value = rr.Name.ToString(), Text = rr.Name }).ToList();
 
             ViewBag.Roles = list;
-            ViewBag.Test = AccountInfoHelper.NumberAdminsLeft().ToString();
 
             return View();
         }

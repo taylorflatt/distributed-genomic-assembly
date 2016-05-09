@@ -10,7 +10,6 @@ using Microsoft.AspNet.Identity.Owin;
 using Microsoft.Owin.Security;
 using Genome.Models;
 using System.Web.Security;
-using Microsoft.AspNet.Identity.EntityFramework;
 
 namespace Genome.Controllers
 {
@@ -153,14 +152,14 @@ namespace Genome.Controllers
         {
             if (ModelState.IsValid)
             {
-                var user = new ApplicationUser { UserName = model.Email, Email = model.Email, DawgTag = model.DawgTag, ClusterAccountVerified =  model.ClusterAccountVerified};
+                var user = new ApplicationUser { UserName = model.Email.Split('@')[0], Email = model.Email, DawgTag = model.DawgTag, ClusterAccountVerified =  model.ClusterAccountVerified};
 
                 var result = await UserManager.CreateAsync(user, model.Password);
 
                 if (result.Succeeded)
                 {
-                    await SignInManager.SignInAsync(user, isPersistent: false, rememberBrowser: false);
-
+                    await SignInManager.SignInAsync(user, isPersistent:false, rememberBrowser:false);
+                    
                     //Add new users to the "unverified" role. By default these users cannot access any additional information and 
                     //must be verified by an admin.
                     await this.UserManager.AddToRoleAsync(user.Id, "Unverified");
@@ -174,7 +173,6 @@ namespace Genome.Controllers
                     //return RedirectToAction("Index", "Home");
                     return RedirectToAction("UnverifiedUser", "Account"); //Is this the way it should be done?
                 }
-
                 AddErrors(result);
             }
 
