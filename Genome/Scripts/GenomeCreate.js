@@ -1,7 +1,7 @@
 ﻿// Global Variables
 
-// Used to denote the URL textboxes
-var x = 1; 
+// Corresponds to a SET of textboxes (Left and Right reads for instance (two URLs)).
+var x = 0; 
 
 // Used to manage the steps that need to be displayed for the assemblers.
 var MasurcaStep = 0;
@@ -36,22 +36,43 @@ function Step2MoveForward() {
     }
 
     // Only if there are more text boxes entered.
-    if (x > 1)
+    if (x > 0)
     {
-        for (var i = 1; i < x; i++)
+        // We have sequential reads.
+        if (x == 1)
         {
-            // They added a textbox and didn't enter anything in it.
-            if (document.getElementById("url_" + i).value == "")
+            if (document.getElementById("url_l_" + i).value == "")
             {
                 document.getElementById("DataSourceErrorMsg_" + i).innerHTML = "You need to enter a data source!";
                 invalidData++;
                 invalidURL++;
             }
 
-            // They added a textbox but entered something (anything) into it.
             else
             {
                 document.getElementById("DataSourceErrorMsg_" + i).innerHTML = "";
+            }
+        }
+
+        // We have other read types.
+        else
+        {
+            for (var i = 0; i < x; i++)
+            {
+                // They added a textbox and didn't enter anything in it.
+                if (document.getElementById("url_l_" + i).value == "" ||
+                    document.getElementById("url_r_" + i).value == "")
+                {
+                    document.getElementById("DataSourceErrorMsg_" + i).innerHTML = "You need to enter a data source!";
+                    invalidData++;
+                    invalidURL++;
+                }
+
+                // They added a textbox but entered something (anything) into it.
+                else
+                {
+                    document.getElementById("DataSourceErrorMsg_" + i).innerHTML = "";
+                }
             }
         }
 
@@ -69,7 +90,7 @@ function Step2MoveForward() {
     {
         var input = document.getElementById("PELengthInput").value;
 
-        //addURLBox();
+        addURLBox();
 
         if (input == "")
         {
@@ -290,18 +311,50 @@ function DisplayFinalStepError() {
 }
 
 // Need to fix the styling issue on the textbox so it isn't static. On time crunch so I'm statically assigning values.
-function addURLBox() {
-    document.getElementById("RemoveURLErrorMsg").innerHTML = "";
+function addURLBox(singleURL) {
+    //document.getElementById("RemoveURLErrorMsg").innerHTML = "";
 
-    $('#addUrlRow').append(
-        "<label id='lab_" + x + "' class='control-label col-md-3' style='padding-top: 8px;'> Data Location (URL): </label>"
-        + "<div class='row' id='row_" + x + "' style='padding-top: 8px;'>"
-        +   "<div class='col-md-4'><input type='text' id='url_l_" + x + "' class='form-control text-box single-line' type='text' placeholder='Left read'></div>"
-        +   "<div class='col-md-4'><input type='text' id='url_r_" + x + "' class='form-control text-box single-line' type='text' placeholder='Right read'></div>"
-        +  "<div id='DataSourceErrorMsg_" + x + "' class='col-md-4 text-danger'></div>"
-        + "</div>");
+    if (singleURL)
+    {
+        $('#addUrlRow').append(
+            "<label id='lab_" + x + "' class='control-label col-md-3' style='padding-top: 8px;'> Data Location (URL): </label>"
+            + "<div class='row' id='row_" + x + "' style='padding-top: 8px;'>"
+            + "<div class='col-md-4'><input type='text' id='url_l_" + x + "' class='form-control text-box single-line' type='text' placeholder='Single Read URL'></div>"
+            + "<div id='DataSourceErrorMsg_" + x + "' class='col-md-4 text-danger'></div>"
+            + "</div>");
 
-    x++;
+        x++;
+    }
+
+    else
+    {
+        $('#addUrlRow').append(
+            "<label id='lab_" + x + "' class='control-label col-md-3' style='padding-top: 8px;'> Data Location (URL): </label>"
+            + "<div class='row' id='row_" + x + "' style='padding-top: 8px;'>"
+            + "<div class='col-md-4'><input type='text' id='url_l_" + x + "' class='form-control text-box single-line' type='text' placeholder='Left Read URL'></div>"
+            + "<div class='col-md-4'><input type='text' id='url_r_" + x + "' class='form-control text-box single-line' type='text' placeholder='Right Read URL'></div>"
+            + "<div id='DataSourceErrorMsg_" + x + "' class='col-md-4 text-danger'></div>"
+            + "</div>");
+
+        x++;
+    }
+}
+
+// Generate the add/remove buttons for the data URL(s).
+function addURLButtons() {
+
+    $('#addUrlBtns').append(
+        "<div class='row'>"
+
+        +   "<div class='col-md-3 col-md-offset-5'>"
+        +       "<button type='button' id='UrlBtn' onclick='addURLBox()' value='Add Row'>Add URL</button>"
+        +   "</div>"
+
+        +   "<div id='removeUrlBtn' class='col-md-2'>"
+        +       "<button type='button' id='UrlBtn' onclick='removeURLBox()' value='Remove Row'>Remove URL</button>"
+        +   "</div>"
+
+        + "</div>")
 }
 
 function removeURLBox() {
@@ -332,7 +385,7 @@ function concatURLs() {
 
     // Only if there is more than a single textbox do we need to concat the textboxes.
     if (x > 1) {
-        for (var i = 1; i < x; i++) {
+        for (var i = 0; i < x; i++) {
             var dataSource = document.getElementById("url_0").value; // Get first textbox.
             var textboxValue = document.getElementById("url_" + i).value; // Get second text box.
             document.getElementById("url_0").value = dataSource + "," + textboxValue; // Combine their values delineated by a comma.
@@ -355,17 +408,24 @@ $(function ()
     {
         if ($(this).is(':checked'))
         {
+            addURLBox(); // Add URL boxes to the page.
+            addURLButtons(); // Add URL buttons to the page.
             $("#PELength").show();
             $("#JumpReadsGroup").hide();
             $("#SequentialReadsGroup").hide();
             $("#MasurcaPEGroup").show();
         }
 
-        else{
+        else
+        {
+            $("#addUrlRow").empty(); // Delete the URL boxes from the page.
+            $("#addUrlBtns").empty(); // Delete the URL buttons from the page.
             $("#PELength").hide();
             $("#SequentialReadsGroup").show();
             $("#JumpReadsGroup").show();
             $("#MasurcaPEGroup").hide();
+
+            x = 0; // Reset the URL box counter.
         }
     });
 
@@ -374,23 +434,32 @@ $(function ()
     {
         if ($(this).is(':checked'))
         {
+            addURLBox(); // Add URL boxes to the page.
+            addURLButtons(); // Add URL buttons to the page.
             $("#JumpLength").show();
             $("#PEReadsGroup").hide();
             $("#SequentialReadsGroup").hide();
             $("#MasurcaJumpGroup").show();
         }
 
-        else {
+        else
+        {
+            $("#addUrlRow").empty(); // Delete the URL boxes from the page.
+            $("#addUrlBtns").empty(); // Delete the URL buttons from the page.
             $("#JumpLength").hide();
             $("#SequentialReadsGroup").show();
             $("#PEReadsGroup").show();
             $("#MasurcaJumpGroup").hide();
+
+            x = 0; // Reset the URL box counter.
         }
     });
 
     // Hide Jump Reads box if checkbox is left unchecked.
     $("#SequentialReads").click(function () {
-        if ($(this).is(':checked')) {
+        if ($(this).is(':checked'))
+        {
+            addURLBox(true); // Add URL boxes to the page.
             $("#JumpLength").hide();
             $("#PEReadsGroup").hide();
             $("#JumpReadsGroup").hide();
@@ -399,11 +468,16 @@ $(function ()
             $("#MasurcaPEGroup").hide();
         }
 
-        else {
+        else
+        {
+            $("#addUrlRow").empty(); // Delete the URL boxes from the page.
+            $("#addUrlBtns").empty(); // Delete the URL buttons from the page (may not need this).
             $("#SequentialLength").hide();
             $("#JumpReadsGroup").show();
             $("#PEReadsGroup").show();
             $("#MasurcaJumpGroup").show();
+
+            x = 0; // Reset the URL box counter.
         }
     });
 });
