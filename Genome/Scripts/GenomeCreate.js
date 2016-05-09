@@ -23,34 +23,20 @@ function Step2MoveForward() {
     var invalidData = 0;
     var invalidURL = 0; // Determine if we still have an invalid URL.
 
-    if (document.getElementById("url_0").value == "")
-    {
-        document.getElementById("DataSourceErrorMsg_0").innerHTML = "You need to enter a data source!";
-        invalidData++;
-        invalidURL++;
-    }
-
-    else
-    {
-        document.getElementById("DataSourceErrorMsg_0").innerHTML = "";
-    }
-
-    // Only if there are more text boxes entered.
+    // Check that something was entered into the textboxes.
     if (x > 0)
     {
         // We have sequential reads.
-        if (x == 1)
+        if (document.getElementById('SequentialReads').checked)
         {
-            if (document.getElementById("url_l_" + i).value == "")
-            {
-                document.getElementById("DataSourceErrorMsg_" + i).innerHTML = "You need to enter a data source!";
+            if (document.getElementById("url_l_0").value == "") {
+                document.getElementById("DataSourceErrorMsg_0").innerHTML = "You need to enter a data source!";
                 invalidData++;
                 invalidURL++;
             }
 
-            else
-            {
-                document.getElementById("DataSourceErrorMsg_" + i).innerHTML = "";
+            else {
+                document.getElementById("DataSourceErrorMsg_0").innerHTML = "";
             }
         }
 
@@ -329,10 +315,10 @@ function addURLBox(singleURL) {
     else
     {
         $('#addUrlRow').append(
-            "<label id='lab_" + x + "' class='control-label col-md-3' style='padding-top: 8px;'> Data Location (URL): </label>"
+            "<label id='lab_" + x + "' class='control-label col-md-3' style='padding-top: 8px;'> Data Location: </label>"
             + "<div class='row' id='row_" + x + "' style='padding-top: 8px;'>"
-            + "<div class='col-md-4'><input type='text' id='url_l_" + x + "' class='form-control text-box single-line' type='text' placeholder='Left Read URL'></div>"
-            + "<div class='col-md-4'><input type='text' id='url_r_" + x + "' class='form-control text-box single-line' type='text' placeholder='Right Read URL'></div>"
+            + "<div class='col-md-3'><input type='text' id='url_l_" + x + "' class='form-control text-box single-line' type='text' placeholder='Left Read URL'></div>"
+            + "<div class='col-md-3'><input type='text' id='url_r_" + x + "' class='form-control text-box single-line' type='text' placeholder='Right Read URL'></div>"
             + "<div id='DataSourceErrorMsg_" + x + "' class='col-md-4 text-danger'></div>"
             + "</div>");
 
