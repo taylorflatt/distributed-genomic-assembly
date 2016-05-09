@@ -301,7 +301,7 @@ function addURLBox(singleURL) {
     if (singleURL)
     {
         $('#addUrlRow').append(
-            "<label id='lab_" + x + "' class='control-label col-md-2' style='padding-top: 8px;'> Data Location (URL): </label>"
+            "<label id='lab_" + x + "' class='control-label col-md-2' style='padding-top: 8px;'> Data Location: </label>"
             + "<div class='row' id='row_" + x + "' style='padding-top: 8px;'>"
             + "<div class='col-md-4'><input type='text' id='url_l_" + x + "' class='form-control text-box single-line' type='text' placeholder='Single Read URL'></div>"
             + "<div id='DataSourceErrorMsg_" + x + "' class='col-md-3 text-danger'></div>"
@@ -368,12 +368,38 @@ function isURL(url) {
 function concatURLs() {
 
     // Only if there is more than a single textbox do we need to concat the textboxes.
-    if (x > 1) {
-        for (var i = 0; i < x; i++) {
-            var dataSource = document.getElementById("url_0").value; // Get first textbox.
-            var textboxValue = document.getElementById("url_" + i).value; // Get second text box.
-            document.getElementById("url_0").value = dataSource + "," + textboxValue; // Combine their values delineated by a comma.
+    if (x > 0)
+    {
+        var firstSet;
+        var leftTextBox
+        var rightTextBox
+
+        if (document.getElementById('SequentialReads').checked)
+        {
+            document.getElementById('dataSource').value = document.getElementById('url_l_0').value;
         }
+
+        else
+        {
+            // Define the base case, so we can concat easily.
+            leftTextBox = document.getElementById('url_l_0').value;
+            rightTextBox = document.getElementById('url_r_0').value;
+            firstSet = leftTextBox + "," + rightTextBox;
+            document.getElementById('DataSource').value = firstSet;
+
+            // For the rest of the URLs.
+            for (var i = 1; i < x; i++)
+            {
+                var dataSource = document.getElementById('DataSource').value;
+
+                leftTextBox = document.getElementById('url_l_' + i).value;
+                rightTextBox = document.getElementById('url_r_' + i).value;
+
+                document.getElementById('DataSource').value = dataSource + "," + leftTextBox + "," + rightTextBox;
+            }
+        }
+
+
     }
 }
 

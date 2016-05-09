@@ -49,17 +49,17 @@ namespace Genome.Controllers
                     string error = "";
 
                     //SSHConfig ssh = new SSHConfig("login-0-0.research.siu.edu", genomeModel, builder.InitConfigURL);
-                    SSHConfig ssh = new SSHConfig(Locations.BD_IP, genomeModel, "", out error);
+                    //SSHConfig ssh = new SSHConfig(Locations.BD_IP, genomeModel, "", out error);
 
-                    ssh.CreateJob(out error);
+                    //ssh.CreateJob(out error);
 
                     //ssh.CreateConnection(out error);
 
                     // No error so proceed.
                     if (string.IsNullOrEmpty(error))
                     {
-                        db.GenomeModels.Add(genomeModel);
-                        db.SaveChanges();
+                        //db.GenomeModels.Add(genomeModel);
+                        //db.SaveChanges();
                         return RedirectToAction("Details", new { id = genomeModel.uuid });
                     }
 
