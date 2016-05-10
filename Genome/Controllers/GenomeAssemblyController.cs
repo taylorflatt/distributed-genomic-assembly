@@ -4,6 +4,7 @@ using System.Web.Mvc;
 using Genome.Models;
 using Genome.Helpers;
 using Renci.SshNet;
+using System.Collections.Generic;
 
 namespace Genome.Controllers
 {
@@ -42,16 +43,17 @@ namespace Genome.Controllers
                     //ConfigBuilder builder = new ConfigBuilder();
 
                     //string[] dataArray = genomeModel.DataSource.Split(',');
+                    List <string> dataSources = HelperMethods.ParseUrlString(genomeModel.DataSource);
 
                     //builder.BuildMasurcaConfig(genomeModel, dataArray);
-                    //builder.BuildInitConfig(genomeModel, dataArray);
+                    //builder.BuildInitConfig(genomeModel, dataSources);
 
                     string error = "";
 
                     //SSHConfig ssh = new SSHConfig("login-0-0.research.siu.edu", genomeModel, builder.InitConfigURL);
-                    //SSHConfig ssh = new SSHConfig(Locations.BD_IP, genomeModel, "", out error);
+                    SSHConfig ssh = new SSHConfig(Locations.BD_IP, genomeModel, "", out error);
 
-                    //ssh.CreateJob(out error);
+                    ssh.CreateJob(out error);
 
                     //ssh.CreateConnection(out error);
 

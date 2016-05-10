@@ -77,29 +77,77 @@ namespace Genome.Helpers
             return MasurcaConfigURL;
         }
 
-        public string BuildInitConfig(GenomeModel genomeModel, string[] dataSource)
+        public string BuildInitConfig(GenomeModel genomeModel, List<string> dataSources)
         {
             string urlPath = "AssemblerConfigs/" + "Job" + genomeModel.uuid + "/";
             string path = AppDomain.CurrentDomain.BaseDirectory + "AssemblerConfigs\\" + "Job" + genomeModel.uuid + "\\";
             Directory.CreateDirectory(path);
             string fileName = "init_" + genomeModel.uuid + ".sh";
             string fullPath = path + fileName;
+
             if (!File.Exists(fullPath))
             {
                 TextWriter tw = new StreamWriter(fullPath);
 
                 //tw.WriteLine("cd " + "WORKING DIRECTORY/Data"); // Change directory to working directory
                 //tw
-                foreach (string url in dataSource)
+
+                // If we have sequential reads there will be only a single URL:
+                if(dataSources.Count == 1)
                 {
-                    tw.WriteLine("wget " + url.ToString());
-                    // Error check wget to make sure it completed.
-
-                    // If(wget.ExitStatus == 0) { We stop the wgets and write to a file saying there is an error. }
-                    // Here we would check the wget error code to see if the download completed successfully (0) or it didn't.
-
-
+                    tw.WriteLine("wget " + dataSources[0].ToString());
                 }
+
+                // If we have any other type of reads there will be at least a left and right read:
+                else
+                {
+                    List<string> leftReads = new List<string>();
+                    List<string> rightReads = new List<string>();
+
+                    // Create the URL lists with the left and right reads split.
+                    HelperMethods.CreateUrlLists(dataSources, out leftReads, out rightReads);
+
+                    // Now add the wgets for the left reads URLs and rename them to leftData_[j]:
+                    for (int j = 0; j < leftReads.Count; j++)
+                    {
+                        tw.WriteLine("wget -O leftData_" + j  + " " + leftReads[j].ToString());
+                    }
+
+                    // If we have MULTIPLE sets of urls we need to concat them into a single file:
+                    if (dataSources.Count > 2)
+                    {
+                        string concatFiles = "";
+
+                        for(int j = 0; j < leftReads.Count; j++)
+                        {
+                            concatFiles = concatFiles + " " + leftReads[j].ToString();
+                        }
+
+                        // Concat the left reads together into a leftReads.fastq file.
+                        tw.WriteLine("cat " + concatFiles + "> leftReads.fastq");
+                    }
+
+                    // Now add the wgets for the right reads URLs and rename them to rightData_[i]:
+                    for (int i = 0; i < rightReads.Count; i++)
+                    {
+                        tw.WriteLine("wget -O leftData_" + i + " " + rightReads[i].ToString());
+                    }
+
+                    // If we have MULTIPLE sets of urls we need to concat them into a single file:
+                    if (dataSources.Count > 2)
+                    {
+                        string concatFiles = "";
+
+                        for (int i = 0; i < rightReads.Count; i++)
+                        {
+                            concatFiles = concatFiles + " " + rightReads[i].ToString();
+                        }
+
+                        // Concat the right reads together into a rightReads.fastq file.
+                        tw.WriteLine("cat " + concatFiles + "> rightReads.fastq");
+                    }
+                }
+
                 tw.Close();
 
                 // Next step is to do wget error checking. 

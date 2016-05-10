@@ -1,6 +1,7 @@
 ﻿using Genome.Models;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Web;
 
@@ -27,6 +28,21 @@ namespace Genome.Helpers
                 numAssemblers++;
 
             return numAssemblers;
+        }
+
+        protected internal static void CreateUrlLists(List<string> dataSources, out List<string> leftReads, out List<string> rightReads)
+        {
+            leftReads = new List<string>();
+            rightReads = new List<string>();
+
+            // Split the data URLs into their respective lists so they get concatenated correctly.
+            for (int i = 0; i < dataSources.Count; i++)
+            {
+                if (i % 2 == 0)
+                    leftReads.Add(dataSources[i]);
+                else
+                    rightReads.Add(dataSources[i]);
+            }
         }
 
         protected internal static GenomeModel SetDefaultMasurcaValues(GenomeModel genomeModel)

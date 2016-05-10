@@ -172,9 +172,6 @@ namespace Genome.Helpers
                 string jobName = genomeModel.SSHUser.ToString() + genomeModel.uuid.ToString();
                 string node = COMPUTENODE1; // default  
 
-                // The split up list of each data source location.
-                List<string> dataSources = HelperMethods.ParseUrlString(genomeModel.DataSource);
-
                 try
                 {
                     client.Connect();
