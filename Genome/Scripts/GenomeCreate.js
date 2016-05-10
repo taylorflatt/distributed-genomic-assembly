@@ -29,7 +29,8 @@ function Step2MoveForward() {
         // We have sequential reads.
         if (document.getElementById('SequentialReads').checked)
         {
-            if (document.getElementById("url_l_0").value == "") {
+            if (document.getElementById("url_l_0").value == "")
+            {
                 document.getElementById("DataSourceErrorMsg_0").innerHTML = "You need to enter a data source!";
                 invalidData++;
                 invalidURL++;
@@ -301,10 +302,10 @@ function addURLBox(singleURL) {
     if (singleURL)
     {
         $('#addUrlRow').append(
-            "<label id='lab_" + x + "' class='control-label col-md-2' style='padding-top: 8px;'> Data Location: </label>"
-            + "<div class='row' id='row_" + x + "' style='padding-top: 8px;'>"
-            + "<div class='col-md-4'><input type='text' id='url_l_" + x + "' class='form-control text-box single-line' type='text' placeholder='Single Read URL'></div>"
-            + "<div id='DataSourceErrorMsg_" + x + "' class='col-md-3 text-danger'></div>"
+            "<label id='lab_0' class='control-label col-md-2' style='padding-top: 8px;'> Data Location: </label>"
+            + "<div class='row' id='row_0' style='padding-top: 8px;'>"
+            + "<div class='col-md-4'><input type='text' id='url_l_0' class='form-control text-box single-line' type='text' placeholder='Single Read URL'></div>"
+            + "<div id='DataSourceErrorMsg_0' class='col-md-3 text-danger'></div>"
             + "</div>");
 
         x++;
@@ -376,7 +377,7 @@ function concatURLs() {
 
         if (document.getElementById('SequentialReads').checked)
         {
-            document.getElementById('dataSource').value = document.getElementById('url_l_0').value;
+            document.getElementById('DataSource').value = document.getElementById('url_l_0').value;
         }
 
         else

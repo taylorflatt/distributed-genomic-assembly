@@ -14,10 +14,18 @@
         protected internal const string BD_UPDATE_KEY_PATH = "FILE SERVER LOCATION OF BIG DOG PRIVATE KEY LOCATION";
         protected internal const string BD_COMPUTE_NODE1 = "compute-0-24";
         protected internal const string BD_COMPUTE_NODE2 = "compute-0-25";
-        protected internal const string INIT_SCRIPT_PATH = "LOCATION ON THE FTP SERVER";
-        protected internal const string MASURCA_SCRIPT_PATH = "LOCATION ON THE FTP SERVER";
         protected internal const string ZIP_STORAGE_PATH = "LOCATION ON THE FTP SERVER";
         protected internal const string FTP_URL =  "URL TO THE FTP";
+
+        protected internal static string GetInitScriptPath(int seed)
+        {
+            return "LOCATION ON FTP SERVER WITH THE PARTICULAR SEED VALUE";
+        }
+
+        protected internal static string GetMasurcaScriptPath(int seed)
+        {
+            return "LOCATION ON FTP SERVER WITH THE PARTICULAR SEED VALUE";
+        }
 
         /// <summary>
         /// Get the link for the data download for the user.

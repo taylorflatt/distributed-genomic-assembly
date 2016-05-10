@@ -12,14 +12,15 @@ namespace Genome.Helpers
         public string InitConfigURL { get; set; }
         public string SchedulerConfigURL { get; set; }
 
-        public string BuildMasurcaConfig(GenomeModel genomeModel, List<string> dataSource)
+        public string BuildMasurcaConfig(GenomeModel genomeModel, List<string> dataSource, int seed)
         {
-            string urlPath = "AssemblerConfigs/" + "Job" + genomeModel.uuid + "/";
-            string path = AppDomain.CurrentDomain.BaseDirectory + "AssemblerConfigs\\" + "Job" + genomeModel.uuid + "\\";
+            string urlPath = "AssemblerConfigs/" + "Job-" + seed + "/";
+            string path = AppDomain.CurrentDomain.BaseDirectory + "AssemblerConfigs\\" + "Job-" + seed + "\\";
 
-            Directory.CreateDirectory(path);
+            if(!Directory.Exists(path))
+                Directory.CreateDirectory(path);
 
-            string fileName = "MasurcaConfig_" + genomeModel.uuid + ".txt";
+            string fileName = "MasurcaConfig_" + seed + ".txt";
             string fullPath = path + fileName;
 
             if (!File.Exists(fullPath))
@@ -27,26 +28,18 @@ namespace Genome.Helpers
                 TextWriter tw = new StreamWriter(fullPath);
 
                 tw.WriteLine("DATA");
+                // Paired-end reads only.
                 if (genomeModel.PEReads)
-                {
-                    if(dataSource.Count > 1)
-                        tw.WriteLine("PE= pe " + genomeModel.MasurcaMean + genomeModel.MasurcaStdev + "leftReads.fastq rightReads.fastq");
+                    tw.WriteLine("PE= pe " + genomeModel.MasurcaMean + " " + genomeModel.MasurcaStdev + " leftReads.fastq rightReads.fastq");
 
-                    else
-                        tw.WriteLine("PE= pe " + genomeModel.MasurcaMean + genomeModel.MasurcaStdev + "sequentialData.fastq");
-                }
-
-                // These locations are not the same, used for now for development purposes
+                // Jump reads only.
                 else if (genomeModel.JumpReads)
-                {
-                    if (dataSource.Count > 1)
-                        tw.WriteLine("JUMP= sh " + genomeModel.MasurcaMean + genomeModel.MasurcaStdev + "leftReads.fastq rightReads.fastq");
+                    tw.WriteLine("JUMP= sh " + genomeModel.MasurcaMean + " " + genomeModel.MasurcaStdev + " leftReads.fastq rightReads.fastq");
 
-                    else
-                        tw.WriteLine("JUMP= sh " + genomeModel.MasurcaMean + genomeModel.MasurcaStdev + "sequentialData.fastq");
-                }
+                // Sequential reads only.
+                else if(genomeModel.SequentialReads)
+                    tw.WriteLine("PE= pe " + genomeModel.MasurcaMean + " " + genomeModel.MasurcaStdev + " sequentialData.fastq");
                 tw.WriteLine("END");
-
 
                 tw.WriteLine("PARAMETERS");
                 if (genomeModel.MasurcaGraphKMerValue == null)
@@ -57,7 +50,13 @@ namespace Genome.Helpers
 
                 tw.WriteLine("USE_LINKING_MATES = " + Convert.ToInt32(genomeModel.MasurcaLinkingMates));
 
-                tw.WriteLine("LIMIT_JUMP_COVERAGE = " + genomeModel.MasurcaLimitJumpCoverage);
+                // For bacteria
+                if(genomeModel.MasurcaLimitJumpCoverage)
+                    tw.WriteLine("LIMIT_JUMP_COVERAGE = 60");
+                
+                // For other organisms
+                else
+                    tw.WriteLine("LIMIT_JUMP_COVERAGE = 300");
 
                 if (genomeModel.MasurcaCAParameters)
                     tw.WriteLine("CA_PARAMETERS = cgwErrorRate=0.25 ovlMemory=4GB");
@@ -69,7 +68,12 @@ namespace Genome.Helpers
                 tw.WriteLine("KMER_COUNT_THRESHOLD = " + genomeModel.MasurcaKMerErrorCount);
                 tw.WriteLine("NUM_THREADS = " + genomeModel.MasurcaThreadNum);
                 tw.WriteLine("JF_SIZE = " + genomeModel.MasurcaJellyfishHashSize); // Should be estimated_genome_size * estimated_coverage.
-                tw.WriteLine("DO_HOMOPOLYMER_TRIM = " + genomeModel.HomoTrim);
+
+                if(genomeModel.HomoTrim)
+                    tw.WriteLine("DO_HOMOPOLYMER_TRIM = 1");
+                else
+                    tw.WriteLine("DO_HOMOPOLYMER_TRIM = 0");
+
                 tw.WriteLine("END");
 
                 tw.Close();
@@ -80,14 +84,25 @@ namespace Genome.Helpers
             return MasurcaConfigURL;
         }
 
-        public string BuildInitConfig(GenomeModel genomeModel, List<string> dataSources)
+        public string BuildInitConfig(List<string> dataSources, out int seed)
         {
-            string urlPath = "AssemblerConfigs/" + "Job" + genomeModel.uuid + "/";
-            string path = AppDomain.CurrentDomain.BaseDirectory + "AssemblerConfigs\\" + "Job" + genomeModel.uuid + "\\";
+            Random random = new Random();
+            seed = random.Next(100, 1284812);
+
+            string urlPath = "AssemblerConfigs/" + "Job-" + seed + "/";
+            string path = AppDomain.CurrentDomain.BaseDirectory + "AssemblerConfigs\\" + "Job-" + seed + "\\";
+
+            // If the directory already exists, then generate a new seed.
+            while (Directory.Exists(path))
+            {
+                seed = random.Next(198, 1248712);
+                urlPath = "AssemblerConfigs/" + "Job-" + seed + "/";
+                path = AppDomain.CurrentDomain.BaseDirectory + "AssemblerConfigs\\" + "Job-" + seed + "\\";
+            }
 
             Directory.CreateDirectory(path);
 
-            string fileName = "init_" + genomeModel.uuid + ".sh";
+            string fileName = "init_" + seed + ".sh";
             string fullPath = path + fileName;
 
             if (!File.Exists(fullPath))
@@ -99,7 +114,7 @@ namespace Genome.Helpers
                 // If we have sequential reads there will be only a single URL:
                 if(dataSources.Count == 1)
                 {
-                    tw.WriteLine("wget -O sequentialData.fastq" + dataSources[0].ToString());
+                    tw.WriteLine("wget -O sequentialData.fastq " + dataSources[0].ToString());
                 }
 
                 // If we have any other type of reads there will be at least a left and right read:
@@ -128,13 +143,13 @@ namespace Genome.Helpers
                         }
 
                         // Concat the left reads together into a leftReads.fastq file.
-                        tw.WriteLine("cat " + concatFiles + "> leftReads.fastq");
+                        tw.WriteLine("cat " + concatFiles + " > leftReads.fastq");
                     }
 
                     // Now add the wgets for the right reads URLs and rename them to rightData_[i]:
                     for (int i = 0; i < rightReads.Count; i++)
                     {
-                        tw.WriteLine("wget -O leftData_" + i + " " + rightReads[i].ToString());
+                        tw.WriteLine("wget -O rightData_" + i + " " + rightReads[i].ToString());
                     }
 
                     // If we have MULTIPLE sets of urls we need to concat them into a single file:
@@ -148,7 +163,7 @@ namespace Genome.Helpers
                         }
 
                         // Concat the right reads together into a rightReads.fastq file.
-                        tw.WriteLine("cat " + concatFiles + "> rightReads.fastq");
+                        tw.WriteLine("cat " + concatFiles + " > rightReads.fastq");
                     }
                 }
 

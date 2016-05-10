@@ -156,7 +156,7 @@ namespace Genome.Helpers
         }
 
         // Will return TRUE if successful connection and commands all run or FALSE if ANY error is encountered.
-        public bool CreateJob(out string error)
+        public bool CreateJob(string initUrl, string masurcaUrl, out string error)
         {
             error = "";
             // UUID is not being assigned before it hits this method so we have a problem. We need to save it to the DB prior to hitting this method but that causes other problems.......need to look into this. We can probably find a work around by checking the db and seeing the previous uuid and just incrementing the previous uuid.
@@ -185,10 +185,10 @@ namespace Genome.Helpers
                     if (string.IsNullOrEmpty(error)) { LinuxCommands.ChangeDirectory(client, Locations.GetJobConfigPath(id), out error); }
 
                     // This command has NOT been tested.
-                    if (string.IsNullOrEmpty(error)) { LinuxCommands.DownloadFile(client, Locations.INIT_SCRIPT_PATH, out error, wgetLogParameter); }
+                    if (string.IsNullOrEmpty(error)) { LinuxCommands.DownloadFile(client, initUrl, out error, wgetLogParameter); }
 
                     // This command has NOT been tested.
-                    if (string.IsNullOrEmpty(error)) { LinuxCommands.DownloadFile(client, Locations.MASURCA_SCRIPT_PATH, out error, wgetLogParameter); }
+                    if (string.IsNullOrEmpty(error)) { LinuxCommands.DownloadFile(client, masurcaUrl, out error, wgetLogParameter); }
 
                     if (string.IsNullOrEmpty(error)) { LinuxCommands.ChangePermissions(client, Locations.GetJobPath(id), "777", out error, "-R"); }
 

@@ -39,21 +39,22 @@ namespace Genome.Controllers
                     genomeModel.CreatedBy = User.Identity.Name;
                     genomeModel.CreatedDate = DateTime.UtcNow;
 
-                    //string path = "temp";
-                    //ConfigBuilder builder = new ConfigBuilder();
+                    
 
-                    //string[] dataArray = genomeModel.DataSource.Split(',');
+                    ConfigBuilder builder = new ConfigBuilder();
+
                     List <string> dataSources = HelperMethods.ParseUrlString(genomeModel.DataSource);
 
-                    //builder.BuildMasurcaConfig(genomeModel, dataArray);
-                    //builder.BuildInitConfig(genomeModel, dataSources);
+                    int seed;
+
+                    string initURL = builder.BuildInitConfig(dataSources, out seed);
+                    string masurcaURL = builder.BuildMasurcaConfig(genomeModel, dataSources, seed);
 
                     string error = "";
 
-                    //SSHConfig ssh = new SSHConfig("login-0-0.research.siu.edu", genomeModel, builder.InitConfigURL);
                     SSHConfig ssh = new SSHConfig(Locations.BD_IP, genomeModel, "", out error);
 
-                    ssh.CreateJob(out error);
+                    ssh.CreateJob(initURL, masurcaURL, out error);
 
                     //ssh.CreateConnection(out error);
 
