@@ -247,6 +247,14 @@
     <Compile Include="Migrations\201605081528280_numAssemblers.Designer.cs">
       <DependentUpon>201605081528280_numAssemblers.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201605091946327_sequentialReads.cs" />
+    <Compile Include="Migrations\201605091946327_sequentialReads.Designer.cs">
+      <DependentUpon>201605091946327_sequentialReads.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201605101829287_masurca_data_update.cs" />
+    <Compile Include="Migrations\201605101829287_masurca_data_update.Designer.cs">
+      <DependentUpon>201605101829287_masurca_data_update.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\AccountViewModels.cs" />
     <Compile Include="Models\GenomeModel.cs" />
@@ -362,6 +370,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201605081528280_numAssemblers.resx">
       <DependentUpon>201605081528280_numAssemblers.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201605091946327_sequentialReads.resx">
+      <DependentUpon>201605091946327_sequentialReads.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201605101829287_masurca_data_update.resx">
+      <DependentUpon>201605101829287_masurca_data_update.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>

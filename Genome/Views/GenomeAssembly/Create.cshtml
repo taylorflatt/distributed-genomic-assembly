@@ -61,49 +61,6 @@
                 Initial Data
             </h3>
             <hr />
-            <!-- Here we might want to also include checkboxes for the different assemblers that they want so we can show/hide. -->
-            <div class="form-group">
-                <div class="col-md-8">
-
-                    <label class="control-label col-md-3" id="north-east" title="This is a test title.">
-                        Data Location (URL):
-                    </label>
-
-                    <!-- Dynamically create list of URL textboxes here -->
-                        <div class="row">
-                            <div class="col-md-4">
-                                @Html.EditorFor(model => model.DataSource, new { htmlAttributes = new { @class = "form-control", @id = "url_0" } })
-                                @Html.ValidationMessageFor(model => model.DataSource, "", new { @class = "text-danger" })
-                            </div>
-
-                            <div id="DataSourceErrorMsg_0" class="col-md-4 text-danger">
-                                @* Error message for data source if any. *@
-                            </div>
-                        </div>
-
-                    <div id="RemoveURLErrorMsg" class="text-danger">
-                        @* Remove textbox error msg if any. *@
-                    </div>
-
-                    <!-- Where the new URL text box will appear. -->
-                    <div id="addUrlBtn"></div>
-                    <br />
-
-                    <div class="row">
-                        <div class="col-md-3 col-md-offset-3">
-                            <button type="button" id="UrlBtn" onclick="addURLBox()" value="Add Row">Add URL</button>
-                        </div>
-
-                        <div id="removeUrlBtn" class="col-md-3">
-                            <button type="button" id="UrlBtn" onclick="removeURLBox()" value="Remove Row">Remove URL</button>
-                        </div>
-                    </div>
-
-                    <!-- End dynamically created list of URL textboxes -->
-
-
-                </div>
-            </div>
 
             <div class="form-group">
                 <label class="control-label col-md-2">
@@ -123,7 +80,9 @@
             *@
 
             <div class="form-group" id="PEReadsGroup">
-                @Html.LabelFor(model => model.PEReads, htmlAttributes: new { @class = "control-label col-md-2" })
+                <label class="control-label col-md-2">
+                    PE Reads:
+                </label>
                 <div class="col-md-10">
                     <div class="checkbox">
                         @Html.EditorFor(model => model.PEReads, "", new { @id = "PEReads"})
@@ -136,7 +95,9 @@
             </div>
 
             <div class="form-group" id="PELength" hidden="hidden">
-                @Html.LabelFor(model => model.PairedEndLength, htmlAttributes: new { @class = "control-label col-md-2" })
+                <label class="control-label col-md-2">
+                    Paired-End Length:
+                </label>
                 <div class="col-md-10">
                     @Html.EditorFor(model => model.PairedEndLength, new { htmlAttributes = new { @class = "form-control", @id = "PELengthInput" } })
                     @Html.ValidationMessageFor(model => model.PairedEndLength, "", new { @class = "text-danger" })
@@ -151,7 +112,9 @@
                 and handle that in the config creator. (If model.jumpreads == "" then jump_reads = 0) for instance.
             *@
             <div class="form-group" id="JumpReadsGroup">
-                @Html.LabelFor(model => model.JumpReads, htmlAttributes: new { @class = "control-label col-md-2" })
+                <label class="control-label col-md-2">
+                    Jump Reads:
+                </label>
                 <div class="col-md-10">
                     <div class="checkbox">
                         @Html.EditorFor(model => model.JumpReads, "", new { @id = "JumpReads" })
@@ -164,7 +127,9 @@
             </div>
 
             <div class="form-group" id="JumpLength" hidden="hidden">
-                @Html.LabelFor(model => model.JumpLength, htmlAttributes: new { @class = "control-label col-md-2" })
+                <label class="control-label col-md-2">
+                    Jump Read Length:
+                </label>
                 <div class="col-md-10">
                     @Html.EditorFor(model => model.JumpLength, new { htmlAttributes = new { @class = "form-control", @id = "JumpLengthInput" } })
                     @Html.ValidationMessageFor(model => model.JumpLength, "", new { @class = "text-danger" })
@@ -172,6 +137,57 @@
                         @* Error message goes here if any *@
                     </div>
                 </div>
+            </div>
+
+            @*
+                Upon checking the box, we show the sequential-length text box for them to enter the data. Otherwise we leave the data null
+                and handle that in the config creator. (If model.sequentialReads == "" then sequential_reads = 0) for instance.
+            *@
+            <div class="form-group" id="SequentialReadsGroup">
+                @Html.LabelFor(model => model.SequentialReads, htmlAttributes: new { @class = "control-label col-md-2" })
+                <div class="col-md-10">
+                    <div class="checkbox">
+                        @Html.EditorFor(model => model.SequentialReads, "", new { @id = "SequentialReads" })
+                        @Html.ValidationMessageFor(model => model.SequentialReads, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+                <div id="SequentialReadsErrorMsg" class="text-danger">
+                    @* Error message goes here if any. *@
+                </div>
+            </div>
+
+            <div class="form-group" id="SequentialLength" hidden="hidden">
+                @Html.LabelFor(model => model.SequentialLength, htmlAttributes: new { @class = "control-label col-md-2" })
+                <div class="col-md-10">
+                    @Html.EditorFor(model => model.SequentialLength, new { htmlAttributes = new { @class = "form-control", @id = "SequentialLengthInput" } })
+                    @Html.ValidationMessageFor(model => model.SequentialLength, "", new { @class = "text-danger" })
+                    <div id="SequentialLengthErrorMsg" class="text-danger">
+                        @* Error message goes here if any *@
+                    </div>
+                </div>
+            </div>
+
+            <!-- Here we might want to also include checkboxes for the different assemblers that they want so we can show/hide. -->
+            <div class="form-group">
+
+                    <div class="col-md-10">
+
+                        <!-- Where the new URL text box will appear. -->
+                        <div id="addUrlRow"></div>
+
+                        <div id="RemoveURLErrorMsg" class="text-danger">
+                            @* Remove textbox error msg if any. *@
+                        </div>
+                        
+                        @Html.HiddenFor(model => model.DataSource)
+
+                        <br />
+
+                        <div id="addUrlBtns"></div>
+
+                        <!-- End dynamically created list of URL textboxes -->
+                    </div>
+
             </div>
 
             <div class="row">
@@ -330,28 +346,25 @@
                 </div>
             </div>
 
-            @* Only display the Paired-End fields if their data contains Paired-Ends. *@
-            <div id="MasurcaPEGroup" hidden="hidden">
-                <div class="form-group">
-                    @*@Html.LabelFor(model => model.MasurcaPEMean, htmlAttributes: new { @class = "control-label col-md-2" })*@
-                    <label class="control-label col-md-2">
-                        Paired-End Mean
-                    </label>
-                    <div class="col-md-10">
-                        @Html.EditorFor(model => model.MasurcaPEMean, new { htmlAttributes = new { @class = "form-control" } })
-                        @Html.ValidationMessageFor(model => model.MasurcaPEMean, "", new { @class = "text-danger" })
-                    </div>
+            <div class="form-group">
+                @*@Html.LabelFor(model => model.MasurcaPEMean, htmlAttributes: new { @class = "control-label col-md-2" })*@
+                <label class="control-label col-md-2">
+                    Data Mean
+                </label>
+                <div class="col-md-10">
+                    @Html.EditorFor(model => model.MasurcaMean, new { htmlAttributes = new { @class = "form-control" } })
+                    @Html.ValidationMessageFor(model => model.MasurcaMean, "", new { @class = "text-danger" })
                 </div>
+            </div>
 
-                <div class="form-group">
-                    @*@Html.LabelFor(model => model.MasurcaPEStdev, htmlAttributes: new { @class = "control-label col-md-2" })*@
-                    <label class="control-label col-md-2">
-                        Paired-End Standard Deviation
-                    </label>
-                    <div class="col-md-10">
-                        @Html.EditorFor(model => model.MasurcaPEStdev, new { htmlAttributes = new { @class = "form-control" } })
-                        @Html.ValidationMessageFor(model => model.MasurcaPEStdev, "", new { @class = "text-danger" })
-                    </div>
+            <div class="form-group">
+                @*@Html.LabelFor(model => model.MasurcaPEStdev, htmlAttributes: new { @class = "control-label col-md-2" })*@
+                <label class="control-label col-md-2">
+                    Data Standard Deviation
+                </label>
+                <div class="col-md-10">
+                    @Html.EditorFor(model => model.MasurcaStdev, new { htmlAttributes = new { @class = "form-control" } })
+                    @Html.ValidationMessageFor(model => model.MasurcaStdev, "", new { @class = "text-danger" })
                 </div>
             </div>
             

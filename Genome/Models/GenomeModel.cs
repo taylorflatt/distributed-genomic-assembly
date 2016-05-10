@@ -50,6 +50,12 @@ namespace Genome.Models
         [Display(Name = "Jump Length")]
         public int? JumpLength { get; set; }
 
+        [Display(Name = "Sequential Reads")]
+        public bool SequentialReads { get; set; }
+
+        [Display(Name = "Sequential Length")]
+        public int? SequentialLength { get; set; }
+
         /////////////////////////////////
         // Masurca specific parameters //
         /////////////////////////////////
@@ -63,11 +69,11 @@ namespace Genome.Models
         [DefaultValue(1)]
         public int MasurcaCurrentStep { get; set; }
 
-        [Display(Name = "Masurca PE Mean")]
-        public int? MasurcaPEMean { get; set; }
+        [Display(Name = "Masurca Mean")]
+        public int? MasurcaMean { get; set; }
 
-        [Display(Name = "Masurca PE Standard Deviation")]
-        public int? MasurcaPEStdev { get; set; }
+        [Display(Name = "Masurca Standard Deviation")]
+        public int? MasurcaStdev { get; set; }
 
         [Display(Name = "Masurca Graph K-Mer Value")]
         [Range(25, 101)]

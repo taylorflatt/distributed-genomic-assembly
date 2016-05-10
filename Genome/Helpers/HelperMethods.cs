@@ -1,6 +1,7 @@
 ﻿using Genome.Models;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Web;
 
@@ -29,6 +30,21 @@ namespace Genome.Helpers
             return numAssemblers;
         }
 
+        protected internal static void CreateUrlLists(List<string> dataSources, out List<string> leftReads, out List<string> rightReads)
+        {
+            leftReads = new List<string>();
+            rightReads = new List<string>();
+
+            // Split the data URLs into their respective lists so they get concatenated correctly.
+            for (int i = 0; i < dataSources.Count; i++)
+            {
+                if (i % 2 == 0)
+                    leftReads.Add(dataSources[i]);
+                else
+                    rightReads.Add(dataSources[i]);
+            }
+        }
+
         protected internal static GenomeModel SetDefaultMasurcaValues(GenomeModel genomeModel)
         {
             // If they don't have jump reads.
@@ -39,15 +55,14 @@ namespace Genome.Helpers
             if (genomeModel.PEReads == false)
                 genomeModel.PairedEndLength = 0;
 
-            if (genomeModel.MasurcaPEMean == null)
-                genomeModel.MasurcaPEMean = 180;
+            if (genomeModel.MasurcaMean == null)
+                genomeModel.MasurcaMean = 180;
 
-            if (genomeModel.MasurcaPEStdev == null)
-                genomeModel.MasurcaPEStdev = 20;
+            if (genomeModel.MasurcaStdev == null)
+                genomeModel.MasurcaStdev = 20;
 
-            // This could ALSO be set to auto which makes it calculated by the program.
+            // We don't specify anything here. If it is null, we set it to AUTO in the masurca method of the config builder.
             if (genomeModel.MasurcaGraphKMerValue == null)
-                genomeModel.MasurcaGraphKMerValue = 50; 
 
             if (genomeModel.MasurcaKMerErrorCount == null)
                 genomeModel.MasurcaKMerErrorCount = 1;

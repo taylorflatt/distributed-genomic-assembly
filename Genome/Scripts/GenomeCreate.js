@@ -1,7 +1,7 @@
 ﻿// Global Variables
 
-// Used to denote the URL textboxes
-var x = 1; 
+// Corresponds to a SET of textboxes (Left and Right reads for instance (two URLs)).
+var x = 0; 
 
 // Used to manage the steps that need to be displayed for the assemblers.
 var MasurcaStep = 0;
@@ -23,35 +23,43 @@ function Step2MoveForward() {
     var invalidData = 0;
     var invalidURL = 0; // Determine if we still have an invalid URL.
 
-    if (document.getElementById("url_0").value == "")
+    // Check that something was entered into the textboxes.
+    if (x > 0)
     {
-        document.getElementById("DataSourceErrorMsg_0").innerHTML = "You need to enter a data source!";
-        invalidData++;
-        invalidURL++;
-    }
-
-    else
-    {
-        document.getElementById("DataSourceErrorMsg_0").innerHTML = "";
-    }
-
-    // Only if there are more text boxes entered.
-    if (x > 1)
-    {
-        for (var i = 1; i < x; i++)
+        // We have sequential reads.
+        if (document.getElementById('SequentialReads').checked)
         {
-            // They added a textbox and didn't enter anything in it.
-            if (document.getElementById("url_" + i).value == "")
+            if (document.getElementById("url_l_0").value == "")
             {
-                document.getElementById("DataSourceErrorMsg_" + i).innerHTML = "You need to enter a data source!";
+                document.getElementById("DataSourceErrorMsg_0").innerHTML = "You need to enter a data source!";
                 invalidData++;
                 invalidURL++;
             }
 
-            // They added a textbox but entered something (anything) into it.
-            else
+            else {
+                document.getElementById("DataSourceErrorMsg_0").innerHTML = "";
+            }
+        }
+
+        // We have other read types.
+        else
+        {
+            for (var i = 0; i < x; i++)
             {
-                document.getElementById("DataSourceErrorMsg_" + i).innerHTML = "";
+                // They added a textbox and didn't enter anything in it.
+                if (document.getElementById("url_l_" + i).value == "" ||
+                    document.getElementById("url_r_" + i).value == "")
+                {
+                    document.getElementById("DataSourceErrorMsg_" + i).innerHTML = "You need to enter a data source!";
+                    invalidData++;
+                    invalidURL++;
+                }
+
+                // They added a textbox but entered something (anything) into it.
+                else
+                {
+                    document.getElementById("DataSourceErrorMsg_" + i).innerHTML = "";
+                }
             }
         }
 
@@ -114,11 +122,34 @@ function Step2MoveForward() {
         }
     }
 
+        // Jump read validation is only done if Jump reads is checked.
+    else if (document.getElementById("SequentialReads").checked)
+    {
+        var input = document.getElementById("SequentialLengthInput").value;
+
+        if (input == "") {
+            document.getElementById("SequentialLengthErrorMsg").innerHTML = "The value you entered was invalid. You must enter a number from 0-100!";
+            invalidData++;
+        }
+
+            // Make sure the value of the box is between 0 and 100. (TEST - MAY REMOVE) (WORKS)
+        else if (input < 0 || input > 100) {
+            document.getElementById("SequentialLengthErrorMsg").innerHTML = "The value you entered was invalid. You may only enter numbers from 0-100!";
+            invalidData++;
+        }
+
+        else {
+            // We can remove the error if they have corrected it but not ALL errors.
+            document.getElementById("SequentialLengthErrorMsg").innerHTML = "";
+        }
+    }
+
     // If neither box was checked, then we need to stop them from moving to the next step.
     else
     {
         document.getElementById("PEReadsErrorMsg").innerHTML = "You need to at least check one of these boxes!";
         document.getElementById("JumpReadsErrorMsg").innerHTML = "You need to check at least one of these boxes!";
+        document.getElementById("SequentialReadsErrorMsg").innerHTML = "You need to check at least one of these boxes!";
         invalidData++;
     }
 
@@ -130,6 +161,8 @@ function Step2MoveForward() {
         document.getElementById("RemoveURLErrorMsg").innerHTML = "";
         document.getElementById("PEReadsErrorMsg").innerHTML = "";
         document.getElementById("JumpReadsErrorMsg").innerHTML = "";
+        document.getElementById("SequentialReadsErrorMsg").innerHTML = "";
+        document.getElementById("SequentialLengthErrorMsg").innerHTML = "";
 
         // Move to the next step.
         document.getElementById('Step2').style.display = "none";
@@ -263,10 +296,50 @@ function DisplayFinalStepError() {
 }
 
 // Need to fix the styling issue on the textbox so it isn't static. On time crunch so I'm statically assigning values.
-function addURLBox() {
-    document.getElementById("RemoveURLErrorMsg").innerHTML = "";
-    $('#addUrlBtn').append("<label id='lab_" + x + "' class='control-label col-md-3' style='padding-top: 8px;'> Data Location (URL): </label><div class='row' id='row_" + x + "' style='padding-top: 8px;'><div class='col-md-4' id='col_" + x + "'><input type='text' id='url_" + x + "' class='form-control text-box single-line' style='width: 229.984px;' type='text'></div><div id='DataSourceErrorMsg_" + x + "' class='col-md-4 text-danger'></div></div>");
-    x++;
+function addURLBox(singleURL) {
+    //document.getElementById("RemoveURLErrorMsg").innerHTML = "";
+
+    if (singleURL)
+    {
+        $('#addUrlRow').append(
+            "<label id='lab_0' class='control-label col-md-2' style='padding-top: 8px;'> Data Location: </label>"
+            + "<div class='row' id='row_0' style='padding-top: 8px;'>"
+            + "<div class='col-md-4'><input type='text' id='url_l_0' class='form-control text-box single-line' type='text' placeholder='Single Read URL'></div>"
+            + "<div id='DataSourceErrorMsg_0' class='col-md-3 text-danger'></div>"
+            + "</div>");
+
+        x++;
+    }
+
+    else
+    {
+        $('#addUrlRow').append(
+            "<label id='lab_" + x + "' class='control-label col-md-2' style='padding-top: 8px;'> Data Location: </label>"
+            + "<div class='row' id='row_" + x + "' style='padding-top: 8px;'>"
+            + "<div class='col-md-3'><input type='text' id='url_l_" + x + "' class='form-control text-box single-line' type='text' placeholder='Left Read URL'></div>"
+            + "<div class='col-md-3'><input type='text' id='url_r_" + x + "' class='form-control text-box single-line' type='text' placeholder='Right Read URL'></div>"
+            + "<div id='DataSourceErrorMsg_" + x + "' class='col-md-3 text-danger'></div>"
+            + "</div>");
+
+        x++;
+    }
+}
+
+// Generate the add/remove buttons for the data URL(s).
+function addURLButtons() {
+
+    $('#addUrlBtns').append(
+        "<div class='row'>"
+
+        +   "<div class='col-md-3 col-md-offset-3'>"
+        +       "<button type='button' id='UrlBtn' onclick='addURLBox()' value='Add Row'>Add URL</button>"
+        +   "</div>"
+
+        +   "<div id='removeUrlBtn' class='col-md-3'>"
+        +       "<button type='button' id='UrlBtn' onclick='removeURLBox()' value='Remove Row'>Remove URL</button>"
+        +   "</div>"
+
+        + "</div>")
 }
 
 function removeURLBox() {
@@ -296,12 +369,38 @@ function isURL(url) {
 function concatURLs() {
 
     // Only if there is more than a single textbox do we need to concat the textboxes.
-    if (x > 1) {
-        for (var i = 1; i < x; i++) {
-            var dataSource = document.getElementById("url_0").value; // Get first textbox.
-            var textboxValue = document.getElementById("url_" + i).value; // Get second text box.
-            document.getElementById("url_0").value = dataSource + "," + textboxValue; // Combine their values delineated by a comma.
+    if (x > 0)
+    {
+        var firstSet;
+        var leftTextBox
+        var rightTextBox
+
+        if (document.getElementById('SequentialReads').checked)
+        {
+            document.getElementById('DataSource').value = document.getElementById('url_l_0').value;
         }
+
+        else
+        {
+            // Define the base case, so we can concat easily.
+            leftTextBox = document.getElementById('url_l_0').value;
+            rightTextBox = document.getElementById('url_r_0').value;
+            firstSet = leftTextBox + "," + rightTextBox;
+            document.getElementById('DataSource').value = firstSet;
+
+            // For the rest of the URLs.
+            for (var i = 1; i < x; i++)
+            {
+                var dataSource = document.getElementById('DataSource').value;
+
+                leftTextBox = document.getElementById('url_l_' + i).value;
+                rightTextBox = document.getElementById('url_r_' + i).value;
+
+                document.getElementById('DataSource').value = dataSource + "," + leftTextBox + "," + rightTextBox;
+            }
+        }
+
+
     }
 }
 
@@ -320,15 +419,22 @@ $(function ()
     {
         if ($(this).is(':checked'))
         {
+            addURLBox(); // Add URL boxes to the page.
+            addURLButtons(); // Add URL buttons to the page.
             $("#PELength").show();
             $("#JumpReadsGroup").hide();
-            $("#MasurcaPEGroup").show();
+            $("#SequentialReadsGroup").hide();
         }
 
-        else{
+        else
+        {
+            $("#addUrlRow").empty(); // Delete the URL boxes from the page.
+            $("#addUrlBtns").empty(); // Delete the URL buttons from the page.
             $("#PELength").hide();
+            $("#SequentialReadsGroup").show();
             $("#JumpReadsGroup").show();
-            $("#MasurcaPEGroup").hide();
+
+            x = 0; // Reset the URL box counter.
         }
     });
 
@@ -337,15 +443,49 @@ $(function ()
     {
         if ($(this).is(':checked'))
         {
+            addURLBox(); // Add URL boxes to the page.
+            addURLButtons(); // Add URL buttons to the page.
             $("#JumpLength").show();
             $("#PEReadsGroup").hide();
+            $("#SequentialReadsGroup").hide();
             $("#MasurcaJumpGroup").show();
         }
 
-        else {
+        else
+        {
+            $("#addUrlRow").empty(); // Delete the URL boxes from the page.
+            $("#addUrlBtns").empty(); // Delete the URL buttons from the page.
             $("#JumpLength").hide();
+            $("#SequentialReadsGroup").show();
             $("#PEReadsGroup").show();
             $("#MasurcaJumpGroup").hide();
+
+            x = 0; // Reset the URL box counter.
+        }
+    });
+
+    // Hide Jump Reads box if checkbox is left unchecked.
+    $("#SequentialReads").click(function () {
+        if ($(this).is(':checked'))
+        {
+            addURLBox(true); // Add URL boxes to the page.
+            $("#JumpLength").hide();
+            $("#PEReadsGroup").hide();
+            $("#JumpReadsGroup").hide();
+            $("#SequentialReadsGroup").show();
+            $("#SequentialLength").show();
+        }
+
+        else
+        {
+            $("#addUrlRow").empty(); // Delete the URL boxes from the page.
+            $("#addUrlBtns").empty(); // Delete the URL buttons from the page (may not need this).
+            $("#SequentialLength").hide();
+            $("#JumpReadsGroup").show();
+            $("#PEReadsGroup").show();
+            $("#MasurcaJumpGroup").show();
+
+            x = 0; // Reset the URL box counter.
         }
     });
 });
