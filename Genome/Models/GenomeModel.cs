@@ -69,11 +69,11 @@ namespace Genome.Models
         [DefaultValue(1)]
         public int MasurcaCurrentStep { get; set; }
 
-        [Display(Name = "Masurca PE Mean")]
-        public int? MasurcaPEMean { get; set; }
+        [Display(Name = "Masurca Mean")]
+        public int? MasurcaMean { get; set; }
 
-        [Display(Name = "Masurca PE Standard Deviation")]
-        public int? MasurcaPEStdev { get; set; }
+        [Display(Name = "Masurca Standard Deviation")]
+        public int? MasurcaStdev { get; set; }
 
         [Display(Name = "Masurca Graph K-Mer Value")]
         [Range(25, 101)]

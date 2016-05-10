@@ -55,11 +55,11 @@ namespace Genome.Helpers
             if (genomeModel.PEReads == false)
                 genomeModel.PairedEndLength = 0;
 
-            if (genomeModel.MasurcaPEMean == null)
-                genomeModel.MasurcaPEMean = 180;
+            if (genomeModel.MasurcaMean == null)
+                genomeModel.MasurcaMean = 180;
 
-            if (genomeModel.MasurcaPEStdev == null)
-                genomeModel.MasurcaPEStdev = 20;
+            if (genomeModel.MasurcaStdev == null)
+                genomeModel.MasurcaStdev = 20;
 
             // This could ALSO be set to auto which makes it calculated by the program.
             if (genomeModel.MasurcaGraphKMerValue == null)

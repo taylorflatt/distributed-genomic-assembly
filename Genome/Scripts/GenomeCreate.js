@@ -423,7 +423,6 @@ $(function ()
             $("#PELength").show();
             $("#JumpReadsGroup").hide();
             $("#SequentialReadsGroup").hide();
-            $("#MasurcaPEGroup").show();
         }
 
         else
@@ -433,7 +432,6 @@ $(function ()
             $("#PELength").hide();
             $("#SequentialReadsGroup").show();
             $("#JumpReadsGroup").show();
-            $("#MasurcaPEGroup").hide();
 
             x = 0; // Reset the URL box counter.
         }
@@ -475,7 +473,6 @@ $(function ()
             $("#JumpReadsGroup").hide();
             $("#SequentialReadsGroup").show();
             $("#SequentialLength").show();
-            $("#MasurcaPEGroup").hide();
         }
 
         else

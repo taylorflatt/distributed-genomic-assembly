@@ -12,7 +12,7 @@ namespace Genome.Helpers
         public string InitConfigURL { get; set; }
         public string SchedulerConfigURL { get; set; }
 
-        public string BuildMasurcaConfig(GenomeModel genomeModel, string[] dataSource)
+        public string BuildMasurcaConfig(GenomeModel genomeModel, List<string> dataSource)
         {
             string urlPath = "AssemblerConfigs/" + "Job" + genomeModel.uuid + "/";
             string path = AppDomain.CurrentDomain.BaseDirectory + "AssemblerConfigs\\" + "Job" + genomeModel.uuid + "\\";
@@ -34,13 +34,21 @@ namespace Genome.Helpers
                 //data params
                 if (genomeModel.PEReads)
                 {
-                    tw.WriteLine("PE= pe " + genomeModel.PairedEndLength + " 20  " + dataString);
+                    if(dataSource.Count > 1)
+                        tw.WriteLine("PE= pe " + genomeModel.MasurcaMean + genomeModel.MasurcaStdev + "leftReads.fastq rightReads.fastq");
+
+                    else
+                        tw.WriteLine("PE= pe " + genomeModel.MasurcaMean + genomeModel.MasurcaStdev + "sequentialData.fastq");
                 }
 
                 // These locations are not the same, used for now for development purposes
                 else if (genomeModel.JumpReads)
                 {
-                    tw.WriteLine("JUMP= sh " + genomeModel.JumpLength + " 200  " + dataString);
+                    if (dataSource.Count > 1)
+                        tw.WriteLine("JUMP= sh " + genomeModel.MasurcaMean + genomeModel.MasurcaStdev + "leftReads.fastq rightReads.fastq");
+
+                    else
+                        tw.WriteLine("JUMP= sh " + genomeModel.MasurcaMean + genomeModel.MasurcaStdev + "sequentialData.fastq");
                 }
 
                 tw.WriteLine("END");
@@ -95,7 +103,7 @@ namespace Genome.Helpers
                 // If we have sequential reads there will be only a single URL:
                 if(dataSources.Count == 1)
                 {
-                    tw.WriteLine("wget " + dataSources[0].ToString());
+                    tw.WriteLine("wget -O sequentialData.fastq" + dataSources[0].ToString());
                 }
 
                 // If we have any other type of reads there will be at least a left and right read:
