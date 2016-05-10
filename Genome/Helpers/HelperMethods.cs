@@ -61,9 +61,8 @@ namespace Genome.Helpers
             if (genomeModel.MasurcaStdev == null)
                 genomeModel.MasurcaStdev = 20;
 
-            // This could ALSO be set to auto which makes it calculated by the program.
+            // We don't specify anything here. If it is null, we set it to AUTO in the masurca method of the config builder.
             if (genomeModel.MasurcaGraphKMerValue == null)
-                genomeModel.MasurcaGraphKMerValue = 50; 
 
             if (genomeModel.MasurcaKMerErrorCount == null)
                 genomeModel.MasurcaKMerErrorCount = 1;
