@@ -39,8 +39,6 @@ namespace Genome.Controllers
                     genomeModel.CreatedBy = User.Identity.Name;
                     genomeModel.CreatedDate = DateTime.UtcNow;
 
-                    
-
                     ConfigBuilder builder = new ConfigBuilder();
 
                     List <string> dataSources = HelperMethods.ParseUrlString(genomeModel.DataSource);
@@ -51,26 +49,48 @@ namespace Genome.Controllers
                     string masurcaURL = builder.BuildMasurcaConfig(genomeModel, dataSources, seed);
 
                     string error = "";
+                    string badUrl = "";
 
+                    /// TODO: Start the download of their data on BigDog to see if we can get each URL. If we cannot, then we just terminate 
+                    /// and tell them the error we receieved.
                     SSHConfig ssh = new SSHConfig(Locations.BD_IP, genomeModel, "", out error);
 
-                    ssh.CreateJob(initURL, masurcaURL, out error);
+                    ssh.TestJobUrls(out error, out badUrl);
 
-                    //ssh.CreateConnection(out error);
-
-                    // No error so proceed.
-                    if (string.IsNullOrEmpty(error))
+                    if(string.IsNullOrEmpty(badUrl) && string.IsNullOrEmpty(error))
                     {
-                        //db.GenomeModels.Add(genomeModel);
-                        //db.SaveChanges();
-                        return RedirectToAction("Details", new { id = genomeModel.uuid });
+                        /// We can instead pass in the SEED variable which will be used to reference the method in Locations to grab the correct file(s).
+                        /// This is the ideal solution which will be implemented only once we know that the system works with the direct URL.
+                        ssh.CreateJob(initURL, masurcaURL, out error);
+
+                        //ssh.CreateConnection(out error);
+
+                        // No error so proceed.
+                        if (string.IsNullOrEmpty(error))
+                        {
+                            //db.GenomeModels.Add(genomeModel);
+                            //db.SaveChanges();
+                            return RedirectToAction("Details", new { id = genomeModel.uuid });
+                        }
+
+                        // Redisplay the data and display the error.
+                        else
+                        {
+                            ViewBag.ConnectionError = "There was an error with the connection to BigDog. The following is the error we encountered: ";
+                            ViewBag.ConnectionErrorDetails = error;
+
+                            return View(genomeModel);
+                        }
                     }
 
                     // Redisplay the data and display the error.
                     else
                     {
-                        ViewBag.ConnectionError = "There was an error with the connection to BigDog. The following is the error we encountered: ";
-                        ViewBag.ConnectionErrorDetails = error;
+                        ViewBag.ConnectionError = "There was an error with the URLs provided. We weren't able to locate or download at least one of your files. The file we could not download was: " + badUrl + ".";
+
+                        if(!string.IsNullOrEmpty(error))
+                            ViewBag.ConnectionErrorDetails = "The following is additional error information that we encountered: " + error;
+                        
 
                         return View(genomeModel);
                     }

@@ -155,6 +155,47 @@ namespace Genome.Helpers
             this.path = path;
         }
 
+        // Will return TRUE if the data URLs work or FALSE otherwise. (UNTESTED)
+        public bool TestJobUrls(out string error, out string badUrl)
+        {
+            using (var client = new SshClient(Locations.BD_IP, genomeModel.SSHUser, genomeModel.SSHPass))
+            {
+                badUrl = "";
+                error = "";
+
+                // Create a seed value to reduce the risk of them having already created the folder.
+                Random rand = new Random();
+                int seed = rand.Next(1, 50102);
+
+                List<string> urlList = HelperMethods.ParseUrlString(genomeModel.DataSource);
+
+                LinuxCommands.CreateDirectory(client, "GENOME_ASSEMBLER_test_urls_" + seed, out error);
+
+                foreach (var url in urlList)
+                {
+                    // If there is an error downloading the file, then we break the loop.
+                    if (!LinuxCommands.CheckDataAvailability(client, url, out error))
+                    {
+                        badUrl = url;
+                        break;
+                    }
+                }
+
+                if (string.IsNullOrEmpty(error)) { LinuxCommands.ChangeDirectory(client, "..", out error); }
+                if (string.IsNullOrEmpty(error)) { LinuxCommands.RemoveFile(client, "GENOME_ASSEMBLER_test_urls_" + seed, out error, "-rf"); }
+                if (!string.IsNullOrEmpty(error))
+                {
+                    // We need to do some checking here maybe and see if we can do anything about errors.
+                }
+
+                if (string.IsNullOrEmpty(badUrl))
+                    return true;
+
+                else
+                    return false;
+            }
+        }
+
         // Will return TRUE if successful connection and commands all run or FALSE if ANY error is encountered.
         public bool CreateJob(string initUrl, string masurcaUrl, out string error)
         {
