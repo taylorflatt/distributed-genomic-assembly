@@ -22,6 +22,21 @@ namespace Genome.Helpers
             }
         }
 
+        protected internal static bool CheckDataAvailability(SshClient client, string url, out string error)
+        {
+            using (var cmd = client.CreateCommand("wget --server-response --spider -O - " + url + " > /dev/null 2>download.log | grep 'Remote file exists' download.log | wc -l"))
+            {
+                cmd.Execute();
+
+                LinuxErrorHandling.CommandError(cmd, out error);
+
+                if (string.IsNullOrEmpty(error) && Convert.ToInt32(cmd.Result) > 0)
+                    return true;
+
+                return false;
+            }
+        }
+
         // We check the user's current quota against a minQuota passed into the method. We assume in Gb.
         protected internal static bool CheckQuota(SshClient client, int minQuota, out string error, out int quotaAmount)
         {
