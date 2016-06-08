@@ -22,7 +22,7 @@
     color: #B12F2F;
 }
 
-/* Tooltip Section - Consider Viewport for the future, but for immediate use acceptance, we statically assigned many of the values. */
+/* Tooltip Section - Consider Viewport for the future, but for immediate use/acceptance, we statically assigned many of the values. */
 a.tooltips {
   position: relative;
   display: inline;
@@ -31,6 +31,7 @@ a.tooltips {
   text-decoration: none;
   cursor: default;
 }
+
 a.tooltips span {
   position: absolute;
   width:300px;
@@ -44,6 +45,7 @@ a.tooltips span {
   font-size: 14px;
   padding: 5px 5px 5px 5px; /* Add padding so it doesn't touch the edge of the box. */
 }
+
 a.tooltips span:after {
   content: '';
   position: absolute;
@@ -55,6 +57,7 @@ a.tooltips span:after {
   border-right: 8px solid transparent;
   border-left: 8px solid transparent;
 }
+
 a:hover.tooltips span {
   visibility: visible;
   opacity: 0.8;

@@ -67,13 +67,14 @@ namespace Genome.Models
     public class RegisterViewModel
     {
         [Required]
-        [EmailAddress]
+        [UniqueEmailAddress]
         [Display(Name = "Email")]
         public string Email { get; set; }
 
         [Required]
         [Display(Name = "SIU Dawgtag")]
-        [UniqueDawgTag(ErrorMessage = "The DawgTag entered is currently associated with another user.")]
+        [RegularExpression(@"^\d{0,9}$", ErrorMessage = "Your dawg tag must be exactly 9 digits in length.")]
+        [UniqueDawgTag]
         public int DawgTag { get; set; }
 
         [DefaultValue(false)]
