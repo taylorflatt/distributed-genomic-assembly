@@ -86,7 +86,7 @@ namespace Genome.Controllers
                     // Redisplay the data and display the error.
                     else
                     {
-                        ViewBag.ConnectionError = "There was an error with the URLs provided. We weren't able to locate or download at least one of your files. The file we could not download was: " + badUrl + ".";
+                        ViewBag.ConnectionError = "There was an error with the URLs provided. We weren't able to locate or download at least one of your files. The file we had a problem with was: " + badUrl + ".";
 
                         if(!string.IsNullOrEmpty(error))
                             ViewBag.ConnectionErrorDetails = "The following is additional error information that we encountered: " + error;

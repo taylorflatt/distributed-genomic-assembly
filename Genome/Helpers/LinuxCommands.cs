@@ -24,6 +24,7 @@ namespace Genome.Helpers
 
         protected internal static bool CheckDataAvailability(SshClient client, string url, out string error)
         {
+            // We check to see if we can access the file at the location specified by the user. If we can, then we will proceede with the process.
             using (var cmd = client.CreateCommand("wget --server-response --spider -O - " + url + " > /dev/null 2>download.log | grep 'Remote file exists' download.log | wc -l"))
             {
                 cmd.Execute();
