@@ -1,283 +1,346 @@
-﻿// Global Variables
+﻿/* 
+    The purpose of this is to error check the data entered into the Create Job wizard.
+*/
+
+
+
+
+// TODO: On the FINAL step, we need to know which assemblers the user wants to use. That means, we need to grab the checked boxes 
+// AGAIN and only care about the data under those assemblers. Or find some other method/work around to handle moving back and forth.
+
+
+
+
+// Global Variables
 
 // Corresponds to a SET of textboxes (Left and Right reads for instance (two URLs)).
-var x = 0; 
+var numTextboxSet = 0;
 
-// Used to manage the steps that need to be displayed for the assemblers.
-var MasurcaStep = 0;
-var SGAStep = 0;
-var WGSStep = 0;
-var AssemblerSteps = [MasurcaStep, SGAStep, WGSStep];
+// Corresponds to the number of assemblers deployed.
+var numAssemblers = 3;
 
-function Step1MoveForward() {
-    document.getElementById('Step1').style.display = "none";
-    document.getElementById('Step2').style.display = "block";
+// This will be dynamically created at runtime to contain a key/value pair corresponding to the rank (step number) and the existence of 
+// the step (true if it was checked and false if it was not). This is so we can manage how to go forward and backward dynamically.
+var wizardSteps = [];
+
+var numWizardSteps = 7;
+
+// Changes the state of the wizard from one step to the next. Next can refer to forward or backward movement.
+function ChangeStep(currentStep, nextStep) {
+    document.getElementById(currentStep).style.display = "none"; // Hide the contents of the current step.
+    document.getElementById(nextStep).style.display = "block"; // Display the contents of the next step.
 }
 
-function Step2MoveBack(){
-    document.getElementById('Step2').style.display = "none";
-    document.getElementById('Step1').style.display = "block";
+function ClearWarning(location) {
+    document.getElementById(location).style.display = "none";
 }
 
-function Step2MoveForward() {
-    var invalidData = 0;
-    var invalidURL = 0; // Determine if we still have an invalid URL.
+function AddWarning(location, message) {
+    document.getElementById(location).innerHTML = message;
+}
 
-    // Check that something was entered into the textboxes.
-    if (x > 0)
+function IsEmpty(location) {
+    return (location == null || location === '');
+}
+
+function VerifyStep2() {
+    var dataInvalid = false;
+
+    // TODO: Reset ALL warning/error messages prior to running through this each time to make certain that old messages get removed.
+
+    // Check that at least a single data source was entered for the different read types.
+    if (numTextboxSet > 0)
     {
         // We have sequential reads.
         if (document.getElementById('SequentialReads').checked)
         {
-            if (document.getElementById("url_l_0").value == "")
+            if (IsEmpty(document.getElementById("url_l_0").value))
             {
-                document.getElementById("DataSourceErrorMsg_0").innerHTML = "You need to enter a data source!";
-                invalidData++;
-                invalidURL++;
+                AddWarning("DataSourceErrorMsg_0", "You need to enter a data source (URL).");
+                dataInvalid = true;
             }
 
-            else {
-                document.getElementById("DataSourceErrorMsg_0").innerHTML = "";
-            }
+            else
+                ClearWarning('DataSourceErrorMsg_0');
         }
 
         // We have other read types.
-        else
-        {
-            for (var i = 0; i < x; i++)
-            {
-                // They added a textbox and didn't enter anything in it.
-                if (document.getElementById("url_l_" + i).value == "" ||
-                    document.getElementById("url_r_" + i).value == "")
-                {
-                    document.getElementById("DataSourceErrorMsg_" + i).innerHTML = "You need to enter a data source!";
-                    invalidData++;
-                    invalidURL++;
+        else {
+            for (var i = 0; i < numTextboxSet; i++) {
+                // They added a textbox but didn't enter anything in it.
+                if (IsEmpty(document.getElementById("url_l_" + i).value) || IsEmpty(document.getElementById("url_r_" + i).value)) {
+                    AddWarning("DataSourceErrorMsg_" + i, "You need to enter a data source (URL).");
+                    dataInvalid = true;
                 }
 
-                // They added a textbox but entered something (anything) into it.
                 else
-                {
-                    document.getElementById("DataSourceErrorMsg_" + i).innerHTML = "";
-                }
+                    ClearWarning("DataSourceErrorMsg_" + i);
             }
         }
-
-        // If there are no errors, make sure the the error message for the first textbox is nulled.
-        //if (invalidURL == 0)
-        //{
-        //    document.getElementById("DataSourceErrorMsg_" + x).innerHTML = "";
-        //    invalidURL = 0;
-        //}
     }
 
-
-    // Paired-end read validation is only done if paired-end reads is checked.
-    if (document.getElementById("PEReads").checked)
-    {
+    // Now check the other information.
+    if (document.getElementById("PEReads").checked) {
         var input = document.getElementById("PELengthInput").value;
 
-        if (input == "")
-        {
-            document.getElementById("PELengthErrorMsg").innerHTML = "The value you entered was invalid. You must enter a number from 0-100!";
-            invalidData++;
+        // Nothing was entered into the textbox.
+        if (IsEmpty(input)) {
+            AddWarning("PELengthErrorMsg", "The value you entered was invalid. You must enter a number from 0-100!");
+            dataInvalid = true;
         }
 
-        // Make sure the value of the box is between 0 and 100. (TEST - MAY REMOVE) (WORKS)
-        else if(input < 0 || input > 100)
-        {
-            document.getElementById("PELengthErrorMsg").innerHTML = "The value you entered was invalid. You may only enter numbers from 0-100!";
-            invalidData++;
+        // Make sure the value of the box is between 0 and 100.
+        else if (input < 0 || input > 100) {
+            AddWarning("PELengthErrorMsg", "The value you entered was invalid. You may only enter numbers from 0-100!");
+            dataInvalid = true;
         }
 
-        else
-        {
-            // We can remove the error if they have corrected it but not ALL errors.
-            document.getElementById("PELengthErrorMsg").innerHTML = "";
-        }
+        else 
+            ClearWarning("PELengthErrorMsg");
     }
 
     // Jump read validation is only done if Jump reads is checked.
-    else if (document.getElementById("JumpReads").checked)
-    {
+    else if (document.getElementById("JumpReads").checked) {
         var input = document.getElementById("JumpLengthInput").value;
 
-        if (input == "")
-        {
-            document.getElementById("JumpLengthErrorMsg").innerHTML = "The value you entered was invalid. You must enter a number from 0-100!";
-            invalidData++;
-        }
-
-        // Make sure the value of the box is between 0 and 100. (TEST - MAY REMOVE) (WORKS)
-        else if (input < 0 || input > 100)
-        {
-            document.getElementById("JumpLengthErrorMsg").innerHTML = "The value you entered was invalid. You may only enter numbers from 0-100!";
-            invalidData++;
-        }
-
-        else
-        {
-            // We can remove the error if they have corrected it but not ALL errors.
-            document.getElementById("JumpLengthErrorMsg").innerHTML = "";
-        }
-    }
-
-        // Jump read validation is only done if Jump reads is checked.
-    else if (document.getElementById("SequentialReads").checked)
-    {
-        var input = document.getElementById("SequentialLengthInput").value;
-
-        if (input == "") {
-            document.getElementById("SequentialLengthErrorMsg").innerHTML = "The value you entered was invalid. You must enter a number from 0-100!";
-            invalidData++;
+        if (IsEmpty(input)) {
+            AddWarning("JumpLengthErrorMsg", "The value you entered was invalid. You must enter a number from 0-100!");
+            dataInvalid = true;
         }
 
             // Make sure the value of the box is between 0 and 100. (TEST - MAY REMOVE) (WORKS)
         else if (input < 0 || input > 100) {
-            document.getElementById("SequentialLengthErrorMsg").innerHTML = "The value you entered was invalid. You may only enter numbers from 0-100!";
-            invalidData++;
+            AddWarning("JumpLengthErrorMsg", "The value you entered was invalid. You may only enter numbers from 0-100!");
+            dataInvalid = true;
         }
 
-        else {
-            // We can remove the error if they have corrected it but not ALL errors.
-            document.getElementById("SequentialLengthErrorMsg").innerHTML = "";
+        else
+            ClearWarning("JumpLengthErrorMsg");
+    }
+
+    // Jump read validation is only done if Jump reads is checked.
+    else if (document.getElementById("SequentialReads").checked) {
+        var input = document.getElementById("SequentialLengthInput").value;
+
+        if (IsEmpty(input)) {
+            AddWarning("SequentialLengthErrorMsg", "The value you entered was invalid. You must enter a number from 0-100!");
+            dataInvalid = true;
         }
+
+            // Make sure the value of the box is between 0 and 100. (TEST - MAY REMOVE) (WORKS)
+        else if (input < 0 || input > 100) {
+            AddWarning("SequentialLengthErrorMsg", "The value you entered was invalid. You may only enter numbers from 0-100!");
+            dataInvalid = true;
+        }
+
+        else
+            ClearWarning("SequentialLengthErrorMsg");
     }
 
-    // If neither box was checked, then we need to stop them from moving to the next step.
+        // If no box was checked, then we need to stop them from moving to the next step.
+    else {
+        AddWarning("checkBoxError", "You must choose at least one type of reads prior to proceeding to the next step.")
+        dataInvalid = true;
+    }
+
+    // Move to the next step only if all data is valid.
+    if (!dataInvalid) {
+        ClearWarning("PELengthErrorMsg");
+        ClearWarning("JumpLengthErrorMsg");
+        ClearWarning("WizardErrors");
+        ClearWarning("RemoveURLErrorMsg");
+        ClearWarning("PEReadsErrorMsg");
+        ClearWarning("JumpReadsErrorMsg");
+        ClearWarning("SequentialReadsErrorMsg");
+        ClearWarning("SequentialLengthErrorMsg");
+
+        ChangeStep('Step2', 'Step3');
+    }
+
     else
-    {
-        document.getElementById("PEReadsErrorMsg").innerHTML = "You need to at least check one of these boxes!";
-        document.getElementById("JumpReadsErrorMsg").innerHTML = "You need to check at least one of these boxes!";
-        document.getElementById("SequentialReadsErrorMsg").innerHTML = "You need to check at least one of these boxes!";
-        invalidData++;
-    }
-
-    if (invalidData == 0)
-    {
-        document.getElementById("PELengthErrorMsg").innerHTML = "";
-        document.getElementById("JumpLengthErrorMsg").innerHTML = "";
-        document.getElementById("WizardErrors").innerHTML = "";
-        document.getElementById("RemoveURLErrorMsg").innerHTML = "";
-        document.getElementById("PEReadsErrorMsg").innerHTML = "";
-        document.getElementById("JumpReadsErrorMsg").innerHTML = "";
-        document.getElementById("SequentialReadsErrorMsg").innerHTML = "";
-        document.getElementById("SequentialLengthErrorMsg").innerHTML = "";
-
-        // Move to the next step.
-        document.getElementById('Step2').style.display = "none";
-        document.getElementById('Step3').style.display = "block";
-    }
-
-    else
-    {
-        // Write an error message at the top of the page indicating that one or more fields are incorrect.
-        document.getElementById("WizardErrors").innerHTML = "Please correct the errors before proceeding!";
-    }
+        AddWarning("WizardErrors", "Please Correct the errors prior to proceeding to the next step.")
 }
 
-function Step3MoveBack() {
+// Displays the (variable) assembler steps that depend upon the global AssemblerSteps array to determine which (if any) assembler 
+// steps to show next. 
+function DisplayAssemblerStep(currentStep, forward)
+{
+    if (typeof (forward) != "boolean")
+        throw "Forward must be a boolean (true/false) value.";
 
-    document.getElementById('Step3').style.display = "none";
-    document.getElementById('Step2').style.display = "block";
+    if (typeof (currentStep) != "string")
+        throw "CurrentStep must be a string.";
+
+    // Special Case: We are on the last step and thus do not have a step number.
+    if (currentStep == "FinalStep")
+    {
+        // We want to find the last step that was checked. We then add 3 for the 3 steps that come before it and 1 more because of the zero index so + 4.
+        var previousAssemblerStep = assemblerSteps.lastIndexOf(true) + 4;
+
+        ChangeStep("FinalStep", "Step" + previousAssemblerStep)
+    }
+
+    // Now we determine the other steps.
+    else
+    {
+        var currentStepNum = parseInt(currentStep.split("p")[1], 10); // Only get the current step number.
+
+        // Move to a next assembler step.
+        if (forward) {
+            // Note: Keep in mind that currentStepNum is based on a 1 starting index and wizardSteps is based on a zero index.
+            for (var index = currentStepNum; index < numWizardSteps; index++)
+            {
+                if (wizardSteps[index].value)
+                {
+                    // Special Case: If we are going to the last step, we must call it predictably.
+                    if (index = numWizardSteps - 1)
+                    {
+                        ChangeStep(currentStep, "FinalStep");
+                        break;
+                    }
+
+                    else
+                    {
+                        ChangeStep(currentStep, "Step" + (wizardSteps[index].key + 1)); // Increment by 1 because of the differing indices.
+                        break;
+                    }
+                }
+            }
+        }
+
+        else
+        {
+            for(var index = currentStepNum; index >= 0; index--)
+            {
+                if(wizardSteps[index - 1].value)
+                {
+                    ChangeStep(currentStep, "Step" + (wizardSteps[index - 1].key));
+                    break;
+                }
+            }
+        }
+    }
 }
 
 // Choose Assembler Step
-function Step3MoveForward() {
+function VerifyStep3() {
+    numAssemblerSteps = 3;
+    var checkedAssemblers = [false,false,false]
 
     // Check if an assembler is checked.
-    if (document.getElementById('UseMasurca').checked) {
-        AssemblerSteps[0] = 1;
-    }
+    if (document.getElementById('UseMasurca').checked)
+        checkedAssemblers[0] = true;
 
-    if (document.getElementById('UseSGA').checked) {
-        AssemblerSteps[1] = 1;
-    }
+    if (document.getElementById('UseSGA').checked)
+        checkedAssemblers[1] = true;
 
-    if (document.getElementById('UseWGS').checked) {
-        AssemblerSteps[2] = 1;
-    }
+    if (document.getElementById('UseWGS').checked)
+        checkedAssemblers[2] = true;
 
-    // Display the correct first step.
-    if (AssemblerSteps[0] == 1) {
-        document.getElementById('Step3').style.display = "none";
-        document.getElementById('Step4').style.display = "block"; // Masurca Assembler step
+    if (checkedAssemblers.indexOf(true) === -1)
+        AddWarning("AssemblerChoiceErrorMsg", "You must at least select a single assembler to run on the data!");
 
-        document.getElementById("AssemblerChoiceErrorMsg").innerHTML = "";
-    }
-
-    else if (AssemblerSteps[1] == 1) {
-        document.getElementById('Step3').style.display = "none";
-        document.getElementById('Step5').style.display = "block"; // SGA Assembler step
-
-        document.getElementById("AssemblerChoiceErrorMsg").innerHTML = "";
-    }
-
-    else if (AssemblerSteps[2] == 1) {
-        document.getElementById('Step3').style.display = "none";
-        document.getElementById('Step6').style.display = "block"; // WGS Assembler step
-
-        document.getElementById("AssemblerChoiceErrorMsg").innerHTML = "";
-    }
-
-    // They didn't select at least a single assembler to run their data through.
+    // TODO: MOVE FIRST THREE STEPS OUTSIDE AND MAKE THEM DEFAULT PART OF THE ARRAY.
     else
     {
-        document.getElementById("AssemblerChoiceErrorMsg").innerHTML = "You must at least select a single assembler to run on the data!";
+        // Here we dynamically create the wizard step list.
+        for (var i = 0; i < numWizardSteps; i++)     // numAssemblers + 4 will always be the total number of steps.
+        {
+            // First three static steps.
+            if (i < 3)
+            {
+                wizardSteps.push(
+                    {
+                        key: i,
+                        value: true
+                    });
+            }
+
+            // Three assemblers steps.
+            else if (i >= 3 && i < numWizardSteps - 1)
+            {
+                if (checkedAssemblers[i - 3])
+                {
+                    wizardSteps.push(
+                    {
+                        key: i,
+                        value: true
+                    });
+                }
+
+                else
+                {
+                    wizardSteps.push(
+                    {
+                        key: i,
+                        value: false
+                    });
+                }
+            }
+
+            // Final step.
+            else
+            {
+                wizardSteps.push(
+                {
+                    key: i,
+                    value: true
+                });
+            }
+        }
+
+        ClearWarning("AssemblerChoiceErrorMsg");
+        DisplayAssemblerStep("Step3", true);
     }
 }
 
+function VerifyTestStep()
+{
+    DisplayAssemblerStep("Step5", true);
+}
+
+function VerifyTestStep2() {
+    DisplayAssemblerStep("Step6", true);
+}
+
 // Masurca Assembler Step
-function Step4MoveForward() {
-    var invalidData = 0;
+function VerifyMasurcaStep() {
+    var dataInvalid = false;
+
     var graphKmerValue = document.getElementById("MasurcaGraphKMerValue").value;
     var kmerValueThreshold = document.getElementById("MasurcaKMerErrorCount").value;
     var cpuThreadNum = document.getElementById("MasurcaThreadNum").value;
 
-
-    if (graphKmerValue != "" && (betweenInclusive(parseInt(graphKmerValue, 10), 25, 101)) == false)
+    // The graph kmer value entered is not within a valid range.
+    if (!IsEmpty(graphKmerValue) && (betweenInclusive(parseInt(graphKmerValue, 10), 25, 101)) == false)
     {
-        document.getElementById("GraphKmerErrorMsg").innerHTML = "The value you entered was invalid. You may only enter numbers from 25 and 101. Leave blank for auto.";
-        invalidData++;
+        AddWarning("GraphKmerErrorMsg", "The value you entered was invalid. You may only enter numbers from 25 and 101. Leave blank for auto.");
+        dataInvalid = true;
     }
 
-    if(kmerValueThreshold != "" && (betweenInclusive(parseInt(kmerValueThreshold, 10), 1, 2)) == false)
+    if(!IsEmpty(kmerValueThreshold) && (betweenInclusive(parseInt(kmerValueThreshold, 10), 1, 2)) == false)
     {
-        document.getElementById("KMerCountThresholdErrorMsg").innerHTML = "The value you entered was invalid. You may only enter numbers between 1 and 2. Leave blank for auto.";
-        invalidData++;
+        AddWarning("KMerCountThresholdErrorMsg", "The value you entered was invalid. You may only enter numbers between 1 and 2. Leave blank for auto.");
+        dataInvalid = true;
     }
 
-    if (cpuThreadNum != "" && (betweenInclusive(parseInt(cpuThreadNum, 10), 1, 20)) == false)
+    if (!IsEmpty(cpuThreadNum) && (betweenInclusive(parseInt(cpuThreadNum, 10), 1, 20)) == false)
     {
-        document.getElementById("ThreadNumErrorMsg").innerHTML = "The value you entered was invalid. You may only enter numbers between 1 and 20.";
-        invalidData++;
+        AddWarning("ThreadNumErrorMsg", "The value you entered was invalid. You may only enter numbers between 1 and 20.");
+        dataInvalid = true;
     }
 
-    if (invalidData == 0) {
-        document.getElementById("GraphKmerErrorMsg").innerHTML = "";
-        document.getElementById("KMerCountThresholdErrorMsg").innerHTML = "";
-        document.getElementById("ThreadNumErrorMsg").innerHTML = "";
-        document.getElementById("WizardErrors").innerHTML = "";
+    if (!dataInvalid) {
+        ClearWarning("GraphKmerErrorMsg");
+        ClearWarning("KMerCountThresholdErrorMsg");
+        ClearWarning("ThreadNumErrorMsg");
+        ClearWarning("WizardErrors");
 
-        if (AssemblerSteps[1] == 1) {
-            document.getElementById('Step4').style.display = "none";
-            document.getElementById('Step5').style.display = "block"; // SGA Assembler step
-        }
-
-        else if (AssemblerSteps[2] == 1) {
-            document.getElementById('Step4').style.display = "none";
-            document.getElementById('Step6').style.display = "block"; // WGS Assembler step
-        }
-
-        else {
-            document.getElementById('Step4').style.display = "none";
-            document.getElementById('FinalStep').style.display = "block"; // Final step
-        }
+        DisplayAssemblerStep("Step4", true);
     }
 
-    else {
-        document.getElementById("WizardErrors").innerHTML = "Please correct the errors before proceeding!";
-    }
+    else
+        AddWarning("WizardErrors", "Please correct the errors before proceeding!");
 }
 
 function Step4MoveBackward() {
@@ -288,11 +351,6 @@ function Step4MoveBackward() {
 function FinalStepMoveBackward() {
     document.getElementById('FinalStep').style.display = "none";
     document.getElementById('Step4').style.display = "block";
-}
-
-function DisplayFinalStepError() {
-    document.getElementById('Step1').style.display = "none";
-    document.getElementById('FinalStep').style.display = "block";
 }
 
 // Need to fix the styling issue on the textbox so it isn't static. On time crunch so I'm statically assigning values.
@@ -308,20 +366,20 @@ function addURLBox(singleURL) {
             + "<div id='DataSourceErrorMsg_0' class='col-md-3 text-danger'></div>"
             + "</div>");
 
-        x++;
+        numTextboxSet++;
     }
 
     else
     {
         $('#addUrlRow').append(
-            "<label id='lab_" + x + "' class='control-label col-md-2' style='padding-top: 8px;'> Data Location: </label>"
-            + "<div class='row' id='row_" + x + "' style='padding-top: 8px;'>"
-            + "<div class='col-md-3'><input type='text' id='url_l_" + x + "' class='form-control text-box single-line' type='text' placeholder='Left Read URL'></div>"
-            + "<div class='col-md-3'><input type='text' id='url_r_" + x + "' class='form-control text-box single-line' type='text' placeholder='Right Read URL'></div>"
-            + "<div id='DataSourceErrorMsg_" + x + "' class='col-md-3 text-danger'></div>"
+            "<label id='lab_" + numTextboxSet + "' class='control-label col-md-2' style='padding-top: 8px;'> Data Location: </label>"
+            + "<div class='row' id='row_" + numTextboxSet + "' style='padding-top: 8px;'>"
+            + "<div class='col-md-3'><input type='text' id='url_l_" + numTextboxSet + "' class='form-control text-box single-line' type='text' placeholder='Left Read URL'></div>"
+            + "<div class='col-md-3'><input type='text' id='url_r_" + numTextboxSet + "' class='form-control text-box single-line' type='text' placeholder='Right Read URL'></div>"
+            + "<div id='DataSourceErrorMsg_" + numTextboxSet + "' class='col-md-3 text-danger'></div>"
             + "</div>");
 
-        x++;
+        numTextboxSet++;
     }
 }
 
@@ -343,14 +401,14 @@ function addURLButtons() {
 }
 
 function removeURLBox() {
-    if (x > 1)
+    if (numTextboxSet > 1)
     {
         document.getElementById("RemoveURLErrorMsg").innerHTML = "";
-        $("#lab_" + --x).remove();
-        $("#row_" + x).remove();
-        $("#col_" + x).remove();
-        $("#url_" + x).remove();
-        $("#DataSourceErrorMsg_" + x).remove();
+        $("#lab_" + --numTextboxSet).remove();
+        $("#row_" + numTextboxSet).remove();
+        $("#col_" + numTextboxSet).remove();
+        $("#url_" + numTextboxSet).remove();
+        $("#DataSourceErrorMsg_" + numTextboxSet).remove();
     }
 
     else
@@ -369,7 +427,7 @@ function isURL(url) {
 function concatURLs() {
 
     // Only if there is more than a single textbox do we need to concat the textboxes.
-    if (x > 0)
+    if (numTextboxSet > 0)
     {
         var firstSet;
         var leftTextBox
@@ -389,7 +447,7 @@ function concatURLs() {
             document.getElementById('DataSource').value = firstSet;
 
             // For the rest of the URLs.
-            for (var i = 1; i < x; i++)
+            for (var i = 1; i < numTextboxSet; i++)
             {
                 var dataSource = document.getElementById('DataSource').value;
 
@@ -434,7 +492,7 @@ $(function ()
             $("#SequentialReadsGroup").show();
             $("#JumpReadsGroup").show();
 
-            x = 0; // Reset the URL box counter.
+            numTextboxSet = 0; // Reset the URL box counter.
         }
     });
 
@@ -460,7 +518,7 @@ $(function ()
             $("#PEReadsGroup").show();
             $("#MasurcaJumpGroup").hide();
 
-            x = 0; // Reset the URL box counter.
+            numTextboxSet = 0; // Reset the URL box counter.
         }
     });
 
@@ -485,7 +543,7 @@ $(function ()
             $("#PEReadsGroup").show();
             $("#MasurcaJumpGroup").show();
 
-            x = 0; // Reset the URL box counter.
+            numTextboxSet = 0; // Reset the URL box counter.
         }
     });
 });

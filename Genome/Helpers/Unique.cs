@@ -68,7 +68,7 @@ namespace Genome.Helpers
                 }
 
                 else
-                    return new ValidationResult("The email address must be a valid SIU email address ending wiht @siu.edu.");
+                    return new ValidationResult("The email address must be a valid SIU email address ending with @siu.edu.");
             }
 
             else

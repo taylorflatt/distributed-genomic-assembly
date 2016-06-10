@@ -49,7 +49,8 @@
             <br />
 
             <div class="form-group">
-                <input type="button" value="Accept" class="btn btn-default" id="AcceptedInstructions" onclick="Step1MoveForward();" required />
+                @*<input type="button" value="Accept" class="btn btn-default" id="AcceptedInstructions" onclick="Step1MoveForward();" required />*@
+                <input type="button" value="Accept" class="btn btn-default" id="AcceptedInstructions" onclick="ChangeStep('Step1', 'Step2');" required />
             </div>
         </div>
 
@@ -60,6 +61,7 @@
             <h3>
                 Initial Data
             </h3>
+            <div id="checkBoxError" class="text-danger"></div>
             <hr />
 
             <div class="form-group">
@@ -192,11 +194,11 @@
 
             <div class="row">
                 <div class="col-md-4">
-                    <input type="button" value="Previous" class="btn btn-default" id="PreviousStep" onclick="Step2MoveBack();" />
+                    <input type="button" value="Previous" class="btn btn-default" id="PreviousStep" onclick="ChangeStep('Step2', 'Step1');" />
                 </div>
 
                 <div class="col-md-4" style="margin-left: 40px;">
-                    <input type="button" value="Next" class="btn btn-default" id="AcceptedInstructions" onclick="Step2MoveForward();" />
+                    <input type="button" value="Next" class="btn btn-default" id="NextStep" onclick="VerifyStep2();" />
                 </div>
             </div>
 
@@ -247,7 +249,7 @@
                     </p>
                     <div class="checkbox col-md-offset-10">
                         @Html.LabelFor(model => model.UseSGA)
-                        <input class="check-box" data-val="true" data-val-required="The SGA Assembler field is required." id="UseSGA" name="UseSGA" type="checkbox" value="true" disabled>
+                        <input class="check-box" data-val="true" data-val-required="The SGA Assembler field is required." id="UseSGA" name="UseSGA" type="checkbox" value="true">
                         @*@Html.EditorFor(model => model.UseSGA)*@
                         @Html.ValidationMessageFor(model => model.UseSGA, "", new { @class = "text-danger" })
                     </div>
@@ -264,7 +266,7 @@
                     </p>
                     <div class="checkbox col-md-offset-10">
                         @Html.LabelFor(model => model.UseWGS)
-                        <input class="check-box" data-val="true" data-val-required="The WGS Assembler field is required." id="UseWGS" name="UseWGS" type="checkbox" value="true" disabled>
+                        <input class="check-box" data-val="true" data-val-required="The WGS Assembler field is required." id="UseWGS" name="UseWGS" type="checkbox" value="true">
                         @*@Html.EditorFor(model => model.UseWGS)*@
                         @Html.ValidationMessageFor(model => model.UseWGS, "", new { @class = "text-danger" })
 
@@ -276,11 +278,11 @@
 
             <div class="row">
                 <div class="col-md-4">
-                    <input type="button" value="Previous" class="btn btn-default" id="PreviousStep" onclick="Step3MoveBack();" />
+                    <input type="button" value="Previous" class="btn btn-default" id="PreviousStep" onclick="ChangeStep('Step3', 'Step2');" />
                 </div>
 
                 <div class="col-md-1 col-md-offset-7">
-                    <input type="button" value="Next" class="btn btn-default" id="AcceptedInstructions" onclick="Step3MoveForward();" />
+                    <input type="button" value="Next" class="btn btn-default" id="AcceptedInstructions" onclick="VerifyStep3();" />
                 </div>
             </div>
 
@@ -423,14 +425,40 @@
 
             <div class="row">
                 <div class="col-md-4">
-                    <input type="button" value="Previous" class="btn btn-default" id="PreviousStep" onclick="Step4MoveBackward();" />
+                    <input type="button" value="Previous" class="btn btn-default" id="PreviousStep" onclick="DisplayAssemblerStep('Step4', false);" />
                 </div>
 
                 <div class="col-md-4" style="margin-left: 40px;">
-                    <input type="button" value="Next" class="btn btn-default" id="AcceptedInstructions" onclick="Step4MoveForward();" />
+                    <input type="button" value="Next" class="btn btn-default" id="AcceptedInstructions" onclick="VerifyMasurcaStep();" />
                 </div>
             </div>
 
+        </div>
+
+        <div id="Step5" hidden="hidden">
+            <h3>This is step 5, a test step.</h3>
+                        <div class="row">
+                <div class="col-md-4">
+                    <input type="button" value="Previous" class="btn btn-default" id="PreviousStep" onclick="DisplayAssemblerStep('Step5', false);" />
+                </div>
+
+                <div class="col-md-4" style="margin-left: 40px;">
+                    <input type="button" value="Next" class="btn btn-default" id="AcceptedInstructions" onclick="VerifyTestStep();" />
+                </div>
+            </div>
+        </div>
+
+        <div id="Step6" hidden="hidden">
+            <h3>This is step 6, a test step.</h3>
+            <div class="row">
+                <div class="col-md-4">
+                    <input type="button" value="Previous" class="btn btn-default" id="PreviousStep" onclick="DisplayAssemblerStep('Step6', false);" />
+                </div>
+
+                <div class="col-md-4" style="margin-left: 40px;">
+                    <input type="button" value="Next" class="btn btn-default" id="AcceptedInstructions" onclick="VerifyTestStep2();" />
+                </div>
+            </div>
         </div>
 
             <!-- END MASURCA DATA (STEP 4) -->
@@ -481,7 +509,7 @@
 
             <div class="row">
                 <div class="col-md-1">
-                    <input type="button" value="Previous" class="btn btn-default" id="PreviousStep" onclick="FinalStepMoveBackward();" />
+                    <input type="button" value="Previous" class="btn btn-default" id="PreviousStep" onclick="DisplayAssemblerStep('FinalStep', false);" />
                 </div>
 
                 <div class="col-md-offset-10 col-md-1">
@@ -496,11 +524,11 @@
             <!-- END CONFIRM DATA (FINAL STEP)-->
 
         </div>
-
+        <!-- There has been an error on the last step so we need to display that to the user. -->
         if (ViewBag.ConnectionErrorDetails != null)
         {
             <script type="text/javascript">
-                DisplayFinalStepError();
+                ChangeStep("Step1", "FinalStep");
             </script>
         }
 }
