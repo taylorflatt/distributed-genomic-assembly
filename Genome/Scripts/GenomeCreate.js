@@ -22,17 +22,30 @@ var numWizardSteps = 7;
 
 // Changes the state of the wizard from one step to the next. Next can refer to forward or backward movement.
 function ChangeStep(currentStep, nextStep) {
+    if (typeof (currentStep) != "string")
+        throw "CurrentStep must be a string.";
+    if (typeof (nextStep) != "string")
+        throw "NextStep must be a string.";
+
     document.getElementById(currentStep).style.display = "none"; // Hide the contents of the current step.
     document.getElementById(nextStep).style.display = "block"; // Display the contents of the next step.
 }
 
 // Clears the text of a div id of location.
 function ClearWarning(location) {
+    if (typeof (location) != "string")
+        throw "Location must be a string.";
+
     document.getElementById(location).style.display = "none";
 }
 
 // Adds a warning to the div with id location with a message.
 function AddWarning(location, message) {
+    if (typeof (location) != "string")
+        throw "Location must be a string.";
+    if (typeof (message) != "string")
+        throw "Message must be a string.";
+
     document.getElementById(location).innerHTML = message;
 }
 
@@ -43,11 +56,25 @@ function IsEmpty(location) {
 
 // Checks if a value is inclusively between two integets. Returns true if the x-value is, or false if it is not.
 function betweenInclusive(x, min, max) {
+    if (typeof (x) != "number")
+        throw "X must be a number.";
+    if (typeof (min) != "number")
+        throw "Min must be a number.";
+    if (typeof (max) != "number")
+        throw "Max must be a number.";
+
     return x >= min && x <= max;
 }
 
 // Checks if a value is strictly between two integers. Returns true if x-value is, or false if it is not.
 function between(x, min, max) {
+    if (typeof (x) != "number")
+        throw "X must be a number.";
+    if (typeof (min) != "number")
+        throw "Min must be a number.";
+    if (typeof (max) != "number")
+        throw "Max must be a number.";
+
     return x > min && x < max;
 }
 
@@ -119,6 +146,9 @@ function ChangeAssemblerStep(currentStep, forward) {
 // Need to fix the styling issue on the textbox so it isn't static. On time crunch so I'm statically assigning values.
 function addURLBox(singleURL) {
 
+    if (typeof (singleURL) != "boolean")
+        throw "SingleURL must be a boolean.";
+
     if (singleURL) {
         $('#addUrlRow').append(
             "<label id='lab_0' class='control-label col-md-2' style='padding-top: 8px;'> Data Location: </label>"
@@ -177,6 +207,9 @@ function removeURLBox() {
 
 // This function needs tweeked. It will return valid for something like www.google.comd
 function isURL(url) {
+    if (typeof (url) != "string")
+        throw "URL must be a string.";
+
     var pattern = new RegExp(/^(?:(?:https?|ftp):\/\/)?(?:www\.)(?:\S+(?::\S*)?@)?(?:(?!10(?:\.\d{1,3}){3})(?!127(?:\.\d{1,3}){3})(?!169\.254(?:\.\d{1,3}){2})(?!192\.168(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\u00a1-\uffff0-9]+-?)*[a-z\u00a1-\uffff0-9]+)(?:\.(?:[a-z\u00a1-\uffff0-9]+-?)*[a-z\u00a1-\uffff0-9]+)*(?:\.(?:[a-z\u00a1-\uffff]{2,})))(?::\d{2,5})?(?:\/[^\s]*)?$/i);
 
     return pattern.test(url);
