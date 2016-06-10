@@ -425,7 +425,7 @@
 
             <div class="row">
                 <div class="col-md-4">
-                    <input type="button" value="Previous" class="btn btn-default" id="PreviousStep" onclick="DisplayAssemblerStep('Step4', false);" />
+                    <input type="button" value="Previous" class="btn btn-default" id="PreviousStep" onclick="ChangeAssemblerStep('Step4', false);" />
                 </div>
 
                 <div class="col-md-4" style="margin-left: 40px;">
@@ -435,31 +435,31 @@
 
         </div>
 
-        <div id="Step5" hidden="hidden">
-            <h3>This is step 5, a test step.</h3>
-                        <div class="row">
-                <div class="col-md-4">
-                    <input type="button" value="Previous" class="btn btn-default" id="PreviousStep" onclick="DisplayAssemblerStep('Step5', false);" />
-                </div>
+        @*<div id="Step5" hidden="hidden">
+        <h3>This is step 5, an SGA step.</h3>
+                    <div class="row">
+            <div class="col-md-4">
+                <input type="button" value="Previous" class="btn btn-default" id="PreviousStep" onclick="ChangeAssemblerStep('Step5', false);" />
+            </div>
 
-                <div class="col-md-4" style="margin-left: 40px;">
-                    <input type="button" value="Next" class="btn btn-default" id="AcceptedInstructions" onclick="VerifyTestStep();" />
-                </div>
+            <div class="col-md-4" style="margin-left: 40px;">
+                <input type="button" value="Next" class="btn btn-default" id="AcceptedInstructions" onclick="VerifySgaStep();" />
             </div>
         </div>
+    </div>
 
-        <div id="Step6" hidden="hidden">
-            <h3>This is step 6, a test step.</h3>
-            <div class="row">
-                <div class="col-md-4">
-                    <input type="button" value="Previous" class="btn btn-default" id="PreviousStep" onclick="DisplayAssemblerStep('Step6', false);" />
-                </div>
+    <div id="Step6" hidden="hidden">
+        <h3>This is step 6, a WGS step.</h3>
+        <div class="row">
+            <div class="col-md-4">
+                <input type="button" value="Previous" class="btn btn-default" id="PreviousStep" onclick="ChangeAssemblerStep('Step6', false);" />
+            </div>
 
-                <div class="col-md-4" style="margin-left: 40px;">
-                    <input type="button" value="Next" class="btn btn-default" id="AcceptedInstructions" onclick="VerifyTestStep2();" />
-                </div>
+            <div class="col-md-4" style="margin-left: 40px;">
+                <input type="button" value="Next" class="btn btn-default" id="AcceptedInstructions" onclick="VerifyWgsStep();" />
             </div>
         </div>
+    </div>*@
 
             <!-- END MASURCA DATA (STEP 4) -->
             <!-- Confirm Data (FINAL STEP) -->
@@ -509,11 +509,11 @@
 
             <div class="row">
                 <div class="col-md-1">
-                    <input type="button" value="Previous" class="btn btn-default" id="PreviousStep" onclick="DisplayAssemblerStep('FinalStep', false);" />
+                    <input type="button" value="Previous" class="btn btn-default" id="PreviousStep" onclick="ChangeAssemblerStep('FinalStep', false);" />
                 </div>
 
                 <div class="col-md-offset-10 col-md-1">
-                        <input type="submit" value="Create" class="btn btn-default" onclick="concatURLs();" />
+                        <input type="submit" value="Create" class="btn btn-default" onclick="VerifyFinalStep();" />
                 </div>
             </div>
 
