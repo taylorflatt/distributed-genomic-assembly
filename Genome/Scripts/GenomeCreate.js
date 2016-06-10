@@ -19,6 +19,8 @@ var numTextboxSet = 0;
 // Corresponds to the number of assemblers deployed.
 var numAssemblers = 3;
 
+var numAssemblersChecked = 0;
+
 // This will be dynamically created at runtime to contain a key/value pair corresponding to the rank (step number) and the existence of 
 // the step (true if it was checked and false if it was not). This is so we can manage how to go forward and backward dynamically.
 var wizardSteps = [];
@@ -171,14 +173,27 @@ function DisplayAssemblerStep(currentStep, forward)
     if (typeof (currentStep) != "string")
         throw "CurrentStep must be a string.";
 
-    // Special Case: We are on the last step and thus do not have a step number.
-    if (currentStep == "FinalStep")
+    if(currentStep == "FinalStep")
     {
-        // We want to find the last step that was checked. We then add 3 for the 3 steps that come before it and 1 more because of the zero index so + 4.
-        var previousAssemblerStep = assemblerSteps.lastIndexOf(true) + 4;
-
-        ChangeStep("FinalStep", "Step" + previousAssemblerStep)
+        // Don't want to include the final step.
+        for (var i = wizardSteps.length - 2; i >= 0; i--)
+        {
+            if (wizardSteps[i].value == true)
+            {
+                ChangeStep("FinalStep", "Step" + (wizardSteps[i].key + 1)); // Because of the offset, we must increment here.
+                break;
+            }
+        }
     }
+
+    //// Special Case: We are on the last step and thus do not have a step number.
+    //if (currentStep == "FinalStep")
+    //{
+    //    // We want to find the last step that was checked. We then add 3 for the 3 steps that come before it and 1 more because of the zero index so + 4.
+    //    var previousAssemblerStep = assemblerSteps.lastIndexOf(true) + 4;
+
+    //    ChangeStep("FinalStep", "Step" + previousAssemblerStep)
+    //}
 
     // Now we determine the other steps.
     else
@@ -193,7 +208,7 @@ function DisplayAssemblerStep(currentStep, forward)
                 if (wizardSteps[index].value)
                 {
                     // Special Case: If we are going to the last step, we must call it predictably.
-                    if (index = numWizardSteps - 1)
+                    if (index == numWizardSteps - 1)
                     {
                         ChangeStep(currentStep, "FinalStep");
                         break;
@@ -210,11 +225,15 @@ function DisplayAssemblerStep(currentStep, forward)
 
         else
         {
-            for(var index = currentStepNum; index >= 0; index--)
+            //var offset = numAssemblers - numAssemblersChecked; //3-1 = 2
+            //var numStepsLeft = numWizardSteps - offset; //7-2 = 5 -> Number of total steps including static steps
+
+            // What if my current step is 4
+
+            for (var index = 1; index < numAssemblers; index++)
             {
-                if(wizardSteps[index - 1].value)
-                {
-                    ChangeStep(currentStep, "Step" + (wizardSteps[index - 1].key));
+                if (wizardSteps[currentStepNum - index].value) {
+                    ChangeStep(currentStep, "Step" + (wizardSteps[currentStepNum - index].key));
                     break;
                 }
             }
@@ -224,8 +243,9 @@ function DisplayAssemblerStep(currentStep, forward)
 
 // Choose Assembler Step
 function VerifyStep3() {
-    numAssemblerSteps = 3;
-    var checkedAssemblers = [false,false,false]
+    numAssemblersChecked = 0;
+    var checkedAssemblers = [false, false, false]
+    wizardSteps = []; // Clear out the array.
 
     // Check if an assembler is checked.
     if (document.getElementById('UseMasurca').checked)
@@ -266,6 +286,8 @@ function VerifyStep3() {
                         key: i,
                         value: true
                     });
+
+                    numAssemblersChecked++;
                 }
 
                 else
