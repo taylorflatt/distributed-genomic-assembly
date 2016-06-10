@@ -3,11 +3,8 @@
 */
 
 
-
-
 // TODO: On the FINAL step, we need to know which assemblers the user wants to use. That means, we need to grab the checked boxes 
 // AGAIN and only care about the data under those assemblers. Or find some other method/work around to handle moving back and forth.
-
 
 
 
@@ -17,14 +14,13 @@
 var numTextboxSet = 0;
 
 // Corresponds to the number of assemblers deployed.
-var numAssemblers = 3;
-
-var numAssemblersChecked = 0;
+//var numAssemblers = 3;
 
 // This will be dynamically created at runtime to contain a key/value pair corresponding to the rank (step number) and the existence of 
 // the step (true if it was checked and false if it was not). This is so we can manage how to go forward and backward dynamically.
 var wizardSteps = [];
 
+// The total number of wizard steps that can possibly be seen by a user. For instance, with 3 possible assemblers, that would be 4 + 3 = 7.
 var numWizardSteps = 7;
 
 // Changes the state of the wizard from one step to the next. Next can refer to forward or backward movement.
@@ -180,20 +176,11 @@ function DisplayAssemblerStep(currentStep, forward)
         {
             if (wizardSteps[i].value == true)
             {
-                ChangeStep("FinalStep", "Step" + (wizardSteps[i].key + 1)); // Because of the offset, we must increment here.
+                ChangeStep("FinalStep", "Step" + wizardSteps[i].key); // Because of the offset, we must increment here.
                 break;
             }
         }
     }
-
-    //// Special Case: We are on the last step and thus do not have a step number.
-    //if (currentStep == "FinalStep")
-    //{
-    //    // We want to find the last step that was checked. We then add 3 for the 3 steps that come before it and 1 more because of the zero index so + 4.
-    //    var previousAssemblerStep = assemblerSteps.lastIndexOf(true) + 4;
-
-    //    ChangeStep("FinalStep", "Step" + previousAssemblerStep)
-    //}
 
     // Now we determine the other steps.
     else
@@ -216,7 +203,7 @@ function DisplayAssemblerStep(currentStep, forward)
 
                     else
                     {
-                        ChangeStep(currentStep, "Step" + (wizardSteps[index].key + 1)); // Increment by 1 because of the differing indices.
+                        ChangeStep(currentStep, "Step" + (wizardSteps[index].key));
                         break;
                     }
                 }
@@ -225,15 +212,21 @@ function DisplayAssemblerStep(currentStep, forward)
 
         else
         {
-            //var offset = numAssemblers - numAssemblersChecked; //3-1 = 2
-            //var numStepsLeft = numWizardSteps - offset; //7-2 = 5 -> Number of total steps including static steps
+            var index = -1;
 
-            // What if my current step is 4
-
-            for (var index = 1; index < numAssemblers; index++)
+            for (var i = 0; i < wizardSteps.length - 1; i++)
             {
-                if (wizardSteps[currentStepNum - index].value) {
-                    ChangeStep(currentStep, "Step" + (wizardSteps[currentStepNum - index].key));
+                if(wizardSteps[i].key == currentStepNum)
+                {
+                    index = i - 1; // We want to go backwards so we subtract 1.
+                    break;
+                }
+            }
+
+            for (index; index > 1 ; index--)
+            {
+                if (wizardSteps[index].value) {
+                    ChangeStep(currentStep, "Step" + (wizardSteps[index].key));
                     break;
                 }
             }
@@ -243,7 +236,6 @@ function DisplayAssemblerStep(currentStep, forward)
 
 // Choose Assembler Step
 function VerifyStep3() {
-    numAssemblersChecked = 0;
     var checkedAssemblers = [false, false, false]
     wizardSteps = []; // Clear out the array.
 
@@ -264,14 +256,14 @@ function VerifyStep3() {
     else
     {
         // Here we dynamically create the wizard step list.
-        for (var i = 0; i < numWizardSteps; i++)     // numAssemblers + 4 will always be the total number of steps.
+        for (var i = 0; i < numWizardSteps; i++)
         {
             // First three static steps.
             if (i < 3)
             {
                 wizardSteps.push(
                     {
-                        key: i,
+                        key: i + 1,
                         value: true
                     });
             }
@@ -283,18 +275,16 @@ function VerifyStep3() {
                 {
                     wizardSteps.push(
                     {
-                        key: i,
+                        key: i + 1,
                         value: true
                     });
-
-                    numAssemblersChecked++;
                 }
 
                 else
                 {
                     wizardSteps.push(
                     {
-                        key: i,
+                        key: i + 1,
                         value: false
                     });
                 }
@@ -305,7 +295,7 @@ function VerifyStep3() {
             {
                 wizardSteps.push(
                 {
-                    key: i,
+                    key: i + 1,
                     value: true
                 });
             }
@@ -365,14 +355,9 @@ function VerifyMasurcaStep() {
         AddWarning("WizardErrors", "Please correct the errors before proceeding!");
 }
 
-function Step4MoveBackward() {
-    document.getElementById('Step4').style.display = "none";
-    document.getElementById('Step3').style.display = "block";
-}
+function VerifyFinalStep() {
 
-function FinalStepMoveBackward() {
-    document.getElementById('FinalStep').style.display = "none";
-    document.getElementById('Step4').style.display = "block";
+
 }
 
 // Need to fix the styling issue on the textbox so it isn't static. On time crunch so I'm statically assigning values.
@@ -456,9 +441,7 @@ function concatURLs() {
         var rightTextBox
 
         if (document.getElementById('SequentialReads').checked)
-        {
             document.getElementById('DataSource').value = document.getElementById('url_l_0').value;
-        }
 
         else
         {
@@ -479,8 +462,6 @@ function concatURLs() {
                 document.getElementById('DataSource').value = dataSource + "," + leftTextBox + "," + rightTextBox;
             }
         }
-
-
     }
 }
 
