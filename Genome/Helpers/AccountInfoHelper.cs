@@ -11,6 +11,10 @@ namespace Genome.Helpers
         private GenomeAssemblyDbContext context = new GenomeAssemblyDbContext();
         private ApplicationUser userContext = new ApplicationUser();
 
+        /// <summary>
+        /// Helper method to retrieve the number of current users with the role of admin.
+        /// </summary>
+        /// <returns>Returns an integer corresponding to the number of users with the role of admin.</returns>
         public static int NumberAdminsLeft()
         {
             int adminCount = 0;

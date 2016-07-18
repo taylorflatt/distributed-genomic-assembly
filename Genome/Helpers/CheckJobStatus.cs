@@ -42,7 +42,6 @@ namespace Genome.Helpers
         {
             error = "";
 
-
             using (var client = new SshClient(CreatePrivateKeyConnectionInfo()))
             {
                 try
@@ -160,12 +159,12 @@ namespace Genome.Helpers
         #region Compile and ship data to FTP for download by user.
 
         /// <summary>
-        /// This will actually compress the data, initiate the sftp connection, and upload the files to the file server FTP. This should be called 
-        /// AFTER the UpdateStatuses method. This also sets the download link for the file IF it uploaded successfully.
+        /// This method completes all the final steps for a completed job. It compresses the data, initiates a SFTP connection, uploads the data to the file server, 
+        /// and sets the download link provided it uploads properly. Note, this ought to be called after the UpdateStatus method.
         /// </summary>
-        /// <param name="client"> Current SSH session client.</param>
-        /// <param name="uuid"> The id of the current job. </param>
-        /// <param name="error"></param>
+        /// <param name="client">Current SSH session client.</param>
+        /// <param name="uuid">An integer number representing the particular job ID via the website (key-value of the submitted job).</param>
+        /// <param name="error">Any error encountered by the command.</param>
         protected internal static void UploadData(SshClient client, int uuid, out string error)
         {
             using (GenomeAssemblyDbContext db = new GenomeAssemblyDbContext())
@@ -179,6 +178,7 @@ namespace Genome.Helpers
                 // Grab the unique list of steps for this particular model.
                 Hashtable overallStepList = StepDescriptions.GenerateOverallStepList(genomeModel.NumAssemblers);
 
+                #region Compress Data
                 if (string.IsNullOrEmpty(error))
                 {
                     // Get the compressing data step number.
@@ -199,6 +199,9 @@ namespace Genome.Helpers
                     }
                 }
 
+                #endregion
+
+                #region Connect to SFTP
                 if (string.IsNullOrEmpty(error))
                 {
                     // Get the connecting to sftp data step number.
@@ -218,6 +221,10 @@ namespace Genome.Helpers
                         db.SaveChanges();
                     }
                 }
+
+                #endregion
+
+                #region Upload Data and Set Download Link
 
                 if (string.IsNullOrEmpty(error))
                 {
@@ -244,6 +251,8 @@ namespace Genome.Helpers
 
                     db.SaveChanges();
                 }
+
+                #endregion
             }
         }
 
