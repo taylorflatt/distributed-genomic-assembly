@@ -6,12 +6,10 @@ using System.Web.Mvc;
 using Genome.Models;
 using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.Owin;
-using Genome.CustomFilters;
 using System.Threading.Tasks;
 using Microsoft.AspNet.Identity.EntityFramework;
 using System.Collections.Generic;
 using Genome.Helpers;
-using System.Collections;
 
 namespace Genome.Controllers
 {
@@ -40,7 +38,13 @@ namespace Genome.Controllers
             return View();
         }
 
-        // Contains all of the commands that are run when pressing the buttons in the view.
+        /// <summary>
+        /// Runs all the commands corresponding to the buttons in the view.
+        /// </summary>
+        /// <param name="UserName">The selected username passed from the view.</param>
+        /// <param name="RoleName">The selected rolename passed from the view.</param>
+        /// <param name="command">The particular command we run on the information.</param>
+        /// <returns>Returns to the view with the information from running the selected command.</returns>
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> Index(string UserName, string RoleName, string command)
@@ -49,7 +53,7 @@ namespace Genome.Controllers
                 AddUserToRole(UserName, RoleName);
 
             else if (command == "Get User Role")
-                GetAllUserRoles(UserName);
+                ViewBag.UserRole = GetUserRole(UserName);
 
             else if (command == "Remove User from Role")
                 DeleteRoleForUser(UserName);
@@ -67,6 +71,9 @@ namespace Genome.Controllers
             return View("Index");
         }
 
+        /// <summary>
+        /// Gets a list of all users and stores them in a viewbag to be sent back to the view.
+        /// </summary>
         private void GetUsersList()
         {
             try
@@ -86,6 +93,8 @@ namespace Genome.Controllers
                         userList.Add(Tuple.Create(user.Username, GetUserRole(user.Username)));
                     }
 
+                    ViewBag.ResultMessage = "All user roles were successfully retrieved!";
+
                     // Send the list to the view.
                     ViewBag.UserList = userList.ToList();
                 }
@@ -97,13 +106,17 @@ namespace Genome.Controllers
             }
         }
 
+        /// <summary>
+        /// Completely removes a user from the system. This will maintain their content however. Note, the last admin will not be able to be removed.
+        /// </summary>
+        /// <param name="UserName">The username of the user to be deleted.</param>
         private async Task DeleteUser(string UserName)
         {
             try
             {
                 // If we are trying to remove an admin and there is only a single admin left, we CANNOT remove that admin. We don't want to get locked out.
                 if (GetUserRole(UserName).Equals("Admin") && AccountInfoHelper.NumberAdminsLeft() == 1)
-                    ViewBag.DeleteError = "Cannot delete this user because they are the last admin. That would result in being locked out.";
+                    ViewBag.ResultMessageError = "Cannot delete " + UserName + " because they are the last admin. This action would result in a lockout.";
 
                 else
                 {
@@ -136,10 +149,16 @@ namespace Genome.Controllers
 
             catch(Exception e)
             {
-                ViewBag.DeleteError = "The user was unable to be removed from the system. Error Message: " + e.Message;
+                ViewBag.ResultMessageError = "The user was unable to be removed from the system. Error Message: " + e.Message;
             }
         }
 
+        /// <summary>
+        /// Add a user to a particular role. Note, this will remove their previous role.
+        /// </summary>
+        /// <param name="UserName">The user whose role is to be changed.</param>
+        /// <param name="RoleName">The new role of the user.</param>
+        /// Note: I made it so admins cannot be deleted. This was a design choice but can be easily changed by removing portions of code below. 
         private void AddUserToRole(string UserName, string RoleName)
         {
             //Make sure valid information is entered/selected.
@@ -152,18 +171,15 @@ namespace Genome.Controllers
             {
                 if(UserManager.GetRoles(user.Id).Contains("Admin"))
                 {
-                    ViewBag.UserSelectError = "An admin cannot change roles to prevent being locked out. They must be deleted!";
+                    ViewBag.ResultMessageError = "An admin cannot change roles to prevent being locked out. " + UserName + " must be deleted!";
                     return;
                 }
 
                 if (UserManager.GetRoles(user.Id).Contains(RoleName))
                 {
-                    ViewBag.RoleSelectError = "The user already has that role assigned.";
+                    ViewBag.ResultMessageError = "The user already has that role assigned.";
                     return;
                 }
-
-                //else if (UserManager.GetRoles(user.Id).Contains("Admin"))
-                //    UserManager.RemoveFromRoles(user.Id, "Admin");
 
                 else if (UserManager.GetRoles(user.Id).Contains("Verified"))
                     UserManager.RemoveFromRoles(user.Id, "Verified");
@@ -177,85 +193,65 @@ namespace Genome.Controllers
             }
 
             else if (RoleName.Equals(""))
-                ViewBag.RoleSelectError = "Please select a valid role.";
+                ViewBag.ResultMessageError = "Please select a valid role.";
 
             else
-                ViewBag.RoleSelectError = "That user is not in the database.";
+                ViewBag.ResultMessageError = "Cannot find \"" + UserName + "\" in the database.";
 
-            // prepopulat roles for the view dropdown
+            // prepopulate roles for the view dropdown. This is required or you will run into errors.
             var list = context.Roles.OrderBy(r => r.Name).ToList().Select(rr => new SelectListItem { Value = rr.Name.ToString(), Text = rr.Name }).ToList();
             ViewBag.Roles = list;
         }
 
+        /// <summary>
+        /// Retrieves a user's current role.
+        /// </summary>
+        /// <param name="UserName">The user whose role we are retrieving.</param>
+        /// <returns>Returns the user's role as a string.</returns>
         private string GetUserRole(string UserName)
         {
             if (!string.IsNullOrWhiteSpace(UserName))
             {
+                UserName = UserName.Trim();
+
                 ApplicationUser user = context.Users.FirstOrDefault(u => u.UserName.Equals(UserName, StringComparison.CurrentCultureIgnoreCase));
 
                 if (user != null)
                 {
                     if (UserManager.GetRoles(user.Id).Count <= 0)
-                        throw new Exception("This user doesn't have any roles assigned to them.");
-
-                    else
-                        return (string)UserManager.GetRoles(user.Id).ElementAt(0);
-                }
-
-                else
-                    throw new Exception("Cannot find " + UserName + " in the database.");
-            }
-
-            else
-                throw new Exception("Cannot find " + UserName + " in the database.");
-        }
-
-        private void GetAllUserRoles(string UserName)
-        {
-            //Make sure valid information is entered/selected.
-            RoleChangeValidation(UserName);
-
-            if (!string.IsNullOrWhiteSpace(UserName))
-            {
-                ApplicationUser user = context.Users.FirstOrDefault(u => u.UserName.Equals(UserName, StringComparison.CurrentCultureIgnoreCase));
-
-                if (user != null)
-                {
-                    if (UserManager.GetRoles(user.Id).Count <= 0)
-                        ViewBag.RolesForThisUser = "This user currently has no roles assigned.";
+                        return ViewBag.ResultMessageError = "This user doesn't have any roles assigned to them.";
 
                     else
                     {
-                        ViewBag.RolesForThisUser = (string)UserManager.GetRoles(user.Id).ElementAt(0);
-                        ViewBag.ResultMessage = "User roles successfully retrieved.";
+                        ViewBag.ResultMessage = "The user's role was successfully retrieved!";
+                        return (string)UserManager.GetRoles(user.Id).ElementAt(0);
                     }
                 }
 
                 else
-                    ViewBag.RoleSelectError = "That user is not in the database.";
-
-                // Populate the roles for a dropdown.
-                var list = context.Roles.OrderBy(r => r.Name).ToList().Select(rr => new SelectListItem { Value = rr.Name.ToString(), Text = rr.Name }).ToList();
-
-                ViewBag.Roles = list;
+                    return ViewBag.ResultMessageError = "Cannot find \"" + UserName + "\" in the database.";
             }
 
             else
-                ViewBag.RoleSelectError = "That user is not in the database.";
+                return ViewBag.ResultMessageError = "Cannot find \"" + UserName + "\" in the database.";
         }
 
+        /// <summary>
+        /// Delete a particular role for a user. This option will reduce their role rank by one. A user will never be without a role.
+        /// </summary>
+        /// <param name="UserName">The user whose rank will be reduced.</param>
         private void DeleteRoleForUser(string UserName)
         {
             ApplicationUser user = context.Users.FirstOrDefault(u => u.UserName.Equals(UserName, StringComparison.CurrentCultureIgnoreCase));
 
             if(user == null)
-                ViewBag.UserSelectError = "That user is not in the database.";
+                ViewBag.ResultMessageError = "Cannot find \"" + UserName + "\" in the database.";
 
             else
             {
                 // Don't let them be removed from the admin role to prevent lockout.
                 if (UserManager.GetRoles(user.Id).Contains("Admin") && AccountInfoHelper.NumberAdminsLeft() == 1)
-                    ViewBag.AdminDeleteError = "This user is an admin and the only admin remaining. The user must be deleted instead.";
+                    ViewBag.ResultMessageError = UserName + " is an admin and the only admin remaining. The user must be deleted instead.";
 
                 else
                 {
@@ -270,9 +266,7 @@ namespace Genome.Controllers
 
                     // If they are already the lowest user role, then we cannot remove them from that role.
                     if(key == roleList.Count - 1)
-                    {
-                        ViewBag.ResultMessageError = "Role was unsuccessfully removed from " + oldRole + " because that is the lowest role possible. If you like, you may delete them instead. ";
-                    }
+                        ViewBag.ResultMessageError = "Role was unsuccessfully reduced from " + oldRole + " because that is the lowest role possible. If you like, you may delete " + UserName + " instead. ";
 
                     else
                     {
@@ -287,32 +281,40 @@ namespace Genome.Controllers
                 }
             }
 
-            // Populate the roles for a dropdown.
+            // Populate the roles for a dropdown. This is required else an error will occur.
             var list = context.Roles.OrderBy(r => r.Name).ToList().Select(rr => new SelectListItem { Value = rr.Name.ToString(), Text = rr.Name }).ToList();
             ViewBag.Roles = list;
         }
 
+        /// <summary>
+        /// Validation method for verifying that the proper dropdowns have been selected when applicable.
+        /// </summary>
+        /// <param name="UserName">A string representing a username.</param>
+        /// <param name="RoleName">An optional string representing a role name.</param>
         private void RoleChangeValidation(string UserName, string RoleName = "null")
         {
             //If they don't select a username for the user and leave it as the default, notify them to change it and return the view.
             if (UserName.Equals(""))
-                ViewBag.UserSelectError = "Please select a valid user.";
+                ViewBag.ResultMessageError = "Please select a valid user.";
 
             //If they don't select a role for the user and leave it as the default, notify them to change it and return the view.
             if (RoleName.Equals(""))
-                ViewBag.RoleSelectError = "Please select a proper role.";
+                ViewBag.ResultMessageError = "Please select a proper role.";
 
             var temp = context.Roles.OrderBy(r => r.Name).ToList().Select(rr => new SelectListItem { Value = rr.Name.ToString(), Text = rr.Name }).ToList();
 
             ViewBag.Roles = temp;
         }
 
+        /// <summary>
+        /// Disposal method.
+        /// </summary>
+        /// <param name="disposing">Determines whether disposal needs to occur.</param>
         protected override void Dispose(bool disposing)
         {
             if (disposing)
-            {
                 context.Dispose();
-            }
+
             base.Dispose(disposing);
         }
     }
