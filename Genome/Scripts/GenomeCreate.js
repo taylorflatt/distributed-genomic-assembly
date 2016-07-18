@@ -508,6 +508,7 @@ function VerifyStep3() {
             // Three assemblers steps.
             else if (i >= 3 && i < numWizardSteps - 1)
             {
+                // Should look at 3 and setup a global/local variable to be the initial steps.
                 if (checkedAssemblers[i - 3])
                 {
                     wizardSteps.push(

@@ -5,6 +5,7 @@ using Genome.Models;
 using Genome.Helpers;
 using Renci.SshNet;
 using System.Collections.Generic;
+using Genome.CustomFilters;
 
 namespace Genome.Controllers
 {
@@ -12,6 +13,8 @@ namespace Genome.Controllers
     {
         private GenomeAssemblyDbContext db = new GenomeAssemblyDbContext();
 
+        [AuthorizedLogin(Roles = CustomRoles.Administrator)]
+        [AuthorizedLogin(Roles = CustomRoles.Verified)]
         public ActionResult Create()
         {
             // Return the VerifyAccount view if their account is not verified...otherwise return this view.
