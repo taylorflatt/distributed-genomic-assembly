@@ -8,7 +8,10 @@ namespace Genome.Helpers
         public const string Verified = "Verified";
         public const string Unverified = "Unverified";
 
-        // Start at 0 to mimic the database indexing of roles. Likewise, when we want Count, we call Count - 1.
+        /// <summary>
+        /// List of roles for all users.
+        /// </summary>
+        /// <returns></returns>
         public static Dictionary<int, string> Roles()
         {
             Dictionary<int, string> roles = new Dictionary<int, string>();

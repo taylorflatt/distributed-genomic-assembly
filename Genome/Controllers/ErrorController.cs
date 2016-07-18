@@ -10,6 +10,10 @@ namespace Genome.Controllers
             return View();
         }
 
+        /// <summary>
+        /// Shows users a permissions error page.
+        /// </summary>
+        /// <returns>Returns the error view.</returns>
         public ActionResult DetailsPermissionError()
         {
             ViewBag.Error = "You do not have sufficient permissions to view the details of this job. If you believe that this is in error, you should contact an administrator by selecting the contact link above.";

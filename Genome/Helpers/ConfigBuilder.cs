@@ -12,7 +12,13 @@ namespace Genome.Helpers
         public string InitConfigURL { get; set; }
         public string SchedulerConfigURL { get; set; }
 
-        public string BuildMasurcaConfig(GenomeModel genomeModel, List<string> dataSource, int seed)
+        /// <summary>
+        /// Creates the configuration file for the Masurca assembler for each unique run.
+        /// </summary>
+        /// <param name="genomeModel">The model data of the current job.</param>
+        /// <param name="seed">Seed value for a unique name for the job.</param>
+        /// <returns>Returns the location (URL) of the file on the server.</returns>
+        public string BuildMasurcaConfig(GenomeModel genomeModel, int seed)
         {
             string urlPath = "AssemblerConfigs/" + "Job-" + seed + "/";
             string path = AppDomain.CurrentDomain.BaseDirectory + "AssemblerConfigs\\" + "Job-" + seed + "\\";
@@ -84,6 +90,12 @@ namespace Genome.Helpers
             return MasurcaConfigURL;
         }
 
+        /// <summary>
+        /// Creates the initial file which is run at the beginning of each run. The primary function is to download the user's data at runtime.
+        /// </summary>
+        /// <param name="dataSources">A stored list of strings containing the location(s) of the user's data set.</param>
+        /// <param name="seed">Seed value for a unique name for the job.</param>
+        /// <returns>Returns the location (URL) of the file on the server.</returns>
         public string BuildInitConfig(List<string> dataSources, out int seed)
         {
             Random random = new Random();

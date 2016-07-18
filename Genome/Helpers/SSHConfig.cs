@@ -20,14 +20,39 @@ namespace Genome.Helpers
 
         private string ip; // To login node.
         private GenomeModel genomeModel;
-        private string path; // marty added this?
 
+        /// <summary>
+        /// Constructor for the SSHConfig class without model data.
+        /// </summary>
+        /// <param name="ip">Sets the ip for connecting to an SSH session.</param>
+        /// <param name="error">Any error encountered by the command.</param>
         public SSHConfig(string ip, out string error)
         {
             error = "";
             this.ip = ip;
         }
 
+        /// <summary>
+        /// Constructor for the SSHConfig class with model data.
+        /// </summary>
+        /// <param name="ip">Sets the ip for connecting to an SSH session.</param>
+        /// <param name="genomeModel">The model data for a particular job.</param>
+        /// <param name="error">Any error encountered by the command.</param>
+        public SSHConfig(string ip, GenomeModel genomeModel, out string error)
+        {
+            error = "";
+            this.ip = ip;
+            this.genomeModel = genomeModel;
+        }
+
+        /// <summary>
+        /// Verifies that a particular user has sufficient quota in order to run the assemblers.
+        /// </summary>
+        /// <param name="SSHUser">The SSH username of the user.</param>
+        /// <param name="SSHPass">The SSH password of the user.</param>
+        /// <param name="error">Any error encountered by the command.</param>
+        /// <param name="quotaAmount">The amount of quota in GB that the user has. This is sent out of the method.</param>
+        /// <returns>Returns a boolean value representing whether or not they have enough space.</returns>
         public bool VerifyQuota(string SSHUser, string SSHPass, out string error, out int quotaAmount)
         {
             quotaAmount = 0;
@@ -81,7 +106,13 @@ namespace Genome.Helpers
             }
         }
 
-        // We attempt to create a directory 
+        /// <summary>
+        /// We need to verify that a user has sufficient permissions in order to run the assemblers. 
+        /// </summary>
+        /// <param name="SSHUser">The SSH username of the user.</param>
+        /// <param name="SSHPass">The SSH password of the user.</param>
+        /// <param name="error">Any error encountered by the command.</param>
+        /// <returns>Returns a boolean value representing whether or not they have sufficient permissions.</returns>
         public bool VerifyPermissions(string SSHUser, string SSHPass, out string error)
         {
             error = "";
@@ -146,16 +177,13 @@ namespace Genome.Helpers
             }
         }
 
-        public SSHConfig(string ip, GenomeModel genomeModel, string path, out string error)
-        {
-            error = "";
-
-            this.ip = ip;
-            this.genomeModel = genomeModel;
-            this.path = path;
-        }
-
-        // Will return TRUE if the data URLs work or FALSE otherwise. (UNTESTED)
+        // IMPORTANT!!!! UNTESTED METHOD!!!!
+        /// <summary>
+        /// Tests whether the URLs entered by the user in the wizard are connectable. A download is attempted and if connectable, stopped and removed. (UNTESTED)
+        /// </summary>
+        /// <param name="error">Any error encountered by the command.</param>
+        /// <param name="badUrl">A string sent out of the method representing a URL which does not work.</param>
+        /// <returns>Returns false if at least one url false. Returns true only if all are downloadable.</returns>
         public bool TestJobUrls(out string error, out string badUrl)
         {
             using (var client = new SshClient(Locations.BD_IP, genomeModel.SSHUser, genomeModel.SSHPass))
@@ -197,10 +225,17 @@ namespace Genome.Helpers
         }
 
         // Will return TRUE if successful connection and commands all run or FALSE if ANY error is encountered.
+        /// <summary>
+        /// Creates a job by adding it to SGE (scheduler) on BigDog.
+        /// </summary>
+        /// <param name="initUrl">The path to the init script (URL).</param>
+        /// <param name="masurcaUrl">The path to the masurca script (URL).</param>
+        /// <param name="error">Any error encountered by the command.</param>
+        /// <returns>Returns true only if a job gets successfully added to SGE.</returns>
         public bool CreateJob(string initUrl, string masurcaUrl, out string error)
         {
             error = "";
-            // UUID is not being assigned before it hits this method so we have a problem. We need to save it to the DB prior to hitting this method but that causes other problems.......need to look into this. We can probably find a work around by checking the db and seeing the previous uuid and just incrementing the previous uuid.
+            // IMPORTANT!!!!! UUID is not being assigned before it hits this method so we have a problem. We need to save it to the DB prior to hitting this method but that causes other problems.......need to look into this. We can probably find a work around by checking the db and seeing the previous uuid and just incrementing the previous uuid.
 
             // The init.sh script will contain all the basic logic to download the data and initiate the job on the assembler(s).
             using (var client = new SshClient(Locations.BD_IP, genomeModel.SSHUser, genomeModel.SSHPass))
@@ -251,7 +286,7 @@ namespace Genome.Helpers
                     // This command has NOT been tested. We may need an absolute path rather than the relative one that we reference in this method since we switch directories to the output path directory.
                     if (string.IsNullOrEmpty(error)) { LinuxCommands.AddJobToScheduler(client, Locations.GetJobLogPath(id), node, jobName, out error); }
 
-                    if (string.IsNullOrEmpty(error)) { SetJobNumber(client, jobName, out error); }
+                    if (string.IsNullOrEmpty(error)) { genomeModel.SGEJobId = LinuxCommands.SetJobNumber(client, genomeModel.SSHUser, jobName, out error); }
 
                     // There were no errors.
                     if (string.IsNullOrEmpty(error))
@@ -291,32 +326,6 @@ namespace Genome.Helpers
 
                     return false;
                 }
-            }
-        }
-
-        private void SetJobNumber(SshClient client, string jobName, out string error)
-        {
-            // USAGE: qstat -f -u "USERNAME" | grep "JOBNAME"
-            // -f: Full Format
-            // -u "[user]": Jobs for specific user
-            // We want to get the job number (which is created at submit to the scheduler).
-            using (var cmd = client.CreateCommand("qstat -f -u " + "\"" + genomeModel.SSHUser + "\"" + "| grep " + jobName))
-            {
-                cmd.Execute();
-
-                // Grab only numbers, ignore the rest.
-                string[] jobNumber = Regex.Split(cmd.Result, @"\D+");
-
-                LinuxErrorHandling.CommandError(cmd, out error);
-
-                // We return the second element [1] here because the first and last element of the array is always the empty "". Trimming
-                // doesn't remove it. So we will always return the first element which corresponds to the job number.
-
-                if (string.IsNullOrEmpty(error))
-                    genomeModel.SGEJobId = Convert.ToInt32(jobNumber[1]);
-
-                else
-                    error = "Failed to get the job ID for the job. Something went wrong with the scheduler. Please contact an administrator.";
             }
         }
     }

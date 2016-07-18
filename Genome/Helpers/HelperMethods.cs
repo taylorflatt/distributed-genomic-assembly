@@ -1,19 +1,26 @@
 ﻿using Genome.Models;
-using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Web;
 
 namespace Genome.Helpers
 {
     public class HelperMethods
     {
+        /// <summary>
+        /// Splits the list of URLs by commas (,) created by the wizard.
+        /// </summary>
+        /// <param name="urlString">The concatenated string of URLs from the wizard.</param>
+        /// <returns>A list of split urls.</returns>
         protected internal static List<string> ParseUrlString(string urlString)
         {
             return urlString.Split(',').Select(sValue => sValue.Trim()).ToList();
         }
 
+        /// <summary>
+        /// Determines how many assemblers have been chosen by the user for a particular job.
+        /// </summary>
+        /// <param name="genomeModel">The model data for a particular job.</param>
+        /// <returns>An integer representing how many assemblers have been chosen for a particular job.</returns>
         protected internal static int NumberOfAssemblers(GenomeModel genomeModel)
         {
             int numAssemblers = 0;
@@ -30,6 +37,12 @@ namespace Genome.Helpers
             return numAssemblers;
         }
 
+        /// <summary>
+        /// Splits up a list of URLs into left and right reads provided the data type is Jump Reads or Paired-End. Note, this method is not applicable for Sequential Reads.
+        /// </summary>
+        /// <param name="dataSources">List of string datasources alternating between left and right reads in order.</param>
+        /// <param name="leftReads">List of string datasources representing the left reads being sent out of the method.</param>
+        /// <param name="rightReads">List of string datasources representing the right reads being sent out of the method.</param>
         protected internal static void CreateUrlLists(List<string> dataSources, out List<string> leftReads, out List<string> rightReads)
         {
             leftReads = new List<string>();
@@ -45,6 +58,11 @@ namespace Genome.Helpers
             }
         }
 
+        /// <summary>
+        /// Sets default values if the user decided not to enter any information for optional values in the wizard.
+        /// </summary>
+        /// <param name="genomeModel">The model data for a particular job.</param>
+        /// <returns>Returns the new job model with the default values.</returns>
         protected internal static GenomeModel SetDefaultMasurcaValues(GenomeModel genomeModel)
         {
             // If they don't have jump reads.

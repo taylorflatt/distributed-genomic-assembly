@@ -1,6 +1,8 @@
 ﻿using Renci.SshNet;
 using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
+using Genome.Models;
 
 namespace Genome.Helpers
 {
@@ -233,6 +235,43 @@ namespace Genome.Helpers
                 cmd.Execute();
 
                 LinuxErrorHandling.CommandError(cmd, out error);
+            }
+        }
+
+        /// <summary>
+        /// Sets the job number the scheduler assigns a job once it has been added to the queue.
+        /// </summary>
+        /// <param name="client">The current SSH client session.</param>
+        /// <param name="SSHUser">The user who submitted the job to the scheduler.</param>
+        /// <param name="jobName">The name of the job.</param>
+        /// <param name="error">Any error encountered by the command.</param>
+        /// <returns>Returns an integer representing the SGE job ID if successful or -1 if unsuccessful.</returns>
+        protected internal static int SetJobNumber(SshClient client, string SSHUser, string jobName, out string error)
+        {
+            // USAGE: qstat -f -u "USERNAME" | grep "JOBNAME"
+            // -f: Full Format
+            // -u "[user]": Jobs for specific user
+            // We want to get the job number (which is created at submit to the scheduler).
+            using (var cmd = client.CreateCommand("qstat -f -u " + "\"" + SSHUser + "\"" + "| grep " + jobName))
+            {
+                cmd.Execute();
+
+                // Grab only numbers, ignore the rest.
+                string[] jobNumber = Regex.Split(cmd.Result, @"\D+");
+
+                LinuxErrorHandling.CommandError(cmd, out error);
+
+                // We return the second element [1] here because the first and last element of the array is always the empty "". Trimming
+                // doesn't remove it. So we will always return the first element which corresponds to the job number.
+
+                if (string.IsNullOrEmpty(error))
+                    return Convert.ToInt32(jobNumber[1]);
+
+                else
+                {
+                    error = "Failed to get the job ID for the job. Something went wrong with the scheduler. Please contact an administrator.";
+                    return -1;
+                }
             }
         }
 
