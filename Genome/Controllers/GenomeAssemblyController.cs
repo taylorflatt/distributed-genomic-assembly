@@ -21,6 +21,11 @@ namespace Genome.Controllers
             return View(new GenomeModel());
         }
 
+        /// <summary>
+        /// Post method of actually creating the job per the user's description. The creation of the scripts and initiating contact with BigDog is done here.
+        /// </summary>
+        /// <param name="genomeModel">The model that contains the job data.</param>
+        /// <returns>Returns the view for the view for creating a job.</returns>
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult Create(GenomeModel genomeModel)
@@ -32,6 +37,8 @@ namespace Genome.Controllers
                 // have them do it? I think just have them do it with a tooltip and make it a required field.
                 try
                 {
+                    #region Set General Information
+
                     HelperMethods.SetDefaultMasurcaValues(genomeModel);
 
                     genomeModel.NumAssemblers = HelperMethods.NumberOfAssemblers(genomeModel);
@@ -42,6 +49,10 @@ namespace Genome.Controllers
                     genomeModel.CreatedBy = User.Identity.Name;
                     genomeModel.CreatedDate = DateTime.UtcNow;
 
+                    #endregion
+
+                    #region Create Scripts
+
                     ConfigBuilder builder = new ConfigBuilder();
 
                     List <string> dataSources = HelperMethods.ParseUrlString(genomeModel.DataSource);
@@ -49,14 +60,18 @@ namespace Genome.Controllers
                     int seed;
 
                     string initURL = builder.BuildInitConfig(dataSources, out seed);
-                    string masurcaURL = builder.BuildMasurcaConfig(genomeModel, dataSources, seed);
+                    string masurcaURL = builder.BuildMasurcaConfig(genomeModel, seed);
 
                     string error = "";
                     string badUrl = "";
 
+                    #endregion
+
+                    #region Connect To BigDog and Test Data Connection
+
                     /// TODO: Start the download of their data on BigDog to see if we can get each URL. If we cannot, then we just terminate 
                     /// and tell them the error we receieved.
-                    SSHConfig ssh = new SSHConfig(Locations.BD_IP, genomeModel, "", out error);
+                    SSHConfig ssh = new SSHConfig(Locations.BD_IP, genomeModel, out error);
 
                     ssh.TestJobUrls(out error, out badUrl);
 
@@ -97,6 +112,8 @@ namespace Genome.Controllers
 
                         return View(genomeModel);
                     }
+
+                    #endregion
                 }
 
                 catch (Exception e)
@@ -139,6 +156,12 @@ namespace Genome.Controllers
                 return RedirectToAction("DetailsPermissionError", "Error");
         }
 
+        /// <summary>
+        /// Post method for job details. We perform the tasks of actually cancelling/updating jobs.
+        /// </summary>
+        /// <param name="id">ID of a particular job.</param>
+        /// <param name="command">The task we wish to accomplish (update/cancel).</param>
+        /// <returns>Returns the particular job's detail page with the results of the task.</returns>
         [HttpPost]
         public ActionResult Details(int id, string command)
         {
@@ -168,7 +191,7 @@ namespace Genome.Controllers
 
             if(string.IsNullOrEmpty(error))
             {
-                // If the job is ready to be uploaded (according to our updatestatuses method) and a download link hasn't been assigned (upload hasn't 
+                // If the job is ready to be uploaded (according to our UpdateStatus method) and a download link hasn't been assigned (upload hasn't 
                 // finished), then we will display to the user that their data is currently being uploaded.
                 if(jobsToUpload && string.IsNullOrEmpty(genomeModel.DownloadLink))
                 {
@@ -182,6 +205,10 @@ namespace Genome.Controllers
             return View();
         }
 
+        /// <summary>
+        /// Disposal method.
+        /// </summary>
+        /// <param name="disposing">Determines whether disposal needs to occur.</param>
         protected override void Dispose(bool disposing)
         {
             if (disposing)
