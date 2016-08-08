@@ -20,5 +20,16 @@ namespace Genome.Controllers
 
             return View("Error");
         }
+
+        /// <summary>
+        /// Shows users a cluster error page after attempting to view the "Create A Job" page without the cluster verification process done.
+        /// </summary>
+        /// <returns>Returns the error view.</returns>
+        public ActionResult CreateJobErrorCluster()
+        {
+            ViewBag.Error = "You are unable to access the \"Create A Job\" page until you have fulfilled all requirements to submit a job. Please verify your account first.";
+
+            return View("Error");
+        }
     }
 }

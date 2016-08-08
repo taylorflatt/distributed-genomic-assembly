@@ -37,11 +37,11 @@ namespace Genome.Controllers
                 }
             }
 
+            // DEBUG
             catch(Exception e)
             {
                 ViewBag.SqlError = "Error Message: " + e.Message + ". The stack trace: " + e.StackTrace + ". The inner-exception: " + e.InnerException + ". The source: " + e.Source;
             }
-
 
             return View();
         }

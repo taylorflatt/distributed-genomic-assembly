@@ -1,6 +1,7 @@
 ﻿using Genome.Models;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.AspNet.Identity;
 
 namespace Genome.Helpers
 {
