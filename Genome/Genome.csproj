@@ -35,6 +35,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <UseVSHostingProcess>true</UseVSHostingProcess>
+    <FilesToIncludeForPublish>AllFilesInProjectFolder</FilesToIncludeForPublish>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -74,12 +75,15 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
+    <Reference Include="Microsoft.Web.Helpers, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.WebHelpers.3.2.3\lib\net45\Microsoft.Web.Helpers.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="MVC.Wizard.Core, Version=1.1.0.0, Culture=neutral, PublicKeyToken=d967ac793f5d2360, processorArchitecture=MSIL">
       <HintPath>..\packages\MVC.Wizard.1.3.1\lib\MVC.Wizard.Core.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="MySql.Data, Version=6.9.9.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d, processorArchitecture=MSIL" />
-    <Reference Include="MySql.Data.Entity.EF5, Version=6.9.9.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d, processorArchitecture=MSIL" />
     <Reference Include="MySql.Data.Entity.EF6, Version=6.9.9.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d, processorArchitecture=MSIL" />
     <Reference Include="MySql.Fabric.Plugin, Version=6.9.9.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d, processorArchitecture=MSIL" />
     <Reference Include="MySql.Web, Version=6.9.9.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d, processorArchitecture=MSIL" />
@@ -89,6 +93,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Data.Linq" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Net.Http.Formatting, Version=5.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.AspNet.WebApi.Client.5.2.3\lib\net45\System.Net.Http.Formatting.dll</HintPath>
@@ -161,6 +166,14 @@
     <Reference Include="Antlr3.Runtime">
       <Private>True</Private>
       <HintPath>..\packages\Antlr.3.4.1.9004\lib\Antlr3.Runtime.dll</HintPath>
+    </Reference>
+    <Reference Include="WebMatrix.Data, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.WebPages.Data.3.2.3\lib\net45\WebMatrix.Data.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="WebMatrix.WebData, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.WebPages.WebData.3.2.3\lib\net45\WebMatrix.WebData.dll</HintPath>
+      <Private>True</Private>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -240,25 +253,9 @@
     <Compile Include="Helpers\LinuxErrorHandling.cs" />
     <Compile Include="Helpers\SSHConfig.cs" />
     <Compile Include="Helpers\Unique.cs" />
-    <Compile Include="Migrations\201604250600145_changedNames.cs" />
-    <Compile Include="Migrations\201604250600145_changedNames.Designer.cs">
-      <DependentUpon>201604250600145_changedNames.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\201604261802587_DownloadLink.cs" />
-    <Compile Include="Migrations\201604261802587_DownloadLink.Designer.cs">
-      <DependentUpon>201604261802587_DownloadLink.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\201605081528280_numAssemblers.cs" />
-    <Compile Include="Migrations\201605081528280_numAssemblers.Designer.cs">
-      <DependentUpon>201605081528280_numAssemblers.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\201605091946327_sequentialReads.cs" />
-    <Compile Include="Migrations\201605091946327_sequentialReads.Designer.cs">
-      <DependentUpon>201605091946327_sequentialReads.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\201605101829287_masurca_data_update.cs" />
-    <Compile Include="Migrations\201605101829287_masurca_data_update.Designer.cs">
-      <DependentUpon>201605101829287_masurca_data_update.cs</DependentUpon>
+    <Compile Include="Migrations\201607260340361_test.cs" />
+    <Compile Include="Migrations\201607260340361_test.Designer.cs">
+      <DependentUpon>201607260340361_test.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\AccountViewModels.cs" />
@@ -266,6 +263,11 @@
     <Compile Include="Models\IdentityModels.cs" />
     <Compile Include="Models\ManageViewModels.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <DependentUpon>Settings.settings</DependentUpon>
+    </Compile>
     <Compile Include="Startup.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -273,7 +275,6 @@
     <Content Include="Content\bootstrap.min.css" />
     <Content Include="Content\customStyle.css" />
     <Content Include="Content\Images\cancel.png" />
-    <Content Include="Content\Images\jumbotron.jpg" />
     <Content Include="Content\Images\refresh.png" />
     <Content Include="Content\jquery.steps.css" />
     <Content Include="favicon.ico" />
@@ -282,6 +283,11 @@
     <Content Include="Content\Site.css" />
     <Content Include="Scripts\bootstrap.js" />
     <Content Include="Scripts\bootstrap.min.js" />
+    <None Include="Properties\PublishProfiles\Genome Production Server.pubxml" />
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
     <None Include="Scripts\jquery-1.10.2.intellisense.js" />
     <Content Include="Scripts\GenomeCreate.js" />
     <Content Include="Scripts\jquery-1.10.2.js" />
@@ -367,21 +373,12 @@
     <Content Include="Scripts\jquery-1.10.2.min.map" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Migrations\201604250600145_changedNames.resx">
-      <DependentUpon>201604250600145_changedNames.cs</DependentUpon>
+    <EmbeddedResource Include="Migrations\201607260340361_test.resx">
+      <DependentUpon>201607260340361_test.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\201604261802587_DownloadLink.resx">
-      <DependentUpon>201604261802587_DownloadLink.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\201605081528280_numAssemblers.resx">
-      <DependentUpon>201605081528280_numAssemblers.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\201605091946327_sequentialReads.resx">
-      <DependentUpon>201605091946327_sequentialReads.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\201605101829287_masurca_data_update.resx">
-      <DependentUpon>201605101829287_masurca_data_update.cs</DependentUpon>
-    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{3259AA49-8AA1-44D3-9025-A0B520596A8C}" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
@@ -397,15 +394,14 @@
     <VisualStudio>
       <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}">
         <WebProjectProperties>
-          <UseIIS>True</UseIIS>
+          <UseIIS>False</UseIIS>
           <AutoAssignPort>True</AutoAssignPort>
           <DevelopmentServerPort>58681</DevelopmentServerPort>
           <DevelopmentServerVPath>/</DevelopmentServerVPath>
           <IISUrl>http://localhost:58681/</IISUrl>
           <NTLMAuthentication>False</NTLMAuthentication>
-          <UseCustomServer>False</UseCustomServer>
-          <CustomServerUrl>
-          </CustomServerUrl>
+          <UseCustomServer>True</UseCustomServer>
+          <CustomServerUrl>http://131.230.63.114/Genome</CustomServerUrl>
           <SaveServerSettingsInUserFile>False</SaveServerSettingsInUserFile>
         </WebProjectProperties>
       </FlavorProperties>

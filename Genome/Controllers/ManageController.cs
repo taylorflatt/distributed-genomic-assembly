@@ -27,9 +27,7 @@ namespace Genome.Controllers
                               select jobs;
 
                 if(jobList.Count() > 0)
-                {
                     return View(jobList.ToList());
-                }
 
                 else
                 {
@@ -57,7 +55,7 @@ namespace Genome.Controllers
             if (SSHUser != "" && SSHPass != "")
             {
                 // Now we need to connect to bigdog and run the quota call and run the permissions call.
-                SSHConfig ssh = new SSHConfig("login-0-0.research.siu.edu", out error);
+                SSHConfig ssh = new SSHConfig(Locations.BD_IP, out error);
                 ssh.VerifyPermissions(SSHUser, SSHPass, out permissionsError);
                 ssh.VerifyQuota(SSHUser, SSHPass, out quotaError, out quotaAmount);
 

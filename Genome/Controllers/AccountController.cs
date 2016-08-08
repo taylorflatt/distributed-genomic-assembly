@@ -6,6 +6,7 @@ using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.Owin;
 using Microsoft.Owin.Security;
 using Genome.Models;
+using MySql.Data.MySqlClient;
 
 namespace Genome.Controllers
 {
@@ -175,6 +176,24 @@ namespace Genome.Controllers
 
         public ActionResult UnverifiedUser()
         {
+            // While this shouldn't necessarily need to be run, there are instances where 
+            // this is necessary to make sure we don't show this page to anything but an unverified user.
+            using (GenomeAssemblyDbContext db = new GenomeAssemblyDbContext())
+            {
+                string username = HttpContext.User.Identity.GetUserName();
+
+                var temp = from u in db.Users
+                            where u.UserName.Equals(username)
+                            select u.Roles;
+
+                // This should only ever be iterated through once.
+                foreach (var uRole in temp)
+                {
+                    if (!uRole.Equals(Helpers.CustomRoles.Unverified))
+                        return RedirectToAction("Index", "Home");
+                }
+            }
+
             return View();
         }
 

@@ -70,6 +70,9 @@
 
             if (ViewBag.PermissionsSuccess != null || ViewBag.QuotaSuccess != null)
             {
+                <p>
+                    You have successfully verified your account. You may now @Html.ActionLink("Create a Job", "Create", "GenomeAssembly").
+                </p>
                 <p class="result result-background result-success" style="margin-left: 40px;">
                     @ViewBag.PermissionsSuccess
                     <br />

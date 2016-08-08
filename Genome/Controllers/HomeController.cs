@@ -9,6 +9,8 @@ using Genome.Models;
 using Microsoft.AspNet.Identity;
 using System.Web.Security;
 using Microsoft.AspNet.Identity.Owin;
+using System.Data;
+using System.Data.SqlClient;
 
 namespace Genome.Controllers
 {
@@ -19,18 +21,27 @@ namespace Genome.Controllers
 
         public ActionResult Index()
         {
-            string username = HttpContext.User.Identity.GetUserName();
-
-            var temp = from u in db.Users
-                       where u.UserName.Equals(username)
-                       select u;
-
-            // This should only ever be iterated through once.
-            foreach(var user in temp)
+            try
             {
-                if(user.ClusterAccountVerified)
-                    ViewBag.ShowCreateButton = "Show";
+                string username = HttpContext.User.Identity.GetUserName();
+
+                var temp = from u in db.Users
+                           where u.UserName.Equals(username)
+                           select u;
+
+                // This should only ever be iterated through once.
+                foreach (var user in temp)
+                {
+                    if (user.ClusterAccountVerified)
+                        ViewBag.ShowCreateButton = "Show";
+                }
             }
+
+            catch(Exception e)
+            {
+                ViewBag.SqlError = "Error Message: " + e.Message + ". The stack trace: " + e.StackTrace + ". The inner-exception: " + e.InnerException + ". The source: " + e.Source;
+            }
+
 
             return View();
         }
