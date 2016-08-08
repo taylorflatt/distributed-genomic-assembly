@@ -56,42 +56,41 @@ namespace Genome.Controllers
             {
                 // Now we need to connect to bigdog and run the quota call and run the permissions call.
                 SSHConfig ssh = new SSHConfig(Locations.BD_IP, out error);
-                ssh.VerifyPermissions(SSHUser, SSHPass, out permissionsError);
-                ssh.VerifyQuota(SSHUser, SSHPass, out quotaError, out quotaAmount);
 
-                // There was a problem with their permissions. Report it.
-                if (!string.IsNullOrEmpty(permissionsError))
-                    ViewBag.PermissionError = permissionsError;
+                // Check if they have sufficient permissions.
+                if (ssh.VerifyPermissions(SSHUser, SSHPass, out permissionsError))
+                    ViewBag.PermissionsSuccess = "Your permissions validated successfully!";
 
                 else
-                    ViewBag.PermissionsSuccess = "The permissions validated successfully!";
+                    ViewBag.PermissionsError = permissionsError;
 
-                // There was a problem with their quota. Report it.
-                if (!string.IsNullOrEmpty(quotaError))
-                    ViewBag.QuotaError = quotaError;
-
-                else
+                // Check if they have sufficient quota.
+                if(ssh.VerifyQuota(SSHUser, SSHPass, out quotaError, out quotaAmount))
                     ViewBag.QuotaSuccess = "You have sufficient quota!";
 
-                if (string.IsNullOrEmpty(permissionsError) && string.IsNullOrEmpty(quotaError))
-                {
-                    // Get the user.
-                    ApplicationUser Model = UserManager.FindById(User.Identity.GetUserId());
+                else
+                    ViewBag.QuotaError = quotaError;
 
-                    // Update the account to be verified.
+                // Get the user.
+                ApplicationUser Model = UserManager.FindById(User.Identity.GetUserId());
+
+                // If there are no errors, the account is good to go.
+                if (string.IsNullOrEmpty(permissionsError) && string.IsNullOrEmpty(quotaError))
                     Model.ClusterAccountVerified = true;
 
-                    // Save the user information.
-                    IdentityResult result = await UserManager.UpdateAsync(Model);
+                else
+                    Model.ClusterAccountVerified = false;
 
-                    if (quotaAmount == 0)
-                        ViewBag.QuotaAmount = "Unknown. Something went wrong.";
+                // Save the user information.
+                IdentityResult result = await UserManager.UpdateAsync(Model);
 
-                    else
-                        ViewBag.QuotaAmount = quotaAmount + "Gb";
+                if (quotaAmount == 0)
+                    ViewBag.QuotaAmount = "Unknown. Something went wrong.";
 
-                    ViewBag.ShowResults = "Show Results";
-                }
+                else
+                    ViewBag.QuotaAmount = quotaAmount + "Gb";
+
+                ViewBag.ShowResults = "Show Results";
 
                 return View();
             }

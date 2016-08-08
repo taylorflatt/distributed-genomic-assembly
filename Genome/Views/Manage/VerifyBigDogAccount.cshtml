@@ -8,10 +8,6 @@
 {
     <p class="result result-background result-error" style="margin-left: 40px;">
         @ViewBag.Error
-        <br />
-        @ViewBag.PermissionsError
-        <br />
-        @ViewBag.QuotaError
     </p>
 }
 
@@ -28,7 +24,7 @@
 
         <ol>
             <li>
-                <strong>Disk quota</strong>: How much space your account has to use. We want to make sure that you don't run out of space on your account in the middle of an assembly.
+                <strong>Disk quota</strong>: How much space your account has to use. We want to make sure that you don't run out of space on your account in the middle of an assembly. (Recommend: 50Gb+)
             </li>
             <li>
                 <strong>Account Permissions</strong>: We want to make sure that you have the proper permissions to make files and directories in a certain location on BigDog. You will need these permissions for creating locations where job information is stored.
@@ -68,15 +64,45 @@
             </h3>
             <hr />
 
-            if (ViewBag.PermissionsSuccess != null || ViewBag.QuotaSuccess != null)
+            if(ViewBag.PermissionsSuccess != null && ViewBag.QuotaSuccess != null)
             {
                 <p>
                     You have successfully verified your account. You may now @Html.ActionLink("Create a Job", "Create", "GenomeAssembly").
                 </p>
+            }
+
+            else
+            {
+                <p>
+                    Unfortunately, your account did not pass all the required tests. You will be <strong>unable</strong> to run assembly jobs until the errors are rectified.
+                </p>
+            }
+
+            if(ViewBag.PermissionsSuccess != null)
+            {
                 <p class="result result-background result-success" style="margin-left: 40px;">
                     @ViewBag.PermissionsSuccess
-                    <br />
+                </p>
+            }
+
+            else
+            {
+                <p class="result result-background result-error" style="margin-left: 40px;">
+                    @ViewBag.PermissionsError
+                </p>
+            }
+
+            if(ViewBag.QuotaSuccess != null)
+            {
+                <p class="result result-background result-success" style="margin-left: 40px;">
                     @ViewBag.QuotaSuccess
+                </p>
+            }
+
+            else
+            {
+                <p class="result result-background result-error" style="margin-left: 40px;">
+                    @ViewBag.QuotaError
                 </p>
             }
 
@@ -128,7 +154,6 @@
         </div>
         }
 
-
         <div class="col-md-offset-10 col-md-1">
             <input type="submit" value="Submit" class="btn btn-default" onsubmit="ShowResults();"/>
         </div>
@@ -138,4 +163,3 @@
 
 <br />
 <br />
-

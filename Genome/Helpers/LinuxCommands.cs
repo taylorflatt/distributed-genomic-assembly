@@ -104,7 +104,8 @@ namespace Genome.Helpers
             // If they have less than 'minQuota' then we return an error telling them the problem and how to rectify it.
             if (quotaAmount < minQuota)
             {
-                error = "You do not have the requisite amount of disk space (" + minQuota + "G) for us to safely run a general assembly job. Please contact the BigDog admin team to increase your quota. You currently have " + quotaAmount + " space to use.";
+                error = "You do not have the requisite amount of disk space (" + minQuota + "Gb) for us to safely run a general assembly "
+                    + "job. Please contact the BigDog admin team to increase your quota. You currently have " + quotaAmount + "Gb space to use.";
 
                 return false;
             }
