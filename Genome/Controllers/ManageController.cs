@@ -203,7 +203,12 @@ namespace Genome.Controllers
                                   select j;
 
                 ViewBag.JobsFinished = finishedJobs.Count().ToString();
-                ViewBag.JobsFinishedStat = Convert.ToString(100 * finishedJobs.Count() / createdJobs.Count()) + "%";
+
+                if (createdJobs.Count() != 0)
+                    ViewBag.JobsFinishedStat = Convert.ToString(100 * finishedJobs.Count() / createdJobs.Count()) + "%";
+
+                else
+                    ViewBag.JobsFinishedStat = "0%";
 
                 return View(model);
             }

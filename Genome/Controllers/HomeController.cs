@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
-using Genome.CustomFilters;
+//using Genome.CustomFilters;
 using Microsoft.AspNet.Identity.EntityFramework;
 using Genome.Models;
 using Microsoft.AspNet.Identity;

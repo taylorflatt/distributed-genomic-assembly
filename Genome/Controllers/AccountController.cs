@@ -146,7 +146,8 @@ namespace Genome.Controllers
         {
             if (ModelState.IsValid)
             {
-                var user = new ApplicationUser { UserName = model.Email.Split('@')[0], Email = model.Email, DawgTag = model.DawgTag, ClusterAccountVerified =  model.ClusterAccountVerified};
+                // Had to remove UserName = model.Email.Split('@')[0] so authentication would work. TODO: Find workaround.
+                var user = new ApplicationUser { UserName = model.Email, Email = model.Email, DawgTag = model.DawgTag, ClusterAccountVerified =  model.ClusterAccountVerified};
 
                 var result = await UserManager.CreateAsync(user, model.Password);
 
