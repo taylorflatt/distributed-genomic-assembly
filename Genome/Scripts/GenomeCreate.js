@@ -36,7 +36,7 @@ function ClearWarning(location) {
     if (typeof (location) != "string")
         throw "Location must be a string.";
 
-    document.getElementById(location).style.display = "none";
+    document.getElementById(location).innerHTML = "";
 }
 
 // Adds a warning to the div with id location with a message.
@@ -216,7 +216,6 @@ function isURL(url) {
 
 // Puts all of the URLs together into a single string separated by a comma so we can store it into the model parameter (datasource).
 function concatURLs() {
-
     // Only if there is more than a single textbox do we need to concat the textboxes.
     if (numTextboxSet > 0) {
         var firstSet;
