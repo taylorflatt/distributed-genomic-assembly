@@ -5,7 +5,6 @@ using Genome.Models;
 using Genome.Helpers;
 using Renci.SshNet;
 using System.Collections.Generic;
-//using Genome.CustomFilters;
 using Microsoft.AspNet.Identity;
 using System.Linq;
 
@@ -16,31 +15,28 @@ namespace Genome.Controllers
         private GenomeAssemblyDbContext db = new GenomeAssemblyDbContext();
 
         // TODO: Figure out the routing issue with the permission checks. For now, they are commented out.
-        //[AuthorizedLogin(Roles = CustomRoles.Administrator)]
-        //[AuthorizedLogin(Roles = CustomRoles.Verified)]
-        [Authorize(Roles = "Administrator, Verified")]
+        [Authorize(Roles = "Admin, Verified")]
         public ActionResult Create()
         {
-            // TODO: Need policy-based authorization workaround for this...
-            //using (GenomeAssemblyDbContext db = new GenomeAssemblyDbContext())
-            //{
-            //    string username = HttpContext.User.Identity.GetUserName();
+            // TODO: Need policy-based authorization workaround for this...aka open up the parameter in the account model
+            // and extending the authorize attribute to include it as a parameter to check all in one sweep. If time permits...
+            using (GenomeAssemblyDbContext db = new GenomeAssemblyDbContext())
+            {
+                string username = HttpContext.User.Identity.GetUserName();
 
-            //    var temp = from u in db.Users
-            //               where u.UserName.Equals(username)
-            //               select u.ClusterAccountVerified;
+                var temp = from u in db.Users
+                           where u.UserName.Equals(username)
+                           select u.ClusterAccountVerified;
 
-            //    // This should only ever be iterated through once.
-            //    foreach (var acctStat in temp)
-            //    {
-            //        if (!acctStat)
-            //            return RedirectToAction("CreateJobErrorCluster", "Error");
-            //    }
-            //}
+                // This should only ever be iterated through once.
+                foreach (var acctStat in temp)
+                {
+                    if (!acctStat)
+                        return RedirectToAction("CreateJobErrorCluster", "Error");
+                }
 
-            // Return the VerifyAccount view if their account is not verified...otherwise return this view.
-
-            return View(new GenomeModel());
+                return View(new GenomeModel());
+            }
         }
 
         /// <summary>

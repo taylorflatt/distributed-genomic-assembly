@@ -239,6 +239,7 @@
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\ManageController.cs" />
     <Compile Include="Controllers\ManageRolesController.cs" />
+    <Compile Include="CustomFilters\AuthorizeAttribute.cs" />
     <Compile Include="Helpers\AccountInfoHelper.cs" />
     <Compile Include="Helpers\Locations.cs" />
     <Compile Include="Helpers\StepDescriptions.cs" />
@@ -253,6 +254,7 @@
     <Compile Include="Helpers\LinuxErrorHandling.cs" />
     <Compile Include="Helpers\SSHConfig.cs" />
     <Compile Include="Helpers\Unique.cs" />
+    <Compile Include="Logging\ExceptionUtility.cs" />
     <Compile Include="Migrations\201607260340361_test.cs" />
     <Compile Include="Migrations\201607260340361_test.Designer.cs">
       <DependentUpon>201607260340361_test.cs</DependentUpon>
@@ -366,8 +368,6 @@
   <ItemGroup>
     <Folder Include="App_Data\" />
     <Folder Include="Content\AssemblerConfig\" />
-    <Folder Include="CustomFilters\" />
-    <Folder Include="Views\Error\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="fonts\glyphicons-halflings-regular.woff" />
