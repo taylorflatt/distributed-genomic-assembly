@@ -145,7 +145,6 @@ function ChangeAssemblerStep(currentStep, forward) {
 
 // Need to fix the styling issue on the textbox so it isn't static. On time crunch so I'm statically assigning values.
 function addURLBox(singleURL) {
-
     if (typeof (singleURL) != "boolean")
         throw "SingleURL must be a boolean.";
 
@@ -180,7 +179,7 @@ function addURLButtons() {
         "<div class='row'>"
 
         + "<div class='col-md-3 col-md-offset-3'>"
-        + "<button type='button' id='UrlBtn' onclick='addURLBox()' value='Add Row'>Add URL</button>"
+        + "<button type='button' id='UrlBtn' onclick='addURLBox(false)' value='Add Row'>Add URL</button>"
         + "</div>"
 
         + "<div id='removeUrlBtn' class='col-md-3'>"
@@ -193,7 +192,7 @@ function addURLButtons() {
 // Removes the url textbox set.
 function removeURLBox() {
     if (numTextboxSet > 1) {
-        ClearWarning("RemoveURLErrorMsg")
+        ClearWarning("RemoveURLErrorMsg");
         $("#lab_" + --numTextboxSet).remove();
         $("#row_" + numTextboxSet).remove();
         $("#col_" + numTextboxSet).remove();
@@ -253,7 +252,7 @@ $(function () {
     $("#PEReads").click(function () {
         if ($(this).is(':checked')) {
             // Add URL stuff to page.
-            addURLBox();
+            addURLBox(false);
             addURLButtons();
 
             // Show Paired-End information
@@ -284,7 +283,7 @@ $(function () {
     $("#JumpReads").click(function () {
         if ($(this).is(':checked')) {
             // Add URL stuff to page
-            addURLBox();
+            addURLBox(false);
             addURLButtons();
 
             // Show Jump-Read information
