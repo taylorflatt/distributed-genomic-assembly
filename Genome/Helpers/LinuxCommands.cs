@@ -20,17 +20,30 @@ namespace Genome.Helpers
         /// <returns>Returns a boolean value as to whether or not a URL is accessible from the BigDog cluster.</returns>
         protected internal static bool CheckDataAvailability(SshClient client, string url, out string error)
         {
+            // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            // BUG: For some reason, during the case in which a good link is passed first (L0 position), all subsequent links are then passed.
+            // I have tried using random logs (to make sure they generate differently) and that didn't work. I have tried using echo &? to tell 
+            // me the exit status of the previous command (which will ALWAYS be the previous one in the pipe). I'm honestly not sure why this 
+            // behavior is occurring. I need to do some more debugging in this method and its use in the SSHConfig class.
+            // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
             // We use wget with the spider option to see if we can access the header of the particular file. We then redirect the output to a file and check whether the file exists or not.
-            using (var cmd = client.CreateCommand("wget --server-response --spider -O - " + url + " > /dev/null 2>download.log | grep 'Remote file exists' download.log | wc -l"))
+            using (var cmd = client.CreateCommand("wget --server-response --spider -O - " + '"' + url + '"' + " 2> /dev/null | echo $?"))
             {
                 cmd.Execute();
 
                 LinuxErrorHandling.CommandError(cmd, out error);
 
-                if (string.IsNullOrEmpty(error) && Convert.ToInt32(cmd.Result) > 0)
-                    return true;
+                if(string.IsNullOrEmpty(error))
+                {
+                    if (string.IsNullOrEmpty(error) && Convert.ToInt32(cmd.Result) == 0)
+                        return true;
 
-                return false;
+                    return false;
+                }
+
+                else
+                    return false;              
             }
         }
 

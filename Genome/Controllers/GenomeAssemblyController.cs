@@ -76,13 +76,15 @@ namespace Genome.Controllers
                     List <string> dataSources = HelperMethods.ParseUrlString(genomeModel.DataSource);
 
                     int seed;
-
-                    string initURL = builder.BuildInitConfig(dataSources, out seed);
-                    string masurcaURL = builder.BuildMasurcaConfig(genomeModel, seed);
-
                     string error = "";
                     string badUrl = "";
+                    // TOOK A BREAK. EDITED THE CONFIG BUILDER TO TRY/CATCH. AND COMMENTED THE STUFF OUT BELOW!!!!!!
 
+                    string initURL = builder.BuildInitConfig(dataSources, out seed, out error);
+                    string masurcaURL = builder.BuildMasurcaConfig(genomeModel, seed, out error);
+
+
+                    ViewBag.ConnectionErrorDetails = error;
                     #endregion
 
                     #region Connect To BigDog and Test Data Connection
@@ -93,7 +95,7 @@ namespace Genome.Controllers
 
                     ssh.TestJobUrls(out error, out badUrl);
 
-                    if(string.IsNullOrEmpty(badUrl) && string.IsNullOrEmpty(error))
+                    if (string.IsNullOrEmpty(badUrl) && string.IsNullOrEmpty(error))
                     {
                         /// We can instead pass in the SEED variable which will be used to reference the method in Locations to grab the correct file(s).
                         /// This is the ideal solution which will be implemented only once we know that the system works with the direct URL.
@@ -124,9 +126,9 @@ namespace Genome.Controllers
                     {
                         ViewBag.ConnectionError = "There was an error with the URLs provided. We weren't able to locate or download at least one of your files. The file we had a problem with was: " + badUrl + ".";
 
-                        if(!string.IsNullOrEmpty(error))
+                        if (!string.IsNullOrEmpty(error))
                             ViewBag.ConnectionErrorDetails = "The following is additional error information that we encountered: " + error;
-                        
+
 
                         return View(genomeModel);
                     }

@@ -250,7 +250,7 @@
                     </p>
                     <div class="checkbox col-md-offset-10">
                         @Html.LabelFor(model => model.UseSGA)
-                        <input class="check-box" data-val="true" data-val-required="The SGA Assembler field is required." id="UseSGA" name="UseSGA" type="checkbox" value="true">
+                        <input class="check-box" data-val="true" data-val-required="The SGA Assembler field is required." id="UseSGA" name="UseSGA" type="checkbox" value="true" disabled>
                         @*@Html.EditorFor(model => model.UseSGA)*@
                         @Html.ValidationMessageFor(model => model.UseSGA, "", new { @class = "text-danger" })
                     </div>
@@ -267,7 +267,7 @@
                     </p>
                     <div class="checkbox col-md-offset-10">
                         @Html.LabelFor(model => model.UseWGS)
-                        <input class="check-box" data-val="true" data-val-required="The WGS Assembler field is required." id="UseWGS" name="UseWGS" type="checkbox" value="true">
+                        <input class="check-box" data-val="true" data-val-required="The WGS Assembler field is required." id="UseWGS" name="UseWGS" type="checkbox" value="true" disabled>
                         @*@Html.EditorFor(model => model.UseWGS)*@
                         @Html.ValidationMessageFor(model => model.UseWGS, "", new { @class = "text-danger" })
 

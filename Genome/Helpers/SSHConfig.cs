@@ -197,7 +197,11 @@ namespace Genome.Helpers
 
                 List<string> urlList = HelperMethods.ParseUrlString(genomeModel.DataSource);
 
-                LinuxCommands.CreateDirectory(client, "GENOME_ASSEMBLER_test_urls_" + seed, out error);
+                client.Connect();
+
+                LinuxCommands.CreateDirectory(client, "/share/scratch/bioinfo/GENOME_ASSEMBLER_test_urls_" + seed, out error);
+
+                if (string.IsNullOrEmpty(error)) { LinuxCommands.ChangeDirectory(client, "/share/scratch/bioinfo/GENOME_ASSEMBLER_test_urls_" + seed, out error); }
 
                 foreach (var url in urlList)
                 {
@@ -210,7 +214,8 @@ namespace Genome.Helpers
                 }
 
                 if (string.IsNullOrEmpty(error)) { LinuxCommands.ChangeDirectory(client, "..", out error); }
-                if (string.IsNullOrEmpty(error)) { LinuxCommands.RemoveFile(client, "GENOME_ASSEMBLER_test_urls_" + seed, out error, "-rf"); }
+                if (string.IsNullOrEmpty(error)) { LinuxCommands.RemoveFile(client, "/share/scratch/bioinfo/GENOME_ASSEMBLER_test_urls_" + seed, out error, "-rf"); }
+
                 if (!string.IsNullOrEmpty(error))
                 {
                     // We need to do some checking here maybe and see if we can do anything about errors.
@@ -283,10 +288,11 @@ namespace Genome.Helpers
                     // anything but the login node. So we might need to investigate the way in which we store the information.
                     if(string.IsNullOrEmpty(error)) { LinuxCommands.ChangeDirectory(client, Locations.GetJobOutputPath(id), out error); }
 
-                    // This command has NOT been tested. We may need an absolute path rather than the relative one that we reference in this method since we switch directories to the output path directory.
-                    if (string.IsNullOrEmpty(error)) { LinuxCommands.AddJobToScheduler(client, Locations.GetJobLogPath(id), node, jobName, out error); }
+                    // This command has NOT been tested. We may need an absolute path rather than the relative one that we reference in this method
+                    //since we switch directories to the output path directory. !!!!!!COMMENTING OUT FOR DEBUG PURPOSES!!!!!!
+                    //if (string.IsNullOrEmpty(error)) { LinuxCommands.AddJobToScheduler(client, Locations.GetJobLogPath(id), node, jobName, out error); }
 
-                    if (string.IsNullOrEmpty(error)) { genomeModel.SGEJobId = LinuxCommands.SetJobNumber(client, genomeModel.SSHUser, jobName, out error); }
+                    //if (string.IsNullOrEmpty(error)) { genomeModel.SGEJobId = LinuxCommands.SetJobNumber(client, genomeModel.SSHUser, jobName, out error); }
 
                     // There were no errors.
                     if (string.IsNullOrEmpty(error))

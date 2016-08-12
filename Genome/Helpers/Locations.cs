@@ -8,6 +8,7 @@
         /// <summary>
         /// List of constants. Here, BigDog is referred to as BD for brevity.
         /// </summary>
+        protected internal const string WEBSITE_IP = "131.230.63.114";
         protected internal const string PUBLIC_KEY_PATH = "UNKNOWN";
         protected internal const string GET_MASTER_PATH = "/share/scratch/tflatt/";
         protected internal const string BD_IP = "login-0-0.research.siu.edu";
@@ -15,16 +16,16 @@
         protected internal const string BD_COMPUTE_NODE1 = "compute-0-24";
         protected internal const string BD_COMPUTE_NODE2 = "compute-0-25";
         protected internal const string ZIP_STORAGE_PATH = "LOCATION ON THE FTP SERVER";
-        protected internal const string FTP_URL =  "URL TO THE FTP";
+        protected internal const string FTP_URL = "ftp://" + WEBSITE_IP;
 
-        protected internal static string GetInitScriptPath(int seed)
+        protected internal static string GetInitScriptPath(int seed, string username)
         {
-            return "LOCATION ON FTP SERVER WITH THE PARTICULAR SEED VALUE";
+            return FTP_URL + "AssemblerConfigs/" + "Job-" + username + seed + "/" + "init_" + seed + ".sh";
         }
 
-        protected internal static string GetMasurcaScriptPath(int seed)
+        protected internal static string GetMasurcaScriptPath(int seed, string username)
         {
-            return "LOCATION ON FTP SERVER WITH THE PARTICULAR SEED VALUE";
+            return FTP_URL + "AssemblerConfigs/" + "Job-" + username + seed + "/" + "MasurcaConfig_" + seed + ".txt";
         }
 
         /// <summary>
