@@ -10,7 +10,7 @@
         /// </summary>
         protected internal const string WEBSITE_IP = "131.230.63.114";
         protected internal const string PUBLIC_KEY_PATH = "UNKNOWN";
-        protected internal const string GET_MASTER_PATH = "/share/scratch/tflatt/";
+        protected internal const string GET_MASTER_PATH = "/share/scratch/bioinfo/";
         protected internal const string BD_IP = "login-0-0.research.siu.edu";
         protected internal const string BD_UPDATE_KEY_PATH = "FILE SERVER LOCATION OF BIG DOG PRIVATE KEY LOCATION";
         protected internal const string BD_COMPUTE_NODE1 = "compute-0-24";
@@ -28,10 +28,10 @@
             return FTP_URL + "AssemblerConfigs/" + "Job-" + username + seed + "/" + "MasurcaConfig_" + seed + ".txt";
         }
 
-        protected internal static string GetUrlTestDirectory(int seed)
-        {
-            return "/share/scratch/bioinfo/GENOME_ASSEMBLER_test_urls_" + seed;
-        }
+        //protected internal static string GetUrlTestDirectory(int seed)
+        //{
+        //    return "/share/scratch/bioinfo/GENOME_ASSEMBLER_test_urls_" + seed;
+        //}
 
         /// <summary>
         /// Get the link for the data download for the user.

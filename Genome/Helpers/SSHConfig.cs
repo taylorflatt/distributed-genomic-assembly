@@ -177,48 +177,28 @@ namespace Genome.Helpers
             }
         }
 
-        // IMPORTANT!!!! UNTESTED METHOD!!!!
         /// <summary>
-        /// Tests whether the URLs entered by the user in the wizard are connectable. A download is attempted and if connectable, stopped and removed. (UNTESTED)
+        /// Tests whether the URLs entered by the user in the wizard are connectable.
         /// </summary>
         /// <param name="error">Any error encountered by the command.</param>
-        /// <param name="badUrl">A string sent out of the method representing a URL which does not work.</param>
-        /// <returns>Returns false if at least one url false. Returns true only if all are downloadable.</returns>
-        public bool TestJobUrls(out string error, out string badUrl)
+        /// <returns>Returns a null string if the URL is connectable. Otherwise it will return the URL that is malfunctioning.</returns>
+        public string TestJobUrls(int seed, out string error)
         {
+            error = "";
+
             using (var client = new SshClient(Locations.BD_IP, genomeModel.SSHUser, genomeModel.SSHPass))
             {
-                badUrl = "";
-                error = "";
-
-                // Create a seed value to reduce the risk of them having already created the folder.
-                Random rand = new Random();
-                int seed = rand.Next(1, 50102);
+                client.Connect();
 
                 List<string> urlList = HelperMethods.ParseUrlString(genomeModel.DataSource);
 
-                client.Connect();
-
-                // Create temp directory for storing wget download log data.
-                LinuxCommands.CreateDirectory(client, Locations.GetUrlTestDirectory(seed), out error);
-
                 foreach (var url in urlList)
                 {
-                    // If there is an error downloading the file, then we break the loop.
-                    if (!LinuxCommands.CheckDataAvailability(client, url, seed, out error))
-                    {
-                        badUrl = url;
-                        break;
-                    }
+                    if (!LinuxCommands.CheckDataAvailability(client, url, out error))
+                        return url;
                 }
 
-                if (string.IsNullOrEmpty(error)) { LinuxCommands.RemoveFile(client, Locations.GetUrlTestDirectory(seed), out error, "-rf"); }
-
-                if (string.IsNullOrEmpty(badUrl))
-                    return true;
-
-                else
-                    return false;
+                return "";
             }
         }
 

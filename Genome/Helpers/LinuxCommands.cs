@@ -19,66 +19,47 @@ namespace Genome.Helpers
         /// <param name="error">Any error encountered by the command.</param>
         /// <returns>Returns a boolean value as to whether or not a URL is accessible from the BigDog cluster.</returns>
         /// <remarks>This may need to include additional greps in the future to catch more cases. These are the only two I could think to include. </remarks>
-        protected internal static bool CheckDataAvailability(SshClient client, string url, int seed, out string error)
+        protected internal static bool CheckDataAvailability(SshClient client, string url, out string error)
         {
-            string logFile = Locations.GetUrlTestDirectory(seed) + "/download.log";
+            string logFile = "download.log";
+            bool fileConnectable = false;
 
-            // First we generate the wget log report.
-            using (var cmd = client.CreateCommand("wget -S --spider " + url + " 2>" + logFile))
+            List<string> cmdList = new List<string>();
+            cmdList.Add("wget -S --spider " + url + " 2>" + logFile);
+            cmdList.Add("grep 'Transfer complete' " + logFile + " | wc -l");
+            cmdList.Add("grep 'HTTP/1.1 200 OK' " + logFile + " | wc -l");
+
+            using (var wget = client.CreateCommand(cmdList[0]))
             {
-                cmd.Execute();
-                LinuxErrorHandling.CommandError(cmd, out error);
+                wget.Execute();
+                LinuxErrorHandling.CommandError(wget, out error);
 
-                if(string.IsNullOrEmpty(error))
+                if (string.IsNullOrEmpty(error))
                 {
-                    // Check if the file is remotely accessible.
-                    using (var grepCmd = client.CreateCommand("grep 'Transfer complete' " + logFile + " | wc -l"))
+                    for (int i = 1; i < cmdList.Count; i++)
                     {
-                        grepCmd.Execute();
-                        LinuxErrorHandling.CommandError(grepCmd, out error);
-
-                        if (string.IsNullOrEmpty(error))
+                        using (var grep = client.CreateCommand(cmdList[i]))
                         {
-                            if (string.IsNullOrEmpty(error) && Convert.ToInt32(grepCmd.Result) > 0)
-                            {
-                                RemoveFile(client, logFile, out error);
+                            grep.Execute();
+                            LinuxErrorHandling.CommandError(grep, out error);
 
-                                return true;
-                            }
-
-                            else
+                            if (string.IsNullOrEmpty(error))
                             {
-                                // Last ditch effort to check if file exists.
-                                using (var grepCmd2 = client.CreateCommand("grep 'HTTP/1.1 200 OK' " + logFile + " | wc -l"))
+                                // If the file is connectable, we can stop checking.
+                                if (string.IsNullOrEmpty(error) && Convert.ToInt32(grep.Result) > 0)
                                 {
-                                    grepCmd2.Execute();
-                                    LinuxErrorHandling.CommandError(grepCmd, out error);
-                                    RemoveFile(client, logFile, out error);
-
-                                    if (string.IsNullOrEmpty(error))
-                                    {
-                                        if (string.IsNullOrEmpty(error) && Convert.ToInt32(grepCmd2.Result) > 0)
-                                            return true;
-
-                                        else
-                                            return false;
-                                    }
-
-                                    else
-                                        return false;
+                                    fileConnectable = true;
+                                    break;
                                 }
                             }
                         }
-
-                        // error
-                        else
-                            return false;
                     }
                 }
 
-                // error
-                else
-                    return false;
+                // Remove our log file after we are finished with it.
+                RemoveFile(client, logFile, out error);
+
+                return fileConnectable;
             }
         }
 

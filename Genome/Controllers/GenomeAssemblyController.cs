@@ -71,18 +71,16 @@ namespace Genome.Controllers
 
                     #region Create Scripts
 
-                    ConfigBuilder builder = new ConfigBuilder();
-
                     List <string> dataSources = HelperMethods.ParseUrlString(genomeModel.DataSource);
 
-                    int seed;
+                    Random rand = new Random();
+                    int seed = rand.Next(198, 1248712);
+
                     string error = "";
                     string badUrl = "";
-                    // TOOK A BREAK. EDITED THE CONFIG BUILDER TO TRY/CATCH. AND COMMENTED THE STUFF OUT BELOW!!!!!!
 
-                    string initURL = builder.BuildInitConfig(dataSources, out seed, out error);
-                    string masurcaURL = builder.BuildMasurcaConfig(genomeModel, seed, out error);
-
+                    ConfigBuilder builder = new ConfigBuilder();
+                    builder.GenerateConfigs(genomeModel, dataSources, seed, out error);
 
                     ViewBag.ConnectionErrorDetails = error;
                     #endregion
@@ -93,13 +91,11 @@ namespace Genome.Controllers
                     /// and tell them the error we receieved.
                     SSHConfig ssh = new SSHConfig(Locations.BD_IP, genomeModel, out error);
 
-                    ssh.TestJobUrls(out error, out badUrl);
-
-                    if (string.IsNullOrEmpty(badUrl) && string.IsNullOrEmpty(error))
+                    if (string.IsNullOrEmpty(ssh.TestJobUrls(seed, out error)) && string.IsNullOrEmpty(error))
                     {
                         /// We can instead pass in the SEED variable which will be used to reference the method in Locations to grab the correct file(s).
                         /// This is the ideal solution which will be implemented only once we know that the system works with the direct URL.
-                        ssh.CreateJob(initURL, masurcaURL, out error);
+                        ssh.CreateJob(builder.InitConfigURL, builder.MasurcaConfigURL, out error);
 
                         //ssh.CreateConnection(out error);
 
@@ -108,7 +104,10 @@ namespace Genome.Controllers
                         {
                             //db.GenomeModels.Add(genomeModel);
                             //db.SaveChanges();
-                            return RedirectToAction("Details", new { id = genomeModel.uuid });
+                            //return RedirectToAction("Details", new { id = genomeModel.uuid });
+                            // DEBUG ONLY BELOW:
+                            ViewBag.ConnectionError = "Successfully did everything except add it to the DB!";
+                            return View(genomeModel);
                         }
 
                         // Redisplay the data and display the error.
