@@ -28,6 +28,11 @@
             return FTP_URL + "AssemblerConfigs/" + "Job-" + username + seed + "/" + "MasurcaConfig_" + seed + ".txt";
         }
 
+        protected internal static string GetUrlTestDirectory(int seed)
+        {
+            return "/share/scratch/bioinfo/GENOME_ASSEMBLER_test_urls_" + seed;
+        }
+
         /// <summary>
         /// Get the link for the data download for the user.
         /// </summary>

@@ -199,27 +199,20 @@ namespace Genome.Helpers
 
                 client.Connect();
 
-                LinuxCommands.CreateDirectory(client, "/share/scratch/bioinfo/GENOME_ASSEMBLER_test_urls_" + seed, out error);
-
-                if (string.IsNullOrEmpty(error)) { LinuxCommands.ChangeDirectory(client, "/share/scratch/bioinfo/GENOME_ASSEMBLER_test_urls_" + seed, out error); }
+                // Create temp directory for storing wget download log data.
+                LinuxCommands.CreateDirectory(client, Locations.GetUrlTestDirectory(seed), out error);
 
                 foreach (var url in urlList)
                 {
                     // If there is an error downloading the file, then we break the loop.
-                    if (!LinuxCommands.CheckDataAvailability(client, url, out error))
+                    if (!LinuxCommands.CheckDataAvailability(client, url, seed, out error))
                     {
                         badUrl = url;
                         break;
                     }
                 }
 
-                if (string.IsNullOrEmpty(error)) { LinuxCommands.ChangeDirectory(client, "..", out error); }
-                if (string.IsNullOrEmpty(error)) { LinuxCommands.RemoveFile(client, "/share/scratch/bioinfo/GENOME_ASSEMBLER_test_urls_" + seed, out error, "-rf"); }
-
-                if (!string.IsNullOrEmpty(error))
-                {
-                    // We need to do some checking here maybe and see if we can do anything about errors.
-                }
+                if (string.IsNullOrEmpty(error)) { LinuxCommands.RemoveFile(client, Locations.GetUrlTestDirectory(seed), out error, "-rf"); }
 
                 if (string.IsNullOrEmpty(badUrl))
                     return true;

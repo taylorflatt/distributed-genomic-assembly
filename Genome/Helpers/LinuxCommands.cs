@@ -11,39 +11,74 @@ namespace Genome.Helpers
         #region General Commands
 
         /// <summary>
-        /// Checks to see if a particular file is accessible remotely from the BigDog cluster. WARNING: This may or may not be exact. Don't assume if this passes that the file is and 
-        /// will always be accessible.
+        /// Checks to see if a particular file is accessible remotely from the BigDog cluster using the wget spider command.
         /// </summary>
         /// <param name="client">The current SSH client session.</param>
         /// <param name="url">The file URL that needs to be verified.</param>
+        /// <param name="seed">The seed of the particular context.</param>
         /// <param name="error">Any error encountered by the command.</param>
         /// <returns>Returns a boolean value as to whether or not a URL is accessible from the BigDog cluster.</returns>
-        protected internal static bool CheckDataAvailability(SshClient client, string url, out string error)
+        /// <remarks>This may need to include additional greps in the future to catch more cases. These are the only two I could think to include. </remarks>
+        protected internal static bool CheckDataAvailability(SshClient client, string url, int seed, out string error)
         {
-            // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            // BUG: For some reason, during the case in which a good link is passed first (L0 position), all subsequent links are then passed.
-            // I have tried using random logs (to make sure they generate differently) and that didn't work. I have tried using echo &? to tell 
-            // me the exit status of the previous command (which will ALWAYS be the previous one in the pipe). I'm honestly not sure why this 
-            // behavior is occurring. I need to do some more debugging in this method and its use in the SSHConfig class.
-            // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            string logFile = Locations.GetUrlTestDirectory(seed) + "/download.log";
 
-            // We use wget with the spider option to see if we can access the header of the particular file. We then redirect the output to a file and check whether the file exists or not.
-            using (var cmd = client.CreateCommand("wget --server-response --spider -O - " + '"' + url + '"' + " 2> /dev/null | echo $?"))
+            // First we generate the wget log report.
+            using (var cmd = client.CreateCommand("wget -S --spider " + url + " 2>" + logFile))
             {
                 cmd.Execute();
-
                 LinuxErrorHandling.CommandError(cmd, out error);
 
                 if(string.IsNullOrEmpty(error))
                 {
-                    if (string.IsNullOrEmpty(error) && Convert.ToInt32(cmd.Result) == 0)
-                        return true;
+                    // Check if the file is remotely accessible.
+                    using (var grepCmd = client.CreateCommand("grep 'Transfer complete' " + logFile + " | wc -l"))
+                    {
+                        grepCmd.Execute();
+                        LinuxErrorHandling.CommandError(grepCmd, out error);
 
-                    return false;
+                        if (string.IsNullOrEmpty(error))
+                        {
+                            if (string.IsNullOrEmpty(error) && Convert.ToInt32(grepCmd.Result) > 0)
+                            {
+                                RemoveFile(client, logFile, out error);
+
+                                return true;
+                            }
+
+                            else
+                            {
+                                // Last ditch effort to check if file exists.
+                                using (var grepCmd2 = client.CreateCommand("grep 'HTTP/1.1 200 OK' " + logFile + " | wc -l"))
+                                {
+                                    grepCmd2.Execute();
+                                    LinuxErrorHandling.CommandError(grepCmd, out error);
+                                    RemoveFile(client, logFile, out error);
+
+                                    if (string.IsNullOrEmpty(error))
+                                    {
+                                        if (string.IsNullOrEmpty(error) && Convert.ToInt32(grepCmd2.Result) > 0)
+                                            return true;
+
+                                        else
+                                            return false;
+                                    }
+
+                                    else
+                                        return false;
+                                }
+                            }
+                        }
+
+                        // error
+                        else
+                            return false;
+                    }
                 }
 
+                // error
                 else
-                    return false;              
+                    return false;
             }
         }
 
