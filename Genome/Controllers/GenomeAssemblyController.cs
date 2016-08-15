@@ -79,8 +79,8 @@ namespace Genome.Controllers
                     string error = "";
                     string badUrl = "";
 
-                    ConfigBuilder builder = new ConfigBuilder();
-                    builder.GenerateConfigs(genomeModel, dataSources, seed, out error);
+                    JobBuilder builder = new JobBuilder(genomeModel, dataSources, seed);
+                    builder.GenerateConfigs(out error);
 
                     ViewBag.ConnectionErrorDetails = error;
                     #endregion
@@ -89,15 +89,12 @@ namespace Genome.Controllers
 
                     /// TODO: Start the download of their data on BigDog to see if we can get each URL. If we cannot, then we just terminate 
                     /// and tell them the error we receieved.
-                    SSHConfig ssh = new SSHConfig(Locations.BD_IP, genomeModel, out error);
 
-                    if (string.IsNullOrEmpty(ssh.TestJobUrls(seed, out error)) && string.IsNullOrEmpty(error))
+                    if (string.IsNullOrEmpty(HelperMethods.TestJobUrls(genomeModel, seed, out error)) && string.IsNullOrEmpty(error))
                     {
                         /// We can instead pass in the SEED variable which will be used to reference the method in Locations to grab the correct file(s).
                         /// This is the ideal solution which will be implemented only once we know that the system works with the direct URL.
-                        ssh.CreateJob(builder.InitConfigURL, builder.MasurcaConfigURL, out error);
-
-                        //ssh.CreateConnection(out error);
+                        builder.CreateJob(out error);
 
                         // No error so proceed.
                         if (string.IsNullOrEmpty(error))

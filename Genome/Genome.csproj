@@ -247,13 +247,13 @@
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Helpers\CheckJobStatus.cs" />
-    <Compile Include="Helpers\ConfigBuilder.cs" />
+    <Compile Include="Helpers\JobBuilder.cs" />
     <Compile Include="Helpers\CustomRoles.cs" />
     <Compile Include="Helpers\HelperMethods.cs" />
     <Compile Include="Helpers\LinuxCommands.cs" />
     <Compile Include="Helpers\LinuxErrorHandling.cs" />
-    <Compile Include="Helpers\SSHConfig.cs" />
     <Compile Include="Helpers\Unique.cs" />
+    <Compile Include="Helpers\VerifyAccount.cs" />
     <Compile Include="Logging\ExceptionUtility.cs" />
     <Compile Include="Migrations\201607260340361_test.cs" />
     <Compile Include="Migrations\201607260340361_test.Designer.cs">

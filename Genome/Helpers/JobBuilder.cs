@@ -1,12 +1,14 @@
 ﻿using Genome.Models;
+using Renci.SshNet;
+using Renci.SshNet.Common;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Web;
+using System.Net.Sockets;
 
 namespace Genome.Helpers
 {
-    public class ConfigBuilder
+    public class JobBuilder
     {
         public string MasurcaConfigURL { get; set; }
         public string InitConfigURL { get; set; }
@@ -17,28 +19,39 @@ namespace Genome.Helpers
         private string urlPath { get; set; }
         private string localPath { get; set; }
 
-        /// <summary>
-        /// Generates the config files necessary for the assembler run.
-        /// </summary>
+        private GenomeModel genomeModel;
+        private List<string> dataSources;
+
         /// <param name="genomeModel">The model data of the current job.</param>
         /// <param name="dataSources">A stored list of strings containing the location(s) of the user's data set.</param>
         /// <param name="seed">Seed value for a unique name for the job.</param>
-        /// <param name="error">Any error encountered by the command.</param>
-        /// <param name="initUrl"></param>
-        /// <param name="masurcaUrl"></param>
-        public void GenerateConfigs(GenomeModel genomeModel, List<string> dataSources, int seed, out string error)
+        public JobBuilder(GenomeModel genomeModel, List<string> dataSources, int seed)
         {
+            this.genomeModel = genomeModel;
             this.seed = seed;
-            username = HttpContext.Current.User.Identity.Name.ToString().Split('@')[0];
+            this.dataSources = dataSources;
+        }
+
+        /// <summary>
+        /// Generates the config files necessary for the assembler run.
+        /// </summary>
+        /// <param name="error">Any error encountered by the command.</param>
+        public void GenerateConfigs(out string error)
+        {
+            username = HelperMethods.GetUsername();
             urlPath = "/AssemblerConfigs/" + "Job-" + username + "-" + seed + "/";
             localPath = @"D:\AssemblerConfigs\Job-" + username + "-" + seed + "\\";
 
-            CreateDirectory(seed);
-            BuildInitConfig(dataSources, seed, out error);
-            if (genomeModel.UseMasurca) { BuildMasurcaConfig(genomeModel, seed, out error); }
+            CreateDirectory();
+            BuildInitConfig(out error);
+            if (genomeModel.UseMasurca) { BuildMasurcaConfig(out error); }
         }
 
-        private void CreateDirectory(int seed)
+        /// <summary>
+        /// Creates the directory on the FTP with a randomized name.
+        /// </summary>
+        /// <param name="seed">Random integer value.</param>
+        private void CreateDirectory()
         {
             while (Directory.Exists(localPath))
             {
@@ -56,10 +69,8 @@ namespace Genome.Helpers
         /// <summary>
         /// Creates the initial file which is run at the beginning of each run. The primary function of which is to download the user's data at runtime.
         /// </summary>
-        /// <param name="dataSources">A stored list of strings containing the location(s) of the user's data set.</param>
-        /// <param name="seed">Seed value for a unique name for the job.</param>
         /// <param name="error">Any error encountered by the command.</param>
-        private void BuildInitConfig(List<string> dataSources, int seed, out string error)
+        private void BuildInitConfig(out string error)
         {
             error = "";
 
@@ -93,8 +104,9 @@ namespace Genome.Helpers
                                 concatFiles = concatFiles + " leftData_" + j;
                             }
 
-                            // Concat the left reads together into a leftReads.fastq file.
+                            // Concat the left reads together into a leftReads.fastq file and delete old files.
                             tw.WriteLine("cat " + concatFiles + " > leftReads.fastq");
+                            tw.WriteLine("rm leftData_*");
                             concatFiles = "";
 
                             // Now add the wgets for the right reads URLs and rename them to rightData_[i]:
@@ -104,8 +116,9 @@ namespace Genome.Helpers
                                 concatFiles = concatFiles + " rightData_" + i;
                             }
 
-                            // Concat the right reads together into a rightReads.fastq file.
+                            // Concat the right reads together into a rightReads.fastq file and delete old files.
                             tw.WriteLine("cat " + concatFiles + " > rightReads.fastq");
+                            tw.WriteLine("rm rightData_*");
                         }
 
                         InitConfigURL = Locations.FTP_URL + urlPath + fileName;
@@ -130,10 +143,8 @@ namespace Genome.Helpers
         /// <summary>
         /// Creates the configuration file for the Masurca assembler for each unique run.
         /// </summary>
-        /// <param name="genomeModel">The model data of the current job.</param>
-        /// <param name="seed">Seed value for a unique name for the job.</param>
         /// <param name="error">Any error encountered by the command.</param>
-        private void BuildMasurcaConfig(GenomeModel genomeModel, int seed, out string error)
+        private void BuildMasurcaConfig(out string error)
         {
             error = "";
 
@@ -199,7 +210,7 @@ namespace Genome.Helpers
                     }
                 }
 
-                catch(Exception e)
+                catch (Exception e)
                 {
                     error = e.Message;
                 }
@@ -211,6 +222,105 @@ namespace Genome.Helpers
                 error = "Unfortunately, we couldn't create the necessary configuration files to submit your job. Please contact an administrator.";
 
                 throw new IOException("Attempted to create \"" + fullPath + "\" but it already exists so we cannot create the file. Continuing is not advised. ");
+            }
+        }
+
+        /// <summary>
+        /// Creates all the necessary folders, downloads the config scripts, and adds the job to the scheduler on BigDog.
+        /// </summary>
+        /// <param name="error">Any error encountered by the command.</param>
+        /// <returns>Returns true only if a job gets successfully added to SGE.</returns>
+        public bool CreateJob(out string error)
+        {
+            error = "";
+
+            // The init.sh script will contain all the basic logic to download the data and initiate the job on the assembler(s).
+            using (var client = new SshClient(Locations.BD_IP, genomeModel.SSHUser, genomeModel.SSHPass))
+            {
+                // Set defaults
+                Locations.masterPath = "/share/scratch/bioinfo/" + HelperMethods.GetUsername();
+                string node = Locations.BD_COMPUTE_NODE1; // default  
+                string wgetLogParameter = "--output-file=" + Locations.GetJobLogPath(seed) + "wget.error";
+                string initPath = Locations.GetJobConfigPath(seed) + "init.sh";
+                string masurcaPath = Locations.GetJobConfigPath(seed) + "masurca_config.txt";
+
+                try
+                {
+                    client.Connect();
+
+                    if (string.IsNullOrEmpty(error)) { LinuxCommands.CreateDirectory(client, Locations.masterPath, out error, "-p"); }
+                    if (string.IsNullOrEmpty(error)) { LinuxCommands.CreateDirectory(client, Locations.GetJobPath(seed), out error, "-p"); }
+                    if (string.IsNullOrEmpty(error)) { LinuxCommands.CreateDirectory(client, Locations.GetJobDataPath(seed), out error, "-p"); }
+                    if (string.IsNullOrEmpty(error)) { LinuxCommands.CreateDirectory(client, Locations.GetJobConfigPath(seed), out error, "-p"); }
+                    if (string.IsNullOrEmpty(error)) { LinuxCommands.CreateDirectory(client, Locations.GetJobOutputPath(seed), out error, "-p"); }
+                    if (string.IsNullOrEmpty(error)) { LinuxCommands.CreateDirectory(client, Locations.GetJobLogPath(seed), out error, "-p"); }
+
+                    if (string.IsNullOrEmpty(error)) { LinuxCommands.DownloadFile(client, initPath, InitConfigURL, out error, wgetLogParameter); }
+                    if (string.IsNullOrEmpty(error)) { LinuxCommands.RunDos2Unix(client, initPath, out error); }
+
+                    if (string.IsNullOrEmpty(error)) { LinuxCommands.DownloadFile(client, masurcaPath, MasurcaConfigURL, out error, wgetLogParameter); }
+                    if (string.IsNullOrEmpty(error)) { LinuxCommands.RunDos2Unix(client, masurcaPath, out error); }
+
+                    if (string.IsNullOrEmpty(error)) { LinuxCommands.ChangePermissions(client, Locations.GetJobPath(seed), "777", out error, "-R"); }
+
+                    if (string.IsNullOrEmpty(error))
+                    {
+                        // So COMPUTENODE2 has a smaller load, we want to use that instead.
+                        if (LinuxCommands.GetNodeLoad(client, Locations.BD_COMPUTE_NODE1, out error) > LinuxCommands.GetNodeLoad(client, Locations.BD_COMPUTE_NODE2, out error))
+                            node = Locations.BD_COMPUTE_NODE2;
+
+                        else
+                            node = Locations.BD_COMPUTE_NODE1;
+                    }
+
+                    // May need to investigate this. But I'm fairly certain you need to be in the current directory or we can always call it 
+                    // via its absolute path but this is probably easier. It is late, but I am pretty sure you aren't able to do a qsub on 
+                    // anything but the login node. So we might need to investigate the way in which we store the information.
+
+                    // This command has NOT been tested. We may need an absolute path rather than the relative one that we reference in this method
+                    //since we switch directories to the output path directory. !!!!!!COMMENTING OUT FOR DEBUG PURPOSES!!!!!!
+                    //if (string.IsNullOrEmpty(error)) { LinuxCommands.AddJobToScheduler(client, Locations.GetJobLogPath(id), node, jobName, out error); }
+
+                    //if (string.IsNullOrEmpty(error)) { genomeModel.SGEJobId = LinuxCommands.SetJobNumber(client, genomeModel.SSHUser, jobName, out error); }
+
+                    // There were no errors.
+                    if (string.IsNullOrEmpty(error))
+                        return true;
+
+                    else
+                        return false;
+                }
+
+                // SSH Connection couldn't be established.
+                catch (SocketException e)
+                {
+                    error = "The SSH connection couldn't be established. " + e.Message;
+
+                    return false;
+                }
+
+                // Authentication failure.
+                catch (SshAuthenticationException e)
+                {
+                    error = "The credentials were entered incorrectly. " + e.Message;
+
+                    return false;
+                }
+
+                // The SSH connection was dropped.
+                catch (SshConnectionException e)
+                {
+                    error = "The connection was terminated unexpectedly. " + e.Message;
+
+                    return false;
+                }
+
+                catch (Exception e)
+                {
+                    error = "There was an uncaught exception. " + e.Message;
+
+                    return false;
+                }
             }
         }
     }

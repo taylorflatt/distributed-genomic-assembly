@@ -45,27 +45,23 @@ namespace Genome.Controllers
         [HttpPost]
         public async Task<ActionResult> VerifyBigDogAccount(string SSHUser, string SSHPass)
         {
-            string error = "";
             string permissionsError = "";
             string quotaError = "";
-            int quotaAmount = 0;
+            ViewBag.RecQuota = Convert.ToString(Locations.MINIMUM_QUOTA) + "Gb+";
             //ViewBag.ShowResults = null; // Need to null this so if the user tries to check again in the SAME session and there is an error it won't display.
 
             // Make sure there is actually information. Otherwise we just return them to the form.
-            if (SSHUser != "" && SSHPass != "")
+            if (!string.IsNullOrEmpty(SSHUser) && !string.IsNullOrEmpty(SSHPass))
             {
-                // Now we need to connect to bigdog and run the quota call and run the permissions call.
-                SSHConfig ssh = new SSHConfig(Locations.BD_IP, out error);
-
                 // Check if they have sufficient permissions.
-                if (ssh.VerifyPermissions(SSHUser, SSHPass, out permissionsError))
+                if (VerifyAccount.VerifyPermissions(SSHUser, SSHPass, out permissionsError))
                     ViewBag.PermissionsSuccess = "Your permissions validated successfully!";
 
                 else
                     ViewBag.PermissionsError = permissionsError;
 
                 // Check if they have sufficient quota.
-                if(ssh.VerifyQuota(SSHUser, SSHPass, out quotaError, out quotaAmount))
+                if(VerifyAccount.VerifyQuota(SSHUser, SSHPass, out quotaError))
                     ViewBag.QuotaSuccess = "You have sufficient quota!";
 
                 else
@@ -84,12 +80,7 @@ namespace Genome.Controllers
                 // Save the user information.
                 IdentityResult result = await UserManager.UpdateAsync(Model);
 
-                if (quotaAmount == 0)
-                    ViewBag.QuotaAmount = "Unknown. Something went wrong.";
-
-                else
-                    ViewBag.QuotaAmount = quotaAmount + "Gb";
-
+                ViewBag.QuotaAmount = "OK";
                 ViewBag.ShowResults = "Show Results";
 
                 return View();

@@ -5,43 +5,53 @@
     /// </summary>
     public class Locations
     {
+        protected internal static string masterPath { get; set; }
+
         /// <summary>
         /// List of constants. Here, BigDog is referred to as BD for brevity.
         /// </summary>
         protected internal const string WEBSITE_IP = "131.230.63.114";
         protected internal const string PUBLIC_KEY_PATH = "UNKNOWN";
-        protected internal const string GET_MASTER_PATH = "/share/scratch/bioinfo/";
         protected internal const string BD_IP = "login-0-0.research.siu.edu";
         protected internal const string BD_UPDATE_KEY_PATH = "FILE SERVER LOCATION OF BIG DOG PRIVATE KEY LOCATION";
         protected internal const string BD_COMPUTE_NODE1 = "compute-0-24";
         protected internal const string BD_COMPUTE_NODE2 = "compute-0-25";
         protected internal const string ZIP_STORAGE_PATH = "LOCATION ON THE FTP SERVER";
         protected internal const string FTP_URL = "ftp://" + WEBSITE_IP;
+        protected internal const string VERIFY_PERMISSIONS_TEST_DIR = "/share/scratch/bioinfo/testPermissions";
+        protected internal const int MINIMUM_QUOTA = 50;
 
+        /// <summary>
+        /// Generates the FTP path (url) to the init script.
+        /// </summary>
+        /// <param name="seed">A unique identifier given to the session.</param>
+        /// <param name="username">The username of the person submitting the job.</param>
+        /// <returns>A string url to the init script.</returns>
         protected internal static string GetInitScriptPath(int seed, string username)
         {
             return FTP_URL + "AssemblerConfigs/" + "Job-" + username + seed + "/" + "init_" + seed + ".sh";
         }
 
+        /// <summary>
+        /// Generates the FTP path (url) to the masurca script.
+        /// </summary>
+        /// <param name="seed">A unique identifier given to the session.</param>
+        /// <param name="username">The username of the person submitting the job.</param>
+        /// <returns>A string url to the masurca script.</returns>
         protected internal static string GetMasurcaScriptPath(int seed, string username)
         {
             return FTP_URL + "AssemblerConfigs/" + "Job-" + username + seed + "/" + "MasurcaConfig_" + seed + ".txt";
         }
 
-        //protected internal static string GetUrlTestDirectory(int seed)
-        //{
-        //    return "/share/scratch/bioinfo/GENOME_ASSEMBLER_test_urls_" + seed;
-        //}
-
         /// <summary>
         /// Get the link for the data download for the user.
         /// </summary>
         /// <param name="username">Username of the user (without the @).</param>
-        /// <param name="uuid">The unique ID for the job.</param>
+        /// <param name="id">The unique ID for the job.</param>
         /// <returns>The path to the download link on the FTP server.</returns>
-        protected internal static string GetDataDownloadLink(string username, int uuid)
+        protected internal static string GetDataDownloadLink(string username, int id)
         {
-            return "ROUTE TO THE FTP ON THE FILE SERVER/" + username + "Job" + uuid;
+            return "ROUTE TO THE FTP ON THE FILE SERVER/" + username + "Job" + id;
         }
 
         /// <summary>
@@ -51,7 +61,7 @@
         /// <returns>Returns a string path to the working directory.</returns>
         protected internal static string GetJobPath(int id)
         {
-            return GET_MASTER_PATH + "/Job" + id + "/";
+            return masterPath + "/Job"  + id + "/";
         }
 
         /// <summary>

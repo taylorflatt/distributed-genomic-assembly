@@ -190,7 +190,7 @@ namespace Genome.Helpers
                     db.SaveChanges();
 
                     // Compress Data.
-                    LinuxCommands.ZipFiles(client, 9, Locations.GetCompressedDataPath(uuid), Locations.GET_MASTER_PATH, out error, "-y -r");
+                    LinuxCommands.ZipFiles(client, 9, Locations.GetCompressedDataPath(uuid), Locations.masterPath, out error, "-y -r");
 
                     if (!string.IsNullOrEmpty(error))
                     {

@@ -2,11 +2,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.AspNet.Identity;
+using System.Web;
+using Renci.SshNet;
 
 namespace Genome.Helpers
 {
     public class HelperMethods
     {
+        private GenomeModel genomeModel;
+
         /// <summary>
         /// Splits the list of URLs by commas (,) created by the wizard.
         /// </summary>
@@ -15,6 +19,40 @@ namespace Genome.Helpers
         protected internal static List<string> ParseUrlString(string urlString)
         {
             return urlString.Split(',').Select(sValue => sValue.Trim()).ToList();
+        }
+
+        /// <summary>
+        /// Gets the username of the current user. 
+        /// </summary>
+        /// <returns>Returns the username (email without everything after the @ symbol) of the current user.</returns>
+        protected internal static string GetUsername()
+        {
+            return HttpContext.Current.User.Identity.Name.ToString().Split('@')[0];
+        }
+
+        /// <summary>
+        /// Tests whether the URLs entered by the user in the wizard are connectable.
+        /// </summary>
+        /// <param name="error">Any error encountered by the command.</param>
+        /// <returns>Returns a null string if the URL is connectable. Otherwise it will return the URL that is malfunctioning.</returns>
+        protected internal static string TestJobUrls(GenomeModel genomeModel, int seed, out string error)
+        {
+            error = "";
+
+            using (var client = new SshClient(Locations.BD_IP, genomeModel.SSHUser, genomeModel.SSHPass))
+            {
+                client.Connect();
+
+                List<string> urlList = ParseUrlString(genomeModel.DataSource);
+
+                foreach (var url in urlList)
+                {
+                    if (!LinuxCommands.CheckDataAvailability(client, url, out error))
+                        return url;
+                }
+
+                return "";
+            }
         }
 
         /// <summary>

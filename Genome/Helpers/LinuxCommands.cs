@@ -112,16 +112,15 @@ namespace Genome.Helpers
         }
 
         /// <summary>
-        /// Checks the allotted quota of a specific user on the BigDog cluster and determines if they have enough space to perform our tasks.
+        /// Checks the allotted quota of a specific user on the BigDog cluster.
         /// </summary>
         /// <param name="client">The current SSH client session.</param>
         /// <param name="minQuota">The amount of minimum quota (in GB) that a user must have to proceed.</param>
         /// <param name="error">Any error encountered by the command.</param>
-        /// <param name="quotaAmount">The amount of quota the user has in GB after checking on BigDog.</param>
-        /// <returns>Returns a boolean value as to whether the user has sufficient quota or not.</returns>
-        protected internal static bool CheckQuota(SshClient client, int minQuota, out string error, out int quotaAmount)
+        /// <returns>Returns the amount of space (in Gb) in quota the user has to work with.</returns>
+        protected internal static int GetQuota(SshClient client, int minQuota, out string error)
         {
-            quotaAmount = 0;
+            int quotaAmount = 0;
             string byteType = CheckQuotaType(client, out error); // Check whether the quota is in MB or GB.
 
             // Now we need to get the quota size.
@@ -130,18 +129,9 @@ namespace Genome.Helpers
             // If the quota is in MB, we need to convert it. Otherwise, we are fine.
             if (string.IsNullOrEmpty(error) && byteType.Equals("M")) { quotaAmount = ConvertToGigabyte(quotaAmount); }
 
-            // If they have less than 'minQuota' then we return an error telling them the problem and how to rectify it.
-            if (quotaAmount < minQuota)
-            {
-                error = "You do not have the requisite amount of disk space (" + minQuota + "Gb) for us to safely run a general assembly "
-                    + "job. Please contact the BigDog admin team to increase your quota. You currently have " + quotaAmount + "Gb space to use.";
+            return quotaAmount;
 
-                return false;
-            }
 
-            // They have at least the minimum quota.
-            else
-                return true;
         }
 
         /// <summary>
@@ -527,14 +517,34 @@ namespace Genome.Helpers
         /// <param name="URL">The URL of the particular file.</param>
         /// <param name="error">Any error encountered by the command.</param>
         /// <param name="parameters">Any optional parameters for the wget command. Every optional parameter needs to conform to typical Linux bash syntax (must be preceeded by a dash). </param>
-        protected internal static void DownloadFile(SshClient client, string URL, out string error, string parameters = "")
+        protected internal static void DownloadFile(SshClient client, string outputLocation, string url, out string error, string parameters = "")
         {
-            // Download the file to the CWD unless specified by an optional parameter.
-            using (var cmd = client.CreateCommand("wget " + URL + " " + parameters))
+            using (var cmd = client.CreateCommand("wget --output-document=" + outputLocation + " " + url + " " + parameters))
             {
                 cmd.Execute();
 
                 LinuxErrorHandling.CommandError(cmd, out error);
+            }
+        }
+
+        /// <summary>
+        /// Runs the Dos2Unix program which will strip away the dumb stuff Windows does to files when writing them. This is required prior to running premade scripts.
+        /// </summary>
+        /// <param name="client">The current SSH client session.</param>
+        /// <param name="scriptLocation">The absolute path of the script which you want to run Dos2Unix on.</param>
+        /// <param name="error">Any error encountered by the command.</param>
+        /// <remarks>This program must be run on the config scripts created by the ConfigBuilder.</remarks>
+        protected internal static void RunDos2Unix(SshClient client, string scriptLocation, out string error)
+        {
+            using (var cmd = client.CreateCommand("dos2unix " + scriptLocation))
+            {
+                cmd.Execute();
+
+                LinuxErrorHandling.CommandError(cmd, out error);
+
+                // For some reason, this is an error but in reality it is actually the script doing its job correctly. So we nullify the "error".
+                if (error.Equals("dos2unix: converting file " + scriptLocation + " to UNIX format ...\n"))
+                    error = "";
             }
         }
 
