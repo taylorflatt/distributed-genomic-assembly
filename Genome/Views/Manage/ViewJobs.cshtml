@@ -38,7 +38,14 @@
                     @Html.DisplayFor(modelItem => item.uuid)
                 </td>
                 <td>
-                    @Html.DisplayFor(modelItem => item.DataSource)
+                    @{
+                        var urls = item.DataSource.Split(',');
+
+                        foreach (var source in urls)
+                        {
+                            <p>@source</p>
+                        }
+                    }
                 </td>
                 <td>
                     @Html.DisplayFor(modelItem => item.CreatedDate)

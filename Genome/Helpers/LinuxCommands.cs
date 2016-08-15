@@ -241,15 +241,16 @@ namespace Genome.Helpers
         /// Adds a job to SGE (scheduler).
         /// </summary>
         /// <param name="client">The current SSH client session.</param>
+        /// <param name="workingDirectory">Directory the scheduler will execute out of.</param>
         /// <param name="logPath">The location of the output and error logs.</param>
         /// <param name="node">The node on which the job will execute.</param>
         /// <param name="jobName">A particular name we would like the job to be called.</param>
-        /// <param name="error">Any error encountered by the command.</param>
-        protected internal static void AddJobToScheduler(SshClient client, string logPath, string node, string jobName)
+        /// <param name="initScript">The program that will be executed by the scheduler. This must be an absolute path beginninig with a /.</param>
+        protected internal static void AddJobToScheduler(SshClient client, string workingDirectory, string logPath, string node, string jobName, string initScript)
         {
             // USAGE: qsub -pe make 20 -V -e /tmp/Genome/ -o/tmp/Genome/ -b y -l hostname=compute-0-24 -N taylor1 ./HelloWorld
             // qsub -pe make 20 -V  -b y -l hostname=compute-0-24 -cwd -N taylor1 ./HelloWorld
-            using (var cmd = client.CreateCommand("qsub -pe make 20 -V -e " + logPath + " -o " + logPath + " -b y -l hostname=" + node + "-N " + jobName + "./assemble.sh"))
+            using (var cmd = client.CreateCommand("qsub -pe make 20 -V -wd " + workingDirectory + " -e " + logPath + " -o " + logPath + " -b y -l hostname=" + node + " -N " + jobName + " " + initScript))
             {
                 cmd.Execute();
 
@@ -271,7 +272,7 @@ namespace Genome.Helpers
             // -f: Full Format
             // -u "[user]": Jobs for specific user
             // We want to get the job number (which is created at submit to the scheduler).
-            using (var cmd = client.CreateCommand("qstat -f -u " + "\"" + SSHUser + "\"" + "| grep " + jobName))
+            using (var cmd = client.CreateCommand("qstat -f -u " + "\"" + SSHUser + "\"" + " | grep " + SSHUser))
             {
                 cmd.Execute();
 

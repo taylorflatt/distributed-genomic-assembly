@@ -44,7 +44,16 @@
                             </tr>
                             <tr>
                                 <td>Data Location</td>
-                                <td>@Html.DisplayFor(model => model.DataSource)</td>
+                                <td>
+                                    @{ 
+                                        var urls = Model.DataSource.Split(',');
+
+                                        foreach(var source in urls)
+                                        {
+                                            <p>@source</p>
+                                        }
+                                    }
+                                </td>
                             </tr>
                             <tr>
                                 <td>Primers Removed</td>

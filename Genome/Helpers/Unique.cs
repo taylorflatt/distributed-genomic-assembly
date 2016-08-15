@@ -25,7 +25,7 @@ namespace Genome.Helpers
                 foreach (var u in userList)
                 {
                     if (u.DawgTag == Convert.ToInt32(value))
-                        return new ValidationResult("That dawgtag is already associated with a user.");
+                        return new ValidationResult("That DawgTag is already associated with a user.");
                 }
 
                 return ValidationResult.Success;

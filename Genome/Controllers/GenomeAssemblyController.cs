@@ -98,12 +98,13 @@ namespace Genome.Controllers
                         // No error so proceed.
                         if (string.IsNullOrEmpty(LinuxErrorHandling.error))
                         {
-                            //db.GenomeModels.Add(genomeModel);
-                            //db.SaveChanges();
-                            //return RedirectToAction("Details", new { id = genomeModel.uuid });
+                            db.GenomeModels.Add(genomeModel);
+                            db.SaveChanges();
+
+                            return RedirectToAction("Details", new { id = genomeModel.uuid });
                             // DEBUG ONLY BELOW:
-                            ViewBag.ConnectionError = "Successfully did everything except add it to the DB!";
-                            return View(genomeModel);
+                            //ViewBag.ConnectionError = "Successfully did everything except add it to the DB!";
+                            //return View(genomeModel);
                         }
 
                         // Redisplay the data and display the error.

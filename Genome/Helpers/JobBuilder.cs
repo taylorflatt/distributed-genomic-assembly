@@ -237,6 +237,7 @@ namespace Genome.Helpers
                 string wgetLogParameter = "--output-file=" + Accessors.GetJobLogPath(seed) + "wget.error";
                 string initPath = Accessors.GetJobConfigPath(seed) + "init.sh";
                 string masurcaPath = Accessors.GetJobConfigPath(seed) + "masurca_config.txt";
+                string jobName = HelperMethods.GetUsername() + "-" + seed;
 
                 try
                 {
@@ -267,15 +268,9 @@ namespace Genome.Helpers
                             node = Accessors.BD_COMPUTE_NODE1;
                     }
 
-                    // May need to investigate this. But I'm fairly certain you need to be in the current directory or we can always call it 
-                    // via its absolute path but this is probably easier. It is late, but I am pretty sure you aren't able to do a qsub on 
-                    // anything but the login node. So we might need to investigate the way in which we store the information.
+                    if (string.IsNullOrEmpty(LinuxErrorHandling.error)) { LinuxCommands.AddJobToScheduler(client, Accessors.GetJobDataPath(seed), Accessors.GetJobLogPath(seed), node, jobName, initPath); }
 
-                    // This command has NOT been tested. We may need an absolute path rather than the relative one that we reference in this method
-                    //since we switch directories to the output path directory. !!!!!!COMMENTING OUT FOR DEBUG PURPOSES!!!!!!
-                    //if (string.IsNullOrEmpty(LinuxErrorHandling.error)) { LinuxCommands.AddJobToScheduler(client, Locations.GetJobLogPath(id), node, jobName); }
-
-                    //if (string.IsNullOrEmpty(LinuxErrorHandling.error)) { genomeModel.SGEJobId = LinuxCommands.SetJobNumber(client, genomeModel.SSHUser, jobName); }
+                    if (string.IsNullOrEmpty(LinuxErrorHandling.error)) { genomeModel.SGEJobId = LinuxCommands.SetJobNumber(client, genomeModel.SSHUser, jobName); }
 
                     // There were no errors.
                     if (string.IsNullOrEmpty(LinuxErrorHandling.error))
