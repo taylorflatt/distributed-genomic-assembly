@@ -31,7 +31,6 @@ namespace Genome.Helpers
         /// <summary>
         /// Tests whether the URLs entered by the user in the wizard are connectable.
         /// </summary>
-        /// <param name="error">Any error encountered by the command.</param>
         /// <returns>Returns a null string if the URL is connectable. Otherwise it will return the URL that is malfunctioning.</returns>
         protected internal static string TestJobUrls(GenomeModel genomeModel, int seed)
         {

@@ -35,7 +35,6 @@ namespace Genome.Helpers
         /// <summary>
         /// Generates the config files necessary for the assembler run.
         /// </summary>
-        /// <param name="error">Any error encountered by the command.</param>
         public void GenerateConfigs()
         {
             username = HelperMethods.GetUsername();
@@ -69,7 +68,6 @@ namespace Genome.Helpers
         /// <summary>
         /// Creates the initial file which is run at the beginning of each run. The primary function of which is to download the user's data at runtime.
         /// </summary>
-        /// <param name="error">Any error encountered by the command.</param>
         private void BuildInitConfig()
         {
             string fileName = "init_" + seed + ".sh";
@@ -141,7 +139,6 @@ namespace Genome.Helpers
         /// <summary>
         /// Creates the configuration file for the Masurca assembler for each unique run.
         /// </summary>
-        /// <param name="error">Any error encountered by the command.</param>
         private void BuildMasurcaConfig()
         {
             string fileName = "MasurcaConfig_" + seed + ".txt";
@@ -224,7 +221,6 @@ namespace Genome.Helpers
         /// <summary>
         /// Creates all the necessary folders, downloads the config scripts, and adds the job to the scheduler on BigDog.
         /// </summary>
-        /// <param name="error">Any error encountered by the command.</param>
         /// <returns>Returns true only if a job gets successfully added to SGE.</returns>
         public bool CreateJob()
         {

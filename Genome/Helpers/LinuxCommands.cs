@@ -16,7 +16,6 @@ namespace Genome.Helpers
         /// <param name="client">The current SSH client session.</param>
         /// <param name="url">The file URL that needs to be verified.</param>
         /// <param name="seed">The seed of the particular context.</param>
-        /// <param name="error">Any error encountered by the command.</param>
         /// <returns>Returns a boolean value as to whether or not a URL is accessible from the BigDog cluster.</returns>
         /// <remarks>This may need to include additional greps in the future to catch more cases. These are the only two I could think to include. </remarks>
         protected internal static bool CheckDataAvailability(SshClient client, string url)
@@ -63,12 +62,10 @@ namespace Genome.Helpers
             }
         }
 
-        // Check whether the quota is returning in Gb or Mb.
         /// <summary>
         /// Determines whether or not the quota is in GB or MB.
         /// </summary>
         /// <param name="client">The current SSH client session.</param>
-        /// <param name="error">Any error encountered by the command.</param>
         /// <returns>Returns a string G or M corresponding to the size of the quota.</returns>
         /// TODO: We need to make sure that we are grabbing the correct location. I need to check with BigDog admin on how they do quota increases and if they carry over to all 
         /// directories or just specific areas. Right now we just grab the first letter of the first return but there can be multiple ones like "G\nG\nG\n" for instance or just one "G\n".
@@ -88,18 +85,13 @@ namespace Genome.Helpers
             }
         }
 
-        // Check the actual number size of the quota being returned regardless of the type (Gb or Mb).
         /// <summary>
         /// Gets the size of quota the user has as an integer.
         /// </summary>
         /// <param name="client">The current SSH client session.</param>
-        /// <param name="error">Any error encountered by the command.</param>
         /// <returns>Returns an integer number representing the quota size in MB or GB.</returns>
         protected internal static int CheckQuotaSize(SshClient client)
         {
-            // Make sure they are in their home directory so we only get a single number. Need to investigate this. (DOESN'T WORK/MATTER)
-            ChangeDirectory(client, "~");
-
             // First we print out the quota then we grab only the quota column. Then we grab the number.
             using (var cmd = client.CreateCommand("quota -vs | awk '{print $2}' | grep -o '[0-9][0-9]*' | head -1"))
             {
@@ -116,7 +108,6 @@ namespace Genome.Helpers
         /// </summary>
         /// <param name="client">The current SSH client session.</param>
         /// <param name="minQuota">The amount of minimum quota (in GB) that a user must have to proceed.</param>
-        /// <param name="error">Any error encountered by the command.</param>
         /// <returns>Returns the amount of space (in Gb) in quota the user has to work with.</returns>
         protected internal static int GetQuota(SshClient client, int minQuota)
         {
@@ -141,7 +132,6 @@ namespace Genome.Helpers
         /// <param name="compressionSpeed">The speed of the compression where 9 is the slowest. Recommend: 9</param>
         /// <param name="outputName">The name of the resulting compression.</param>
         /// <param name="sourceDirectory">The directory that needs compressed.</param>
-        /// <param name="error">Any error encountered by the command.</param>
         /// <param name="parameters">Any optional parameters for the zip command. Every optional parameter needs to conform to typical Linux bash syntax (must be preceeded by a dash). </param>
         protected internal static void ZipFiles(SshClient client, int compressionSpeed, string outputName, string sourceDirectory, string parameters = "")
         {
@@ -164,12 +154,9 @@ namespace Genome.Helpers
         /// <param name="client">The current SSH client session.</param>
         /// <param name="successLog">Filename associated with a successful run.</param>
         /// <param name="jobUuid">An integer number representing the particular job ID via the website (key-value of the submitted job).</param>
-        /// <param name="error">Any error encountered by the command.</param>
         /// <returns>Returns a boolean value whether the assembler has successfully finished.</returns>
         protected internal static bool AssemblerSuccess(SshClient client, string successLog, int jobUuid)
         {
-            ChangeDirectory(client, Accessors.GetJobLogPath(jobUuid));
-
             // Determine if the job has finished successfully by searching for the success log.
             using (var cmd = client.CreateCommand("find " + successLog))
             {
@@ -193,13 +180,9 @@ namespace Genome.Helpers
         /// <param name="workingDirectory">The particular assembler output directory.</param>
         /// <param name="jobUuid">An integer number representing the particular job ID via the website (key-value of the submitted job).</param>
         /// <param name="stepList">The list of steps for a particular assembler.</param>
-        /// <param name="error">Any error encountered by the command.</param>
         /// <returns>Returns an integer representing the current step of a particular assembler or a -1 if there was an error.</returns>
         protected internal static int GetCurrentStep(SshClient client, string workingDirectory, int jobUuid, HashSet<Assembler> stepList)
         {
-            // Change to the assembler output directory.
-            ChangeDirectory(client, workingDirectory);
-
             int currentStep = 1;
 
             // Run through the step list checking which files have been created and determine where the assembler is in the process.
@@ -264,7 +247,6 @@ namespace Genome.Helpers
         /// <param name="client">The current SSH client session.</param>
         /// <param name="SSHUser">The user who submitted the job to the scheduler.</param>
         /// <param name="jobName">The name of the job.</param>
-        /// <param name="error">Any error encountered by the command.</param>
         /// <returns>Returns an integer representing the SGE job ID if successful or -1 if unsuccessful.</returns>
         protected internal static int SetJobNumber(SshClient client, string SSHUser, string jobName)
         {
@@ -300,7 +282,6 @@ namespace Genome.Helpers
         /// </summary>
         /// <param name="client">The current SSH client session.</param>
         /// <param name="node">Particular node on BigDog.</param>
-        /// <param name="error">Any error encountered by the command.</param>
         /// <returns>The load of the node specified in a double format unless there is an error which returns a -1.</returns>
         protected internal static double GetNodeLoad(SshClient client, string node)
         {
@@ -323,7 +304,6 @@ namespace Genome.Helpers
         /// </summary>
         /// <param name="client">The current SSH client session.</param>
         /// <param name="sgeJobId">An integer number representing the particular job ID.</param>
-        /// <param name="error">Any error encountered by the command.</param>
         /// <returns>Returns a boolean representing whether the job is currently in the job queue of SGE.</returns>
         protected internal static bool JobRunning(SshClient client, int sgeJobId)
         {
@@ -360,7 +340,6 @@ namespace Genome.Helpers
         /// </summary>
         /// <param name="client">The current SSH client session.</param>
         /// <param name="sgeJobId">An integer number representing the particular job ID.</param>
-        /// <param name="error">Any error encountered by the command.</param>
         protected internal static void CancelJob(SshClient client, int sgeId)
         {
             // Deletes the job with ID sgeId in SGE.
@@ -391,7 +370,6 @@ namespace Genome.Helpers
         /// </summary>
         /// <param name="client">The current SSH client session.</param>
         /// <param name="directory">The particular directory that needs to be checked.</param>
-        /// <param name="error">Any error encountered by the command.</param>
         /// <returns>Returns a boolean value as to whether the directory is empty or not.</returns>
         protected internal static bool DirectoryHasFiles(SshClient client, string directory)
         {
@@ -416,7 +394,6 @@ namespace Genome.Helpers
         /// <param name="client">The current SSH client session.</param>
         /// <param name="fileServerFtp">The url to the SFTP.</param>
         /// <param name="publicKeyLocation">Absolute path to the public key in order to authenticate to the SFTP.</param>
-        /// <param name="error">Any error encountered by the command.</param>
         protected internal static void ConnectSftpToFtp(SshClient client, string fileServerFtp, string publicKeyLocation)
         {
             // Initiate an SFTP connection with a particular public key (-i [key location]) to a particular sftp url.
@@ -433,7 +410,6 @@ namespace Genome.Helpers
         /// </summary>
         /// <param name="client">The current SSH client session.</param>
         /// <param name="fileLocation">The local path for the file that will be uploaded (probably the zipped completed file).</param>
-        /// <param name="error">Any error encountered by the command.</param>
         protected internal static void SftpUploadFile(SshClient client, string fileLocation)
         {
             // Puts a file from the local machine onto the server we have connected with previously. (See "ConnectSFTP" method).
@@ -446,29 +422,10 @@ namespace Genome.Helpers
         }
 
         /// <summary>
-        /// Changes the CWD to a specified directory.
-        /// </summary>
-        /// <param name="client">The current SSH client session.</param>
-        /// <param name="newDirectory">The path to the new directory.</param>
-        /// <param name="error">Any error encountered by the command.</param>
-        /// <param name="parameters">Any optional parameters for the cd command. Every optional parameter needs to conform to typical Linux bash syntax (must be preceeded by a dash). </param>
-        protected internal static void ChangeDirectory(SshClient client, string newDirectory, string parameters = "")
-        {
-            // Changes directories with any optional parameters mentioned.
-            using (var cmd = client.CreateCommand("cd " + newDirectory + " " + parameters))
-            {
-                cmd.Execute();
-
-                LinuxErrorHandling.CommandError(cmd);
-            }
-        }
-
-        /// <summary>
         /// Changes to a different node on BigDog.
         /// </summary>
         /// <param name="client">The current SSH client session.</param>
         /// <param name="node">The new node's name. (For instance: compute-0-24)</param>
-        /// <param name="error">Any error encountered by the command.</param>
         protected internal static void ChangeNode(SshClient client, string node)
         {
             // Changes to a specified node.
@@ -485,7 +442,6 @@ namespace Genome.Helpers
         /// </summary>
         /// <param name="client">The current SSH client session.</param>
         /// <param name="directoryPath">The new directory's name/location.</param>
-        /// <param name="error">Any error encountered by the command.</param>
         /// <param name="parameters">Any optional parameters for the mkdir command. Every optional parameter needs to conform to typical Linux bash syntax (must be preceeded by a dash). </param>
         protected internal static void CreateDirectory(SshClient client, string directoryPath, string directoryParameters = "")
         {
@@ -503,7 +459,6 @@ namespace Genome.Helpers
         /// </summary>
         /// <param name="client">The current SSH client session.</param>
         /// <param name="path">The location of the file to be deleted.</param>
-        /// <param name="error">Any error encountered by the command.</param>
         /// <param name="parameters">Any optional parameters for the rm command. Every optional parameter needs to conform to typical Linux bash syntax (must be preceeded by a dash). </param>
         protected internal static void RemoveFile(SshClient client, string path, string directoryParameters = "")
         {
@@ -521,7 +476,6 @@ namespace Genome.Helpers
         /// </summary>
         /// <param name="client">The current SSH client session.</param>
         /// <param name="URL">The URL of the particular file.</param>
-        /// <param name="error">Any error encountered by the command.</param>
         /// <param name="parameters">Any optional parameters for the wget command. Every optional parameter needs to conform to typical Linux bash syntax (must be preceeded by a dash). </param>
         protected internal static void DownloadFile(SshClient client, string outputLocation, string url, string parameters = "")
         {
@@ -538,7 +492,6 @@ namespace Genome.Helpers
         /// </summary>
         /// <param name="client">The current SSH client session.</param>
         /// <param name="scriptLocation">The absolute path of the script which you want to run Dos2Unix on.</param>
-        /// <param name="error">Any error encountered by the command.</param>
         /// <remarks>This program must be run on the config scripts created by the ConfigBuilder.</remarks>
         protected internal static void RunDos2Unix(SshClient client, string scriptLocation)
         {
@@ -560,7 +513,6 @@ namespace Genome.Helpers
         /// <param name="client">The current SSH client session.</param>
         /// <param name="path">The path to the file/directory whose permissions need changed.</param>
         /// <param name="newPermissions">The new permissions in the form of octal notation.</param>
-        /// <param name="error">Any error encountered by the command.</param>
         /// <param name="parameters">Any optional parameters for the chmod command. Every optional parameter needs to conform to typical Linux bash syntax (must be preceeded by a dash). </param>
         protected internal static void ChangePermissions(SshClient client, string path, string newPermissions, string parameters = "")
         {

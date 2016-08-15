@@ -12,7 +12,6 @@ namespace Genome.Helpers
         /// </summary>
         /// <param name="sshUser">The SSH username of the user.</param>
         /// <param name="sshPass">The SSH password of the user.</param>
-        /// <param name="error">Any error encountered by the command.</param>
         /// <returns>Returns true only if a user has sufficient permissions and quota.</returns>
         public static bool VerifyClusterAccount(string sshUser, string sshPass)
         {
@@ -28,7 +27,6 @@ namespace Genome.Helpers
         /// </summary>
         /// <param name="SSHUser">The SSH username of the user.</param>
         /// <param name="SSHPass">The SSH password of the user.</param>
-        /// <param name="error">Any error encountered by the command.</param>
         /// <returns>Returns a boolean value representing whether or not they have sufficient permissions.</returns>
         public static bool VerifyPermissions(string SSHUser, string SSHPass)
         {
@@ -94,7 +92,6 @@ namespace Genome.Helpers
         /// </summary>
         /// <param name="SSHUser">The SSH username of the user.</param>
         /// <param name="SSHPass">The SSH password of the user.</param>
-        /// <param name="error">Any error encountered by the command.</param>
         /// <param name="quotaAmount">The amount of quota in GB that the user has. This is sent out of the method.</param>
         /// <returns>Returns a boolean value representing whether or not they have enough space.</returns>
         public static bool VerifyQuota(string SSHUser, string SSHPass)

@@ -94,11 +94,19 @@ namespace Genome.Helpers
             return stepList;
         }
 
+        /// <summary>
+        /// Gets the Data Conversion step number for the job.
+        /// </summary>
+        /// <returns>Returns an integer representing the conversion step number.</returns>
         public static int GetDataConversionStepNum()
         {
             return 2;
         }
 
+        /// <summary>
+        /// Gets the Running Assembler step number for the job.
+        /// </summary>
+        /// <returns>Returns an integer representing the running assembler step number.</returns>
         public static int GetRunningAssemblersStepNum()
         {
             return 3;

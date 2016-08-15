@@ -37,7 +37,6 @@ namespace Genome.Helpers
         /// </summary>
         /// <param name="jobUuid">The unique ID of the job.</param>
         /// <param name="jobsToUpload">Returns, by reference, a flag indicating whether or not the job needs to be uploaded.</param>
-        /// <param name="error">Returns, by value, a string that indicates whether there has been an error. </param>
         protected internal static void UpdateStatus(int jobUuid, ref bool jobsToUpload)
         {
             using (var client = new SshClient(CreatePrivateKeyConnectionInfo()))
@@ -188,7 +187,6 @@ namespace Genome.Helpers
         /// </summary>
         /// <param name="client">Current SSH session client.</param>
         /// <param name="uuid">An integer number representing the particular job ID via the website (key-value of the submitted job).</param>
-        /// <param name="error">Any error encountered by the command.</param>
         protected internal static void UploadData(SshClient client, int uuid)
         {
             using (GenomeAssemblyDbContext db = new GenomeAssemblyDbContext())
@@ -197,7 +195,7 @@ namespace Genome.Helpers
                 GenomeModel genomeModel = db.GenomeModels.Find(uuid);
 
                 // Move to the overall job directory. (NOTE: THIS WILL NOT WORK...NEED TO MAKE SURE I USE ABSOLUTE PATHS.
-                LinuxCommands.ChangeDirectory(client, Accessors.GetJobPath(uuid));
+                //LinuxCommands.ChangeDirectory(client, Accessors.GetJobPath(uuid));
 
                 // Grab the unique list of steps for this particular model.
                 Hashtable overallStepList = StepDescriptions.GenerateOverallStepList(genomeModel.NumAssemblers);
