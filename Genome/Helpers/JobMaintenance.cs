@@ -18,14 +18,14 @@ namespace Genome.Helpers
         private static ConnectionInfo CreatePrivateKeyConnectionInfo()
         {
             // Reference for key: http://www.jokecamp.com/blog/connecting-to-sftp-with-key-file-and-password-using-ssh-net/
-            var keyFile = new PrivateKeyFile(@"[ABSOLUTE PATH OF OPENSSH PRIVATE PPK KEY]");
+            var keyFile = new PrivateKeyFile(Accessors.PRIVATE_KEY_PATH);
             var keyFiles = new[] { keyFile };
-            var username = "[USERNAME FOR UPDATE ACCOUNT]"; // This is the account name we will use to run the updates for jobs.
+            var username = "tflatt"; // This is the account name we will use to run the updates for jobs.
 
             var methods = new List<AuthenticationMethod>();
-            methods.Add(new PrivateKeyAuthenticationMethod(username, keyFiles));
+            methods.Add(new PrivateKeyAuthenticationMethod(Accessors.UPDATE_ACCT, keyFiles));
 
-            return new ConnectionInfo(Accessors.BD_IP, 22, username, methods.ToArray());
+            return new ConnectionInfo(Accessors.BD_IP, Accessors.BD_PORT, username, methods.ToArray());
         }
 
         // This will be called by a scheduler on a timed basis.
@@ -46,6 +46,7 @@ namespace Genome.Helpers
                 {
                     client.Connect();
 
+                    /// TODO: Modify the code to skip entire sections if they have already been completed. This will be based off the CURRENT STEP stored in the model data.
                     using (GenomeAssemblyDbContext db = new GenomeAssemblyDbContext())
                     {
                         GenomeModel genomeModel = db.GenomeModels.Find(jobUuid);
@@ -65,6 +66,8 @@ namespace Genome.Helpers
                         // Checks to see if the job is running.
                         if (LinuxCommands.JobRunning(client, Convert.ToInt32(genomeModel.SGEJobId)))
                         {
+                            genomeModel.OverallCurrentStep = StepDescriptions.GetRunningAssemblersStepNum();
+
                             // Now we need to check the status of EACH assembler, updating their statuses before we know the overall status.
                             if (string.IsNullOrEmpty(LinuxErrorHandling.error))
                             {
@@ -107,23 +110,46 @@ namespace Genome.Helpers
                             // Now I need to go through all the assemblers and see if they exited successfully or not.
                             if (LinuxCommands.AssemblerSuccess(client, Accessors.GetMasurcaSuccessLogPath(jobUuid), jobUuid))
                             {
-                                int masurcaCurrentStep = StepDescriptions.GetMasurcaStepList().Last().step;
+                                // If masurca isn't finished, we need to check it.
+                                if (!genomeModel.MasurcaCurrentStep.Equals(StepDescriptions.GetMasurcaStepList().Count))
+                                {
+                                    int masurcaCurrentStep = StepDescriptions.GetMasurcaStepList().Last().step;
 
-                                genomeModel.MasurcaCurrentStep = masurcaCurrentStep;
-                                genomeModel.MasurcaStatus = StepDescriptions.GetCurrentStepDescription(StepDescriptions.GetMasurcaStepList(), masurcaCurrentStep);
+                                    genomeModel.MasurcaCurrentStep = masurcaCurrentStep;
+                                    genomeModel.MasurcaStatus = StepDescriptions.GetCurrentStepDescription(StepDescriptions.GetMasurcaStepList(), masurcaCurrentStep);
+
+                                    // Update the overall step list to move forward a spot.
+                                    genomeModel.OverallCurrentStep++;
+                                }
                             }
 
                             // Error.
                             else
                             {
-                                int masurcaCurrentStep = StepDescriptions.GetMasurcaStepList().Last().step;
+                                // Don't re-assign values if we have already done it.
+                                if (!genomeModel.MasurcaCurrentStep.Equals(StepDescriptions.GetMasurcaStepList().Count))
+                                {
+                                    int masurcaCurrentStep = StepDescriptions.GetMasurcaStepList().Last().step;
 
-                                genomeModel.MasurcaCurrentStep = masurcaCurrentStep;
-                                genomeModel.MasurcaStatus = StepDescriptions.GetCurrentStepDescription(StepDescriptions.GetMasurcaStepList(), masurcaCurrentStep) + " - Error"; // explicitly note an error for the description.
+                                    genomeModel.MasurcaCurrentStep = masurcaCurrentStep;
+                                    genomeModel.MasurcaStatus = StepDescriptions.GetCurrentStepDescription(StepDescriptions.GetMasurcaStepList(), masurcaCurrentStep) + " - Error"; // explicitly note an error for the description.
+
+                                    // This may need to be investigated further. Not sure how the failure of a single assembler will have on the entire process. (Forking etc).
+                                    genomeModel.OverallCurrentStep++;
+                                }
+
                             }
 
-                            // Add the job to the list of jobs to upload to the file server FTP.
-                            jobsToUpload = true;
+                            /// NOW CHECK SGA.
+
+                            /// NOW CHECK WGS.
+
+                            // Update the status description.
+                            genomeModel.OverallStatus = StepDescriptions.GetCurrentStepDescription(overallStepList, genomeModel.OverallCurrentStep);
+
+                            // If ALL assemblers have finished in some capacity, then we need to move focus to uploading the data.
+                            if(genomeModel.MasurcaCurrentStep.Equals(StepDescriptions.GetMasurcaStepList().Last().step))
+                                jobsToUpload = true;
 
                             #endregion
                         }
@@ -211,7 +237,7 @@ namespace Genome.Helpers
                     db.SaveChanges();
 
                     // Connect to SFTP.
-                    LinuxCommands.ConnectSFTP(client, Accessors.FTP_URL, Accessors.PUBLIC_KEY_PATH);
+                    LinuxCommands.ConnectSftpToFtp(client, Accessors.FTP_URL, Accessors.PUBLIC_KEY_PATH);
 
                     if (!string.IsNullOrEmpty(LinuxErrorHandling.error))
                     {

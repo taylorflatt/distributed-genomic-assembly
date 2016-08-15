@@ -11,7 +11,10 @@
         /// List of constants. Here, BigDog is referred to as BD for brevity.
         /// </summary>
         protected internal const string WEBSITE_IP = "131.230.63.114";
+        protected internal const int BD_PORT = 22;
         protected internal const string PUBLIC_KEY_PATH = "UNKNOWN";
+        protected internal const string PRIVATE_KEY_PATH = @"C:\Connection Information\private-key-openssh-tf.ppk";
+        protected internal const string UPDATE_ACCT = "tflatt"; // BigDog acct we use to update jobs.
         protected internal const string BD_IP = "login-0-0.research.siu.edu";
         protected internal const string BD_UPDATE_KEY_PATH = "FILE SERVER LOCATION OF BIG DOG PRIVATE KEY LOCATION";
         protected internal const string BD_COMPUTE_NODE1 = "compute-0-24";

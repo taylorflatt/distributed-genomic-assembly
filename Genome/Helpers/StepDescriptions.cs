@@ -27,7 +27,7 @@ namespace Genome.Helpers
         }
     }
 
-    public class StepDescriptions
+    public static class StepDescriptions
     {
         /// <summary>
         /// List of errors for the steps.
@@ -65,6 +65,9 @@ namespace Genome.Helpers
         /// </summary>
         /// <param name="numAssemblers"> The total number of assemblers that the job is currently running on.</param>
         /// <returns> Returns a hashtable that consists of a key corresponding to the step number and a description.</returns>
+        /// <remarks>IMPORTANT: Since the number of overall steps is dynamic for a particular job, if the base number of steps change 
+        /// then they will need to be updated both here AND in ~/GenomeAssembly/Details in order to accurately reflect the change. 
+        /// This is in contrast to updating the model to contain the total number of overall steps which I may end up revising.</remarks>
         public static Hashtable GenerateOverallStepList(int numAssemblers)
         {
             Hashtable stepList = new Hashtable();
@@ -77,7 +80,7 @@ namespace Genome.Helpers
 
             for (int index = 1; index <= numAssemblers; index++)
             {
-                stepList.Add(offset++, "Finished Assembler " + index + " of " + numAssemblers + ")");
+                stepList.Add(offset++, "Finished Assembler (" + index + " of " + numAssemblers + ")");
             }
 
             stepList.Add(offset++, "Data Analysis");                    // offset - 4
@@ -89,6 +92,16 @@ namespace Genome.Helpers
             stepList.Add(offset, FINAL_STEP);                           // offset - 0 = 8 + numAssemblers
 
             return stepList;
+        }
+
+        public static int GetDataConversionStepNum()
+        {
+            return 2;
+        }
+
+        public static int GetRunningAssemblersStepNum()
+        {
+            return 3;
         }
 
         /// <summary>

@@ -244,10 +244,24 @@
                 </td>
 
                 <td>
-                    <div class="progress">
-                        <div class="progress-bar" role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width:57%">
-                            Running Assembler(s) (Step 4 of 7)
+                    <div class="progress" style="background-color: grey;">
+                        @{
+                            @* Need to calculate the number of overall steps since it is a dynamic number. This cannot be avoided. *@
+                        var totalStepsOverall = 8; // If this changes, they will need to be reflecte both here AND in StepDescriptions.cs
+
+                        if (Model.UseMasurca) { totalStepsOverall++; }
+                        if (Model.UseSGA) { totalStepsOverall++; }
+                        if (Model.UseWGS) { totalStepsOverall++; }
+
+                        var currentStepOverall = Model.OverallCurrentStep;
+                        double currentStatusOverall = ((double)currentStepOverall / totalStepsOverall) * 100;
+                        var currentStatusTextOverall = Model.OverallStatus;
+                        string barWidthOverall = Convert.ToString(currentStatusOverall) + "%";
+
+                        <div class="progress-bar" role="progressbar" aria-valuenow="@currentStatusOverall" aria-valuemin="0" aria-valuemax="100" style="width:@barWidthOverall">
+                            <strong style="text-indent: 20px; color: #FFFFFF">@currentStatusTextOverall (Step @currentStepOverall of @totalStepsOverall)</strong>
                         </div>
+                        }
                     </div>
                 </td>
             </tr>
@@ -259,15 +273,19 @@
                 <td>
                     @if (Model.UseMasurca.Equals(true))
                     {
-                        <div class="progress">
-                            <div class="progress-bar" role="progressbar" aria-valuenow="10" aria-valuemin="0" aria-valuemax="100" style="width:60%">
-                                Generating CABOG File (Step 6 of 10)
-                            </div>
+                        var totalStepsMasurca = 7;
+                        var currentStepMasurca = Model.MasurcaCurrentStep;
+                        var currentStatusMasurca = (currentStepMasurca / totalStepsMasurca) * 100;
+                        var currentStatusTextMasurca = Model.MasurcaStatus;
+                        string barWidthMasurca = Convert.ToString(currentStatusMasurca) + "%";
+
+                        <div class="progress-bar" role="progressbar" aria-valuenow="@currentStatusMasurca" aria-valuemin="0" aria-valuemax="100" style="width:@barWidthMasurca">
+                            <strong style="text-indent: 20px; color: #FFFFFF">@currentStatusTextMasurca (Step @currentStepMasurca of @totalStepsMasurca)</strong>
                         </div>
                     }
 
-                    else
-                    {
+                            else
+                            {
                         <p>
                             Not Running
                         </p>

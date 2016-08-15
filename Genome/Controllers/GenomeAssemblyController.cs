@@ -220,7 +220,9 @@ namespace Genome.Controllers
                 return View("Details");
             }
 
-            return View();
+            db.SaveChanges();
+
+            return View(genomeModel);
         }
 
         /// <summary>

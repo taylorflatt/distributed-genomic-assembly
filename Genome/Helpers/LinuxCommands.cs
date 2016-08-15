@@ -332,8 +332,13 @@ namespace Genome.Helpers
             {
                 cmd.Execute();
 
-                // So long as there isn't an error, we know it has been added to the scheduler.
-                if (LinuxErrorHandling.CommandError(cmd) == false)
+                LinuxErrorHandling.CommandError(cmd);
+
+                // Since NOT finding a job is considered "failing" on the part of the command, it will likely be erroneously caught by our error function. 
+                if (LinuxErrorHandling.error.Contains("Following jobs do not exist:"))
+                    return false;
+
+                else if (string.IsNullOrEmpty(LinuxErrorHandling.error))
                 {
                     if (cmd.Result.Contains("Following jobs do not exist:"))
                         return false;
@@ -412,7 +417,7 @@ namespace Genome.Helpers
         /// <param name="fileServerFtp">The url to the SFTP.</param>
         /// <param name="publicKeyLocation">Absolute path to the public key in order to authenticate to the SFTP.</param>
         /// <param name="error">Any error encountered by the command.</param>
-        protected internal static void ConnectSFTP(SshClient client, string fileServerFtp, string publicKeyLocation)
+        protected internal static void ConnectSftpToFtp(SshClient client, string fileServerFtp, string publicKeyLocation)
         {
             // Initiate an SFTP connection with a particular public key (-i [key location]) to a particular sftp url.
             using (var cmd = client.CreateCommand("sftp -i " + publicKeyLocation + fileServerFtp))
