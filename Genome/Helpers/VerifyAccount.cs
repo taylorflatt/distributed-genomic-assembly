@@ -14,9 +14,9 @@ namespace Genome.Helpers
         /// <param name="sshPass">The SSH password of the user.</param>
         /// <param name="error">Any error encountered by the command.</param>
         /// <returns>Returns true only if a user has sufficient permissions and quota.</returns>
-        public static bool VerifyClusterAccount(string sshUser, string sshPass, out string error)
+        public static bool VerifyClusterAccount(string sshUser, string sshPass)
         {
-            if (VerifyQuota(sshUser, sshPass, out error) && VerifyPermissions(sshUser, sshPass, out error))
+            if (VerifyQuota(sshUser, sshPass) && VerifyPermissions(sshUser, sshPass))
                 return true;
 
             else
@@ -30,21 +30,19 @@ namespace Genome.Helpers
         /// <param name="SSHPass">The SSH password of the user.</param>
         /// <param name="error">Any error encountered by the command.</param>
         /// <returns>Returns a boolean value representing whether or not they have sufficient permissions.</returns>
-        public static bool VerifyPermissions(string SSHUser, string SSHPass, out string error)
+        public static bool VerifyPermissions(string SSHUser, string SSHPass)
         {
-            error = "";
-
-            using (var client = new SshClient(Locations.BD_IP, SSHUser, SSHPass))
+            using (var client = new SshClient(Accessors.BD_IP, SSHUser, SSHPass))
             {
                 try
                 {
                     client.Connect();
 
-                    LinuxCommands.CreateDirectory(client, Locations.VERIFY_PERMISSIONS_TEST_DIR, out error);
+                    LinuxCommands.CreateDirectory(client, Accessors.VERIFY_PERMISSIONS_TEST_DIR);
 
-                    if (!string.IsNullOrEmpty(error))
+                    if (!string.IsNullOrEmpty(LinuxErrorHandling.error))
                     {
-                        error = "You do not have sufficient permissions to write to the proper directories. Please contact the BigDog Linux team about addressing this problem.";
+                        LinuxErrorHandling.error = "You do not have sufficient permissions to write to the proper directories. Please contact the BigDog Linux team about addressing this problem.";
 
                         return false;
                     }
@@ -52,7 +50,7 @@ namespace Genome.Helpers
                     else
                     {
                         // We want to remove the directory we just created as a test. We recursively force the deletion.
-                        LinuxCommands.RemoveFile(client, Locations.VERIFY_PERMISSIONS_TEST_DIR, out error, "-rf");
+                        LinuxCommands.RemoveFile(client, Accessors.VERIFY_PERMISSIONS_TEST_DIR, "-rf");
 
                         return true;
                     }
@@ -61,7 +59,7 @@ namespace Genome.Helpers
                 // SSH Connection couldn't be established.
                 catch (SocketException e)
                 {
-                    error = "The SSH connection couldn't be established. " + e.Message;
+                    LinuxErrorHandling.error = "The SSH connection couldn't be established. " + e.Message;
 
                     return false;
                 }
@@ -69,7 +67,7 @@ namespace Genome.Helpers
                 // Authentication failure.
                 catch (SshAuthenticationException e)
                 {
-                    error = "The credentials were entered incorrectly. " + e.Message;
+                    LinuxErrorHandling.error = "The credentials were entered incorrectly. " + e.Message;
 
                     return false;
                 }
@@ -77,14 +75,14 @@ namespace Genome.Helpers
                 // The SSH connection was dropped.
                 catch (SshConnectionException e)
                 {
-                    error = "The connection was terminated unexpectedly. " + e.Message;
+                    LinuxErrorHandling.error = "The connection was terminated unexpectedly. " + e.Message;
 
                     return false;
                 }
 
                 catch (Exception e)
                 {
-                    error = "There was an uncaught exception. " + e.Message;
+                    LinuxErrorHandling.error = "There was an uncaught exception. " + e.Message;
 
                     return false;
                 }
@@ -99,22 +97,20 @@ namespace Genome.Helpers
         /// <param name="error">Any error encountered by the command.</param>
         /// <param name="quotaAmount">The amount of quota in GB that the user has. This is sent out of the method.</param>
         /// <returns>Returns a boolean value representing whether or not they have enough space.</returns>
-        public static bool VerifyQuota(string SSHUser, string SSHPass, out string error)
+        public static bool VerifyQuota(string SSHUser, string SSHPass)
         {
-            error = "";
-
-            using (var client = new SshClient(Locations.BD_IP, SSHUser, SSHPass))
+            using (var client = new SshClient(Accessors.BD_IP, SSHUser, SSHPass))
             {
                 try
                 {
                     client.Connect();
 
-                    int userQuota = LinuxCommands.GetQuota(client, Locations.MINIMUM_QUOTA, out error);
+                    int userQuota = LinuxCommands.GetQuota(client, Accessors.MINIMUM_QUOTA);
 
                     // If they have less than 'minQuota' then we return an error telling them the problem and how to rectify it.
-                    if (userQuota < Locations.MINIMUM_QUOTA)
+                    if (userQuota < Accessors.MINIMUM_QUOTA)
                     {
-                        error = "You do not have the requisite amount of disk space (" + Locations.MINIMUM_QUOTA + "Gb) for us to safely run a general assembly "
+                        LinuxErrorHandling.error = "You do not have the requisite amount of disk space (" + Accessors.MINIMUM_QUOTA + "Gb) for us to safely run a general assembly "
                             + "job. Please contact the BigDog admin team to increase your quota. You currently have " + userQuota + "Gb space to use.";
 
                         return false;
@@ -128,7 +124,7 @@ namespace Genome.Helpers
                 // SSH Connection couldn't be established.
                 catch (SocketException e)
                 {
-                    error = "The SSH connection couldn't be established. " + e.Message;
+                    LinuxErrorHandling.error = "The SSH connection couldn't be established. " + e.Message;
 
                     return false;
                 }
@@ -136,7 +132,7 @@ namespace Genome.Helpers
                 // Authentication failure.
                 catch (SshAuthenticationException e)
                 {
-                    error = "The credentials were entered incorrectly. " + e.Message;
+                    LinuxErrorHandling.error = "The credentials were entered incorrectly. " + e.Message;
 
                     return false;
                 }
@@ -144,14 +140,14 @@ namespace Genome.Helpers
                 // The SSH connection was dropped.
                 catch (SshConnectionException e)
                 {
-                    error = "The connection was terminated unexpectedly. " + e.Message;
+                    LinuxErrorHandling.error = "The connection was terminated unexpectedly. " + e.Message;
 
                     return false;
                 }
 
                 catch (Exception e)
                 {
-                    error = "There was an uncaught exception. " + e.Message;
+                    LinuxErrorHandling.error = "There was an uncaught exception. " + e.Message;
 
                     return false;
                 }

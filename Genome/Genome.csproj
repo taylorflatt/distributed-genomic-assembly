@@ -241,12 +241,12 @@
     <Compile Include="Controllers\ManageRolesController.cs" />
     <Compile Include="CustomFilters\AuthorizeAttribute.cs" />
     <Compile Include="Helpers\AccountInfoHelper.cs" />
-    <Compile Include="Helpers\Locations.cs" />
+    <Compile Include="Helpers\Accessors.cs" />
     <Compile Include="Helpers\StepDescriptions.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
-    <Compile Include="Helpers\CheckJobStatus.cs" />
+    <Compile Include="Helpers\JobMaintenance.cs" />
     <Compile Include="Helpers\JobBuilder.cs" />
     <Compile Include="Helpers\CustomRoles.cs" />
     <Compile Include="Helpers\HelperMethods.cs" />

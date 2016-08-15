@@ -9,8 +9,6 @@ namespace Genome.Helpers
 {
     public class HelperMethods
     {
-        private GenomeModel genomeModel;
-
         /// <summary>
         /// Splits the list of URLs by commas (,) created by the wizard.
         /// </summary>
@@ -35,11 +33,9 @@ namespace Genome.Helpers
         /// </summary>
         /// <param name="error">Any error encountered by the command.</param>
         /// <returns>Returns a null string if the URL is connectable. Otherwise it will return the URL that is malfunctioning.</returns>
-        protected internal static string TestJobUrls(GenomeModel genomeModel, int seed, out string error)
+        protected internal static string TestJobUrls(GenomeModel genomeModel, int seed)
         {
-            error = "";
-
-            using (var client = new SshClient(Locations.BD_IP, genomeModel.SSHUser, genomeModel.SSHPass))
+            using (var client = new SshClient(Accessors.BD_IP, genomeModel.SSHUser, genomeModel.SSHPass))
             {
                 client.Connect();
 
@@ -47,7 +43,7 @@ namespace Genome.Helpers
 
                 foreach (var url in urlList)
                 {
-                    if (!LinuxCommands.CheckDataAvailability(client, url, out error))
+                    if (!LinuxCommands.CheckDataAvailability(client, url))
                         return url;
                 }
 

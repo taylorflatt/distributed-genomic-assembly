@@ -19,7 +19,7 @@ namespace Genome.Helpers
         /// <param name="error">Any error encountered by the command.</param>
         /// <returns>Returns a boolean value as to whether or not a URL is accessible from the BigDog cluster.</returns>
         /// <remarks>This may need to include additional greps in the future to catch more cases. These are the only two I could think to include. </remarks>
-        protected internal static bool CheckDataAvailability(SshClient client, string url, out string error)
+        protected internal static bool CheckDataAvailability(SshClient client, string url)
         {
             string logFile = "download.log";
             bool fileConnectable = false;
@@ -32,21 +32,21 @@ namespace Genome.Helpers
             using (var wget = client.CreateCommand(cmdList[0]))
             {
                 wget.Execute();
-                LinuxErrorHandling.CommandError(wget, out error);
+                LinuxErrorHandling.CommandError(wget);
 
-                if (string.IsNullOrEmpty(error))
+                if (string.IsNullOrEmpty(LinuxErrorHandling.error))
                 {
                     for (int i = 1; i < cmdList.Count; i++)
                     {
                         using (var grep = client.CreateCommand(cmdList[i]))
                         {
                             grep.Execute();
-                            LinuxErrorHandling.CommandError(grep, out error);
+                            LinuxErrorHandling.CommandError(grep);
 
-                            if (string.IsNullOrEmpty(error))
+                            if (string.IsNullOrEmpty(LinuxErrorHandling.error))
                             {
                                 // If the file is connectable, we can stop checking.
-                                if (string.IsNullOrEmpty(error) && Convert.ToInt32(grep.Result) > 0)
+                                if (string.IsNullOrEmpty(LinuxErrorHandling.error) && Convert.ToInt32(grep.Result) > 0)
                                 {
                                     fileConnectable = true;
                                     break;
@@ -57,7 +57,7 @@ namespace Genome.Helpers
                 }
 
                 // Remove our log file after we are finished with it.
-                RemoveFile(client, logFile, out error);
+                RemoveFile(client, logFile);
 
                 return fileConnectable;
             }
@@ -72,14 +72,14 @@ namespace Genome.Helpers
         /// <returns>Returns a string G or M corresponding to the size of the quota.</returns>
         /// TODO: We need to make sure that we are grabbing the correct location. I need to check with BigDog admin on how they do quota increases and if they carry over to all 
         /// directories or just specific areas. Right now we just grab the first letter of the first return but there can be multiple ones like "G\nG\nG\n" for instance or just one "G\n".
-        protected internal static string CheckQuotaType(SshClient client, out string error)
+        protected internal static string CheckQuotaType(SshClient client)
         {
             // First we print out the quota then we grab only the quota column, then filter out everything that doesn't have a number in it and then remove all numbers from what is left.
             using (var cmd = client.CreateCommand("quota -vs | awk '{print $2}' | grep '[0-9][0-9]*' | grep -o '[a-zA-Z]'"))
             {
                 cmd.Execute();
 
-                LinuxErrorHandling.CommandError(cmd, out error);
+                LinuxErrorHandling.CommandError(cmd);
 
                 if (!cmd.Result.ToString().Substring(0, 1).Equals("M") && !cmd.Result.ToString().Substring(0, 1).Equals("G"))
                     throw new Exception("There was undetermined behavior in the quota return value. We expected 'M' or 'G' but instead we got: " + cmd.Result.ToString());
@@ -95,17 +95,17 @@ namespace Genome.Helpers
         /// <param name="client">The current SSH client session.</param>
         /// <param name="error">Any error encountered by the command.</param>
         /// <returns>Returns an integer number representing the quota size in MB or GB.</returns>
-        protected internal static int CheckQuotaSize(SshClient client, out string error)
+        protected internal static int CheckQuotaSize(SshClient client)
         {
             // Make sure they are in their home directory so we only get a single number. Need to investigate this. (DOESN'T WORK/MATTER)
-            ChangeDirectory(client, "~", out error);
+            ChangeDirectory(client, "~");
 
             // First we print out the quota then we grab only the quota column. Then we grab the number.
             using (var cmd = client.CreateCommand("quota -vs | awk '{print $2}' | grep -o '[0-9][0-9]*' | head -1"))
             {
                 cmd.Execute();
 
-                LinuxErrorHandling.CommandError(cmd, out error);
+                LinuxErrorHandling.CommandError(cmd);
 
                 return Convert.ToInt32(cmd.Result);
             }
@@ -118,16 +118,16 @@ namespace Genome.Helpers
         /// <param name="minQuota">The amount of minimum quota (in GB) that a user must have to proceed.</param>
         /// <param name="error">Any error encountered by the command.</param>
         /// <returns>Returns the amount of space (in Gb) in quota the user has to work with.</returns>
-        protected internal static int GetQuota(SshClient client, int minQuota, out string error)
+        protected internal static int GetQuota(SshClient client, int minQuota)
         {
             int quotaAmount = 0;
-            string byteType = CheckQuotaType(client, out error); // Check whether the quota is in MB or GB.
+            string byteType = CheckQuotaType(client); // Check whether the quota is in MB or GB.
 
             // Now we need to get the quota size.
-            if (string.IsNullOrEmpty(error)) { quotaAmount = CheckQuotaSize(client, out error); }
+            if (string.IsNullOrEmpty(LinuxErrorHandling.error)) { quotaAmount = CheckQuotaSize(client); }
 
             // If the quota is in MB, we need to convert it. Otherwise, we are fine.
-            if (string.IsNullOrEmpty(error) && byteType.Equals("M")) { quotaAmount = ConvertToGigabyte(quotaAmount); }
+            if (string.IsNullOrEmpty(LinuxErrorHandling.error) && byteType.Equals("M")) { quotaAmount = ConvertToGigabyte(quotaAmount); }
 
             return quotaAmount;
 
@@ -143,7 +143,7 @@ namespace Genome.Helpers
         /// <param name="sourceDirectory">The directory that needs compressed.</param>
         /// <param name="error">Any error encountered by the command.</param>
         /// <param name="parameters">Any optional parameters for the zip command. Every optional parameter needs to conform to typical Linux bash syntax (must be preceeded by a dash). </param>
-        protected internal static void ZipFiles(SshClient client, int compressionSpeed, string outputName, string sourceDirectory, out string error, string parameters = "")
+        protected internal static void ZipFiles(SshClient client, int compressionSpeed, string outputName, string sourceDirectory, string parameters = "")
         {
             // USAGE (optimal run): zip -9 -y -r -q file.zip folder/
             // -9 optimal compression speed
@@ -154,7 +154,7 @@ namespace Genome.Helpers
             {
                 cmd.Execute();
 
-                LinuxErrorHandling.CommandError(cmd, out error);
+                LinuxErrorHandling.CommandError(cmd);
             }
         }
 
@@ -166,16 +166,16 @@ namespace Genome.Helpers
         /// <param name="jobUuid">An integer number representing the particular job ID via the website (key-value of the submitted job).</param>
         /// <param name="error">Any error encountered by the command.</param>
         /// <returns>Returns a boolean value whether the assembler has successfully finished.</returns>
-        protected internal static bool AssemblerSuccess(SshClient client, string successLog, int jobUuid, out string error)
+        protected internal static bool AssemblerSuccess(SshClient client, string successLog, int jobUuid)
         {
-            ChangeDirectory(client, Locations.GetJobLogPath(jobUuid), out error);
+            ChangeDirectory(client, Accessors.GetJobLogPath(jobUuid));
 
             // Determine if the job has finished successfully by searching for the success log.
             using (var cmd = client.CreateCommand("find " + successLog))
             {
                 cmd.Execute();
 
-                LinuxErrorHandling.CommandError(cmd, out error);
+                LinuxErrorHandling.CommandError(cmd);
 
                 // We couldn't find the success file.
                 if (cmd.Result.ToString().Contains("No such file or directory"))
@@ -195,10 +195,10 @@ namespace Genome.Helpers
         /// <param name="stepList">The list of steps for a particular assembler.</param>
         /// <param name="error">Any error encountered by the command.</param>
         /// <returns>Returns an integer representing the current step of a particular assembler or a -1 if there was an error.</returns>
-        protected internal static int GetCurrentStep(SshClient client, string workingDirectory, int jobUuid, HashSet<Assembler> stepList, out string error)
+        protected internal static int GetCurrentStep(SshClient client, string workingDirectory, int jobUuid, HashSet<Assembler> stepList)
         {
             // Change to the assembler output directory.
-            ChangeDirectory(client, workingDirectory, out error);
+            ChangeDirectory(client, workingDirectory);
 
             int currentStep = 1;
 
@@ -220,13 +220,13 @@ namespace Genome.Helpers
                         break;
 
                     // Error Case: If we come across an error or recieve a negative number, break the loop.
-                    if (LinuxErrorHandling.CommandError(cmd, out error))
+                    if (LinuxErrorHandling.CommandError(cmd))
                         break;
                 }
             }
 
             // Provided there was no error, return the current step back to the user.
-            if (string.IsNullOrEmpty(error))
+            if (string.IsNullOrEmpty(LinuxErrorHandling.error))
                 return currentStep;
 
             else
@@ -245,7 +245,7 @@ namespace Genome.Helpers
         /// <param name="node">The node on which the job will execute.</param>
         /// <param name="jobName">A particular name we would like the job to be called.</param>
         /// <param name="error">Any error encountered by the command.</param>
-        protected internal static void AddJobToScheduler(SshClient client, string logPath, string node, string jobName, out string error)
+        protected internal static void AddJobToScheduler(SshClient client, string logPath, string node, string jobName)
         {
             // USAGE: qsub -pe make 20 -V -e /tmp/Genome/ -o/tmp/Genome/ -b y -l hostname=compute-0-24 -N taylor1 ./HelloWorld
             // qsub -pe make 20 -V  -b y -l hostname=compute-0-24 -cwd -N taylor1 ./HelloWorld
@@ -253,7 +253,7 @@ namespace Genome.Helpers
             {
                 cmd.Execute();
 
-                LinuxErrorHandling.CommandError(cmd, out error);
+                LinuxErrorHandling.CommandError(cmd);
             }
         }
 
@@ -265,7 +265,7 @@ namespace Genome.Helpers
         /// <param name="jobName">The name of the job.</param>
         /// <param name="error">Any error encountered by the command.</param>
         /// <returns>Returns an integer representing the SGE job ID if successful or -1 if unsuccessful.</returns>
-        protected internal static int SetJobNumber(SshClient client, string SSHUser, string jobName, out string error)
+        protected internal static int SetJobNumber(SshClient client, string SSHUser, string jobName)
         {
             // USAGE: qstat -f -u "USERNAME" | grep "JOBNAME"
             // -f: Full Format
@@ -278,17 +278,17 @@ namespace Genome.Helpers
                 // Grab only numbers, ignore the rest.
                 string[] jobNumber = Regex.Split(cmd.Result, @"\D+");
 
-                LinuxErrorHandling.CommandError(cmd, out error);
+                LinuxErrorHandling.CommandError(cmd);
 
                 // We return the second element [1] here because the first and last element of the array is always the empty "". Trimming
                 // doesn't remove it. So we will always return the first element which corresponds to the job number.
 
-                if (string.IsNullOrEmpty(error))
+                if (string.IsNullOrEmpty(LinuxErrorHandling.error))
                     return Convert.ToInt32(jobNumber[1]);
 
                 else
                 {
-                    error = "Failed to get the job ID for the job. Something went wrong with the scheduler. Please contact an administrator.";
+                    LinuxErrorHandling.error = "Failed to get the job ID for the job. Something went wrong with the scheduler. Please contact an administrator.";
                     return -1;
                 }
             }
@@ -301,14 +301,14 @@ namespace Genome.Helpers
         /// <param name="node">Particular node on BigDog.</param>
         /// <param name="error">Any error encountered by the command.</param>
         /// <returns>The load of the node specified in a double format unless there is an error which returns a -1.</returns>
-        protected internal static double GetNodeLoad(SshClient client, string node, out string error)
+        protected internal static double GetNodeLoad(SshClient client, string node)
         {
             // qstat -f returns specific information about all nodes. We then grep for a single node and then print out the load of that node.
             using (var cmd = client.CreateCommand("qstat -f | grep " + node + " | awk '{print $4;}'"))
             {
                 cmd.Execute();
 
-                if (LinuxErrorHandling.CommandError(cmd, out error) == false)
+                if (LinuxErrorHandling.CommandError(cmd) == false)
                     return Convert.ToDouble(cmd.Result);
 
                 else
@@ -324,7 +324,7 @@ namespace Genome.Helpers
         /// <param name="sgeJobId">An integer number representing the particular job ID.</param>
         /// <param name="error">Any error encountered by the command.</param>
         /// <returns>Returns a boolean representing whether the job is currently in the job queue of SGE.</returns>
-        protected internal static bool JobRunning(SshClient client, int sgeJobId, out string error)
+        protected internal static bool JobRunning(SshClient client, int sgeJobId)
         {
             // Grabs the entire list of jobs and then picks the one with our job ID and prints out its information.
             using (var cmd = client.CreateCommand("qstat -j " + sgeJobId))
@@ -332,7 +332,7 @@ namespace Genome.Helpers
                 cmd.Execute();
 
                 // So long as there isn't an error, we know it has been added to the scheduler.
-                if (LinuxErrorHandling.CommandError(cmd, out error) == false)
+                if (LinuxErrorHandling.CommandError(cmd) == false)
                 {
                     if (cmd.Result.Contains("Following jobs do not exist:"))
                         return false;
@@ -355,14 +355,14 @@ namespace Genome.Helpers
         /// <param name="client">The current SSH client session.</param>
         /// <param name="sgeJobId">An integer number representing the particular job ID.</param>
         /// <param name="error">Any error encountered by the command.</param>
-        protected internal static void CancelJob(SshClient client, int sgeId, out string error)
+        protected internal static void CancelJob(SshClient client, int sgeId)
         {
             // Deletes the job with ID sgeId in SGE.
             using (var cmd = client.CreateCommand("qdel " + sgeId))
             {
                 cmd.Execute();
 
-                LinuxErrorHandling.CommandError(cmd, out error);
+                LinuxErrorHandling.CommandError(cmd);
             }
         }
 
@@ -387,13 +387,13 @@ namespace Genome.Helpers
         /// <param name="directory">The particular directory that needs to be checked.</param>
         /// <param name="error">Any error encountered by the command.</param>
         /// <returns>Returns a boolean value as to whether the directory is empty or not.</returns>
-        protected internal static bool DirectoryHasFiles(SshClient client, string directory, out string error)
+        protected internal static bool DirectoryHasFiles(SshClient client, string directory)
         {
             using (var cmd = client.CreateCommand("ls -A " + directory + " | wc -l"))
             {
                 cmd.Execute();
 
-                LinuxErrorHandling.CommandError(cmd, out error);
+                LinuxErrorHandling.CommandError(cmd);
 
                 // The directory is not empty.
                 if (Convert.ToInt32(cmd.Result) > 0)
@@ -411,14 +411,14 @@ namespace Genome.Helpers
         /// <param name="fileServerFtp">The url to the SFTP.</param>
         /// <param name="publicKeyLocation">Absolute path to the public key in order to authenticate to the SFTP.</param>
         /// <param name="error">Any error encountered by the command.</param>
-        protected internal static void ConnectSFTP(SshClient client, string fileServerFtp, string publicKeyLocation, out string error)
+        protected internal static void ConnectSFTP(SshClient client, string fileServerFtp, string publicKeyLocation)
         {
             // Initiate an SFTP connection with a particular public key (-i [key location]) to a particular sftp url.
             using (var cmd = client.CreateCommand("sftp -i " + publicKeyLocation + fileServerFtp))
             {
                 cmd.Execute();
 
-                LinuxErrorHandling.CommandError(cmd, out error);
+                LinuxErrorHandling.CommandError(cmd);
             }
         }
 
@@ -428,14 +428,14 @@ namespace Genome.Helpers
         /// <param name="client">The current SSH client session.</param>
         /// <param name="fileLocation">The local path for the file that will be uploaded (probably the zipped completed file).</param>
         /// <param name="error">Any error encountered by the command.</param>
-        protected internal static void SftpUploadFile(SshClient client, string fileLocation, out string error)
+        protected internal static void SftpUploadFile(SshClient client, string fileLocation)
         {
             // Puts a file from the local machine onto the server we have connected with previously. (See "ConnectSFTP" method).
             using (var cmd = client.CreateCommand("put " + fileLocation))
             {
                 cmd.Execute();
 
-                LinuxErrorHandling.CommandError(cmd, out error);
+                LinuxErrorHandling.CommandError(cmd);
             }
         }
 
@@ -446,14 +446,14 @@ namespace Genome.Helpers
         /// <param name="newDirectory">The path to the new directory.</param>
         /// <param name="error">Any error encountered by the command.</param>
         /// <param name="parameters">Any optional parameters for the cd command. Every optional parameter needs to conform to typical Linux bash syntax (must be preceeded by a dash). </param>
-        protected internal static void ChangeDirectory(SshClient client, string newDirectory, out string error, string parameters = "")
+        protected internal static void ChangeDirectory(SshClient client, string newDirectory, string parameters = "")
         {
             // Changes directories with any optional parameters mentioned.
             using (var cmd = client.CreateCommand("cd " + newDirectory + " " + parameters))
             {
                 cmd.Execute();
 
-                LinuxErrorHandling.CommandError(cmd, out error);
+                LinuxErrorHandling.CommandError(cmd);
             }
         }
 
@@ -463,14 +463,14 @@ namespace Genome.Helpers
         /// <param name="client">The current SSH client session.</param>
         /// <param name="node">The new node's name. (For instance: compute-0-24)</param>
         /// <param name="error">Any error encountered by the command.</param>
-        protected internal static void ChangeNode(SshClient client, string node, out string error)
+        protected internal static void ChangeNode(SshClient client, string node)
         {
             // Changes to a specified node.
             using (var cmd = client.CreateCommand("ssh " + node))
             {
                 cmd.Execute();
 
-                LinuxErrorHandling.CommandError(cmd, out error);
+                LinuxErrorHandling.CommandError(cmd);
             }
         }
 
@@ -481,14 +481,14 @@ namespace Genome.Helpers
         /// <param name="directoryPath">The new directory's name/location.</param>
         /// <param name="error">Any error encountered by the command.</param>
         /// <param name="parameters">Any optional parameters for the mkdir command. Every optional parameter needs to conform to typical Linux bash syntax (must be preceeded by a dash). </param>
-        protected internal static void CreateDirectory(SshClient client, string directoryPath, out string error, string directoryParameters = "")
+        protected internal static void CreateDirectory(SshClient client, string directoryPath, string directoryParameters = "")
         {
             // Makes a new directory at [directoryPath] with any optional parameters.
             using (var cmd = client.CreateCommand("mkdir " + directoryPath + " " + directoryParameters))
             {
                 cmd.Execute();
 
-                LinuxErrorHandling.CommandError(cmd, out error);
+                LinuxErrorHandling.CommandError(cmd);
             }
         }
 
@@ -499,14 +499,14 @@ namespace Genome.Helpers
         /// <param name="path">The location of the file to be deleted.</param>
         /// <param name="error">Any error encountered by the command.</param>
         /// <param name="parameters">Any optional parameters for the rm command. Every optional parameter needs to conform to typical Linux bash syntax (must be preceeded by a dash). </param>
-        protected internal static void RemoveFile(SshClient client, string path, out string error, string directoryParameters = "")
+        protected internal static void RemoveFile(SshClient client, string path, string directoryParameters = "")
         {
             // Removes a particular file at [path] with any optional parameters. We don't do any permission checks but those should be caught by our commanderror method.
             using (var cmd = client.CreateCommand("rm " + path + " " + directoryParameters))
             {
                 cmd.Execute();
 
-                LinuxErrorHandling.CommandError(cmd, out error);
+                LinuxErrorHandling.CommandError(cmd);
             }
         }
 
@@ -517,13 +517,13 @@ namespace Genome.Helpers
         /// <param name="URL">The URL of the particular file.</param>
         /// <param name="error">Any error encountered by the command.</param>
         /// <param name="parameters">Any optional parameters for the wget command. Every optional parameter needs to conform to typical Linux bash syntax (must be preceeded by a dash). </param>
-        protected internal static void DownloadFile(SshClient client, string outputLocation, string url, out string error, string parameters = "")
+        protected internal static void DownloadFile(SshClient client, string outputLocation, string url, string parameters = "")
         {
             using (var cmd = client.CreateCommand("wget --output-document=" + outputLocation + " " + url + " " + parameters))
             {
                 cmd.Execute();
 
-                LinuxErrorHandling.CommandError(cmd, out error);
+                LinuxErrorHandling.CommandError(cmd);
             }
         }
 
@@ -534,17 +534,17 @@ namespace Genome.Helpers
         /// <param name="scriptLocation">The absolute path of the script which you want to run Dos2Unix on.</param>
         /// <param name="error">Any error encountered by the command.</param>
         /// <remarks>This program must be run on the config scripts created by the ConfigBuilder.</remarks>
-        protected internal static void RunDos2Unix(SshClient client, string scriptLocation, out string error)
+        protected internal static void RunDos2Unix(SshClient client, string scriptLocation)
         {
             using (var cmd = client.CreateCommand("dos2unix " + scriptLocation))
             {
                 cmd.Execute();
 
-                LinuxErrorHandling.CommandError(cmd, out error);
+                LinuxErrorHandling.CommandError(cmd);
 
                 // For some reason, this is an error but in reality it is actually the script doing its job correctly. So we nullify the "error".
-                if (error.Equals("dos2unix: converting file " + scriptLocation + " to UNIX format ...\n"))
-                    error = "";
+                if (LinuxErrorHandling.error.Equals("dos2unix: converting file " + scriptLocation + " to UNIX format ...\n"))
+                    LinuxErrorHandling.error = "";
             }
         }
 
@@ -556,14 +556,14 @@ namespace Genome.Helpers
         /// <param name="newPermissions">The new permissions in the form of octal notation.</param>
         /// <param name="error">Any error encountered by the command.</param>
         /// <param name="parameters">Any optional parameters for the chmod command. Every optional parameter needs to conform to typical Linux bash syntax (must be preceeded by a dash). </param>
-        protected internal static void ChangePermissions(SshClient client, string path, string newPermissions, out string error, string parameters = "")
+        protected internal static void ChangePermissions(SshClient client, string path, string newPermissions, string parameters = "")
         {
             // USAGE: chmod 777 /tmp/test -R
             using (var cmd = client.CreateCommand("chmod " + " " + newPermissions + " " + path + " " + parameters))
             {
                 cmd.Execute();
 
-                LinuxErrorHandling.CommandError(cmd, out error);
+                LinuxErrorHandling.CommandError(cmd);
             }
         }
 

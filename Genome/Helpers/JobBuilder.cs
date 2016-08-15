@@ -36,15 +36,15 @@ namespace Genome.Helpers
         /// Generates the config files necessary for the assembler run.
         /// </summary>
         /// <param name="error">Any error encountered by the command.</param>
-        public void GenerateConfigs(out string error)
+        public void GenerateConfigs()
         {
             username = HelperMethods.GetUsername();
             urlPath = "/AssemblerConfigs/" + "Job-" + username + "-" + seed + "/";
             localPath = @"D:\AssemblerConfigs\Job-" + username + "-" + seed + "\\";
 
             CreateDirectory();
-            BuildInitConfig(out error);
-            if (genomeModel.UseMasurca) { BuildMasurcaConfig(out error); }
+            BuildInitConfig();
+            if (genomeModel.UseMasurca) { BuildMasurcaConfig(); }
         }
 
         /// <summary>
@@ -70,10 +70,8 @@ namespace Genome.Helpers
         /// Creates the initial file which is run at the beginning of each run. The primary function of which is to download the user's data at runtime.
         /// </summary>
         /// <param name="error">Any error encountered by the command.</param>
-        private void BuildInitConfig(out string error)
+        private void BuildInitConfig()
         {
-            error = "";
-
             string fileName = "init_" + seed + ".sh";
             string fullPath = localPath + fileName;
 
@@ -121,20 +119,20 @@ namespace Genome.Helpers
                             tw.WriteLine("rm rightData_*");
                         }
 
-                        InitConfigURL = Locations.FTP_URL + urlPath + fileName;
+                        InitConfigURL = Accessors.FTP_URL + urlPath + fileName;
                     }
                 }
 
                 catch (Exception e)
                 {
-                    error = e.Message;
+                    LinuxErrorHandling.error = e.Message;
                 }
             }
 
             // We have a problem since the file already exists.
             else
             {
-                error = "Unfortunately, we couldn't create the necessary configuration files to submit your job. Please contact an administrator.";
+                LinuxErrorHandling.error = "Unfortunately, we couldn't create the necessary configuration files to submit your job. Please contact an administrator.";
 
                 throw new IOException("Attempted to create \"" + fullPath + "\" but it already exists so we cannot create the file. Continuing is not advised. ");
             }
@@ -144,10 +142,8 @@ namespace Genome.Helpers
         /// Creates the configuration file for the Masurca assembler for each unique run.
         /// </summary>
         /// <param name="error">Any error encountered by the command.</param>
-        private void BuildMasurcaConfig(out string error)
+        private void BuildMasurcaConfig()
         {
-            error = "";
-
             string fileName = "MasurcaConfig_" + seed + ".txt";
             string fullPath = localPath + fileName;
 
@@ -206,20 +202,20 @@ namespace Genome.Helpers
                             tw.WriteLine("DO_HOMOPOLYMER_TRIM = 0");
                         tw.WriteLine("END");
 
-                        MasurcaConfigURL = Locations.FTP_URL + urlPath + fileName;
+                        MasurcaConfigURL = Accessors.FTP_URL + urlPath + fileName;
                     }
                 }
 
                 catch (Exception e)
                 {
-                    error = e.Message;
+                    LinuxErrorHandling.error = e.Message;
                 }
             }
 
             // We have a problem since the file already exists.
             else
             {
-                error = "Unfortunately, we couldn't create the necessary configuration files to submit your job. Please contact an administrator.";
+                LinuxErrorHandling.error = "Unfortunately, we couldn't create the necessary configuration files to submit your job. Please contact an administrator.";
 
                 throw new IOException("Attempted to create \"" + fullPath + "\" but it already exists so we cannot create the file. Continuing is not advised. ");
             }
@@ -230,47 +226,45 @@ namespace Genome.Helpers
         /// </summary>
         /// <param name="error">Any error encountered by the command.</param>
         /// <returns>Returns true only if a job gets successfully added to SGE.</returns>
-        public bool CreateJob(out string error)
+        public bool CreateJob()
         {
-            error = "";
-
             // The init.sh script will contain all the basic logic to download the data and initiate the job on the assembler(s).
-            using (var client = new SshClient(Locations.BD_IP, genomeModel.SSHUser, genomeModel.SSHPass))
+            using (var client = new SshClient(Accessors.BD_IP, genomeModel.SSHUser, genomeModel.SSHPass))
             {
                 // Set defaults
-                Locations.masterPath = "/share/scratch/bioinfo/" + HelperMethods.GetUsername();
-                string node = Locations.BD_COMPUTE_NODE1; // default  
-                string wgetLogParameter = "--output-file=" + Locations.GetJobLogPath(seed) + "wget.error";
-                string initPath = Locations.GetJobConfigPath(seed) + "init.sh";
-                string masurcaPath = Locations.GetJobConfigPath(seed) + "masurca_config.txt";
+                Accessors.masterPath = "/share/scratch/bioinfo/" + HelperMethods.GetUsername();
+                string node = Accessors.BD_COMPUTE_NODE1; // default  
+                string wgetLogParameter = "--output-file=" + Accessors.GetJobLogPath(seed) + "wget.error";
+                string initPath = Accessors.GetJobConfigPath(seed) + "init.sh";
+                string masurcaPath = Accessors.GetJobConfigPath(seed) + "masurca_config.txt";
 
                 try
                 {
                     client.Connect();
 
-                    if (string.IsNullOrEmpty(error)) { LinuxCommands.CreateDirectory(client, Locations.masterPath, out error, "-p"); }
-                    if (string.IsNullOrEmpty(error)) { LinuxCommands.CreateDirectory(client, Locations.GetJobPath(seed), out error, "-p"); }
-                    if (string.IsNullOrEmpty(error)) { LinuxCommands.CreateDirectory(client, Locations.GetJobDataPath(seed), out error, "-p"); }
-                    if (string.IsNullOrEmpty(error)) { LinuxCommands.CreateDirectory(client, Locations.GetJobConfigPath(seed), out error, "-p"); }
-                    if (string.IsNullOrEmpty(error)) { LinuxCommands.CreateDirectory(client, Locations.GetJobOutputPath(seed), out error, "-p"); }
-                    if (string.IsNullOrEmpty(error)) { LinuxCommands.CreateDirectory(client, Locations.GetJobLogPath(seed), out error, "-p"); }
+                    if (string.IsNullOrEmpty(LinuxErrorHandling.error)) { LinuxCommands.CreateDirectory(client, Accessors.masterPath, "-p"); }
+                    if (string.IsNullOrEmpty(LinuxErrorHandling.error)) { LinuxCommands.CreateDirectory(client, Accessors.GetJobPath(seed), "-p"); }
+                    if (string.IsNullOrEmpty(LinuxErrorHandling.error)) { LinuxCommands.CreateDirectory(client, Accessors.GetJobDataPath(seed), "-p"); }
+                    if (string.IsNullOrEmpty(LinuxErrorHandling.error)) { LinuxCommands.CreateDirectory(client, Accessors.GetJobConfigPath(seed), "-p"); }
+                    if (string.IsNullOrEmpty(LinuxErrorHandling.error)) { LinuxCommands.CreateDirectory(client, Accessors.GetJobOutputPath(seed), "-p"); }
+                    if (string.IsNullOrEmpty(LinuxErrorHandling.error)) { LinuxCommands.CreateDirectory(client, Accessors.GetJobLogPath(seed), "-p"); }
 
-                    if (string.IsNullOrEmpty(error)) { LinuxCommands.DownloadFile(client, initPath, InitConfigURL, out error, wgetLogParameter); }
-                    if (string.IsNullOrEmpty(error)) { LinuxCommands.RunDos2Unix(client, initPath, out error); }
+                    if (string.IsNullOrEmpty(LinuxErrorHandling.error)) { LinuxCommands.DownloadFile(client, initPath, InitConfigURL, wgetLogParameter); }
+                    if (string.IsNullOrEmpty(LinuxErrorHandling.error)) { LinuxCommands.RunDos2Unix(client, initPath); }
 
-                    if (string.IsNullOrEmpty(error)) { LinuxCommands.DownloadFile(client, masurcaPath, MasurcaConfigURL, out error, wgetLogParameter); }
-                    if (string.IsNullOrEmpty(error)) { LinuxCommands.RunDos2Unix(client, masurcaPath, out error); }
+                    if (string.IsNullOrEmpty(LinuxErrorHandling.error)) { LinuxCommands.DownloadFile(client, masurcaPath, MasurcaConfigURL, wgetLogParameter); }
+                    if (string.IsNullOrEmpty(LinuxErrorHandling.error)) { LinuxCommands.RunDos2Unix(client, masurcaPath); }
 
-                    if (string.IsNullOrEmpty(error)) { LinuxCommands.ChangePermissions(client, Locations.GetJobPath(seed), "777", out error, "-R"); }
+                    if (string.IsNullOrEmpty(LinuxErrorHandling.error)) { LinuxCommands.ChangePermissions(client, Accessors.GetJobPath(seed), "777", "-R"); }
 
-                    if (string.IsNullOrEmpty(error))
+                    if (string.IsNullOrEmpty(LinuxErrorHandling.error))
                     {
                         // So COMPUTENODE2 has a smaller load, we want to use that instead.
-                        if (LinuxCommands.GetNodeLoad(client, Locations.BD_COMPUTE_NODE1, out error) > LinuxCommands.GetNodeLoad(client, Locations.BD_COMPUTE_NODE2, out error))
-                            node = Locations.BD_COMPUTE_NODE2;
+                        if (LinuxCommands.GetNodeLoad(client, Accessors.BD_COMPUTE_NODE1) > LinuxCommands.GetNodeLoad(client, Accessors.BD_COMPUTE_NODE2))
+                            node = Accessors.BD_COMPUTE_NODE2;
 
                         else
-                            node = Locations.BD_COMPUTE_NODE1;
+                            node = Accessors.BD_COMPUTE_NODE1;
                     }
 
                     // May need to investigate this. But I'm fairly certain you need to be in the current directory or we can always call it 
@@ -279,12 +273,12 @@ namespace Genome.Helpers
 
                     // This command has NOT been tested. We may need an absolute path rather than the relative one that we reference in this method
                     //since we switch directories to the output path directory. !!!!!!COMMENTING OUT FOR DEBUG PURPOSES!!!!!!
-                    //if (string.IsNullOrEmpty(error)) { LinuxCommands.AddJobToScheduler(client, Locations.GetJobLogPath(id), node, jobName, out error); }
+                    //if (string.IsNullOrEmpty(LinuxErrorHandling.error)) { LinuxCommands.AddJobToScheduler(client, Locations.GetJobLogPath(id), node, jobName); }
 
-                    //if (string.IsNullOrEmpty(error)) { genomeModel.SGEJobId = LinuxCommands.SetJobNumber(client, genomeModel.SSHUser, jobName, out error); }
+                    //if (string.IsNullOrEmpty(LinuxErrorHandling.error)) { genomeModel.SGEJobId = LinuxCommands.SetJobNumber(client, genomeModel.SSHUser, jobName); }
 
                     // There were no errors.
-                    if (string.IsNullOrEmpty(error))
+                    if (string.IsNullOrEmpty(LinuxErrorHandling.error))
                         return true;
 
                     else
@@ -294,7 +288,7 @@ namespace Genome.Helpers
                 // SSH Connection couldn't be established.
                 catch (SocketException e)
                 {
-                    error = "The SSH connection couldn't be established. " + e.Message;
+                    LinuxErrorHandling.error = "The SSH connection couldn't be established. " + e.Message;
 
                     return false;
                 }
@@ -302,7 +296,7 @@ namespace Genome.Helpers
                 // Authentication failure.
                 catch (SshAuthenticationException e)
                 {
-                    error = "The credentials were entered incorrectly. " + e.Message;
+                    LinuxErrorHandling.error = "The credentials were entered incorrectly. " + e.Message;
 
                     return false;
                 }
@@ -310,14 +304,14 @@ namespace Genome.Helpers
                 // The SSH connection was dropped.
                 catch (SshConnectionException e)
                 {
-                    error = "The connection was terminated unexpectedly. " + e.Message;
+                    LinuxErrorHandling.error = "The connection was terminated unexpectedly. " + e.Message;
 
                     return false;
                 }
 
                 catch (Exception e)
                 {
-                    error = "There was an uncaught exception. " + e.Message;
+                    LinuxErrorHandling.error = "There was an uncaught exception. " + e.Message;
 
                     return false;
                 }

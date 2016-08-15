@@ -76,13 +76,12 @@ namespace Genome.Controllers
                     Random rand = new Random();
                     int seed = rand.Next(198, 1248712);
 
-                    string error = "";
                     string badUrl = "";
 
                     JobBuilder builder = new JobBuilder(genomeModel, dataSources, seed);
-                    builder.GenerateConfigs(out error);
+                    builder.GenerateConfigs();
 
-                    ViewBag.ConnectionErrorDetails = error;
+                    ViewBag.ConnectionErrorDetails = LinuxErrorHandling.error;
                     #endregion
 
                     #region Connect To BigDog and Test Data Connection
@@ -90,14 +89,14 @@ namespace Genome.Controllers
                     /// TODO: Start the download of their data on BigDog to see if we can get each URL. If we cannot, then we just terminate 
                     /// and tell them the error we receieved.
 
-                    if (string.IsNullOrEmpty(HelperMethods.TestJobUrls(genomeModel, seed, out error)) && string.IsNullOrEmpty(error))
+                    if (string.IsNullOrEmpty(HelperMethods.TestJobUrls(genomeModel, seed)) && string.IsNullOrEmpty(LinuxErrorHandling.error))
                     {
                         /// We can instead pass in the SEED variable which will be used to reference the method in Locations to grab the correct file(s).
                         /// This is the ideal solution which will be implemented only once we know that the system works with the direct URL.
-                        builder.CreateJob(out error);
+                        builder.CreateJob();
 
                         // No error so proceed.
-                        if (string.IsNullOrEmpty(error))
+                        if (string.IsNullOrEmpty(LinuxErrorHandling.error))
                         {
                             //db.GenomeModels.Add(genomeModel);
                             //db.SaveChanges();
@@ -111,7 +110,7 @@ namespace Genome.Controllers
                         else
                         {
                             ViewBag.ConnectionError = "There was an error with the connection to BigDog. The following is the error we encountered: ";
-                            ViewBag.ConnectionErrorDetails = error;
+                            ViewBag.ConnectionErrorDetails = LinuxErrorHandling.error;
 
                             return View(genomeModel);
                         }
@@ -124,8 +123,8 @@ namespace Genome.Controllers
                             + " one of your files. The file we had a problem with was: " + badUrl + ". Please make sure you typed the URL correctly"
                             + " and it is accessible. If this is in error, please contact an administrator promptly with the details.";
 
-                        if (!string.IsNullOrEmpty(error))
-                            ViewBag.ConnectionErrorDetails = "The following is additional error information that we encountered: " + error;
+                        if (!string.IsNullOrEmpty(LinuxErrorHandling.error))
+                            ViewBag.ConnectionErrorDetails = "The following is additional error information that we encountered: " + LinuxErrorHandling.error;
 
 
                         return View(genomeModel);
@@ -164,7 +163,8 @@ namespace Genome.Controllers
                     // We need to display the download link for the user which is set in CheckJobStatus.UploadData() and stored in the model 
                     // under DownloadLink.
 
-                    ViewBag.DataUploaded = "Your data has successfully uploaded and is ready for download. Using the credentials that you use to access this website, please open the link and enter those credentials to begin the data download.";
+                    ViewBag.DataUploaded = "Your data has successfully uploaded and is ready for download. Using the credentials that you use to access this website, "
+                        + "please open the link and enter those credentials to begin the data download.";
                 }
 
                 return View(genomeModel);
@@ -186,28 +186,27 @@ namespace Genome.Controllers
             GenomeModel genomeModel = db.GenomeModels.Find(id);
 
             bool jobsToUpload = false;
-            string error = "";
 
             if (command == "Update Status")
-                CheckJobStatus.UpdateStatus(id, ref jobsToUpload, out error);
+                JobMaintenance.UpdateStatus(id, ref jobsToUpload);
 
             if (command == "Cancel Job")
             {
-                using (var client = new SshClient(Locations.BD_IP, Locations.BD_UPDATE_KEY_PATH))
+                using (var client = new SshClient(Accessors.BD_IP, Accessors.BD_UPDATE_KEY_PATH))
                 {
                     client.Connect();
 
-                    LinuxCommands.CancelJob(client, genomeModel.SGEJobId, out error);
+                    LinuxCommands.CancelJob(client, genomeModel.SGEJobId);
 
-                    if(string.IsNullOrEmpty(error))
+                    if(string.IsNullOrEmpty(LinuxErrorHandling.error))
                         ViewBag.JobCancelSuccess = "Your job has been successfully cancelled. All progress will reflect its current position at the time it was cancelled.";
 
                     else
-                        ViewBag.JobCancelFailure = "Your job has not been successfully cancelled with the following error: " + error;
+                        ViewBag.JobCancelFailure = "Your job has not been successfully cancelled with the following error: " + LinuxErrorHandling.error;
                 }
             }
 
-            if(string.IsNullOrEmpty(error))
+            if(string.IsNullOrEmpty(LinuxErrorHandling.error))
             {
                 // If the job is ready to be uploaded (according to our UpdateStatus method) and a download link hasn't been assigned (upload hasn't 
                 // finished), then we will display to the user that their data is currently being uploaded.

@@ -3,7 +3,7 @@
     /// <summary>
     /// Contains a list of public locations for different items that are used throughout the program.
     /// </summary>
-    public class Locations
+    public class Accessors
     {
         protected internal static string masterPath { get; set; }
 
@@ -19,7 +19,7 @@
         protected internal const string ZIP_STORAGE_PATH = "LOCATION ON THE FTP SERVER";
         protected internal const string FTP_URL = "ftp://" + WEBSITE_IP;
         protected internal const string VERIFY_PERMISSIONS_TEST_DIR = "/share/scratch/bioinfo/testPermissions";
-        protected internal const int MINIMUM_QUOTA = 50;
+        protected internal const int MINIMUM_QUOTA = 500;
 
         /// <summary>
         /// Generates the FTP path (url) to the init script.

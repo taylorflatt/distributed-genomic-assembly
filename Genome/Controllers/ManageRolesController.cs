@@ -53,7 +53,23 @@ namespace Genome.Controllers
                 AddUserToRole(UserName, RoleName);
 
             else if (command == "Get User Role")
-                ViewBag.UserRole = GetUserRole(UserName);
+            {
+                try
+                {
+                    ViewBag.UserRole = GetUserRole(UserName);
+                }
+
+                catch(ArgumentNullException e)
+                {
+                    ViewBag.ResultMessageError = e.Message;
+                }
+
+                catch(NullReferenceException e)
+                {
+                    ViewBag.ResultMessageError = e.Message;
+                }
+
+            }
 
             else if (command == "Remove User from Role")
                 DeleteRoleForUser(UserName);
@@ -62,7 +78,18 @@ namespace Genome.Controllers
                 await DeleteUser(UserName);
 
             else if (command == "Get Users List")
-                GetUsersList();
+            {
+                List<Tuple<string, string>> userList = GetUsersList();
+
+                // There was an error.
+                if (userList.Count == 0)
+                    ViewBag.GetUsersError = "There was an error retrieving the list of users. Please make sure the database is connectable and try again.";
+                else
+                {
+                    ViewBag.ResultMessage = "User list successfully retrieved!";
+                    ViewBag.UserList = userList;
+                }
+            }
 
             // Populate the roles for a dropdown.
             var list = context.Roles.OrderBy(r => r.Name).ToList().Select(rr => new SelectListItem { Value = rr.Name.ToString(), Text = rr.Name }).ToList();
@@ -74,7 +101,7 @@ namespace Genome.Controllers
         /// <summary>
         /// Gets a list of all users and stores them in a viewbag to be sent back to the view.
         /// </summary>
-        private void GetUsersList()
+        private List<Tuple<string, string>> GetUsersList()
         {
             try
             {
@@ -84,25 +111,23 @@ namespace Genome.Controllers
                     List<Tuple<string, string>> userList = new List<Tuple<string, string>>();
 
                     // Select all the users in the database.
-                    var temp = context.Users
+                    var userListQuery = context.Users
                         .Select(u => new { Username = u.UserName }).ToList();
 
                     // Populate the username list.
-                    foreach (var user in temp)
+                    foreach (var user in userListQuery)
                     {
                         userList.Add(Tuple.Create(user.Username, GetUserRole(user.Username)));
-                    }
-
-                    ViewBag.ResultMessage = "All user roles were successfully retrieved!";
+                    }                    
 
                     // Send the list to the view.
-                    ViewBag.UserList = userList.ToList();
+                    return userList.ToList();
                 }
             }
 
             catch(Exception e)
             {
-                ViewBag.GetUsersError = e.Message; 
+                return null;
             }
         }
 
@@ -115,7 +140,7 @@ namespace Genome.Controllers
             try
             {
                 // If we are trying to remove an admin and there is only a single admin left, we CANNOT remove that admin. We don't want to get locked out.
-                if (GetUserRole(UserName).Equals("Admin") && AccountInfoHelper.NumberAdminsLeft() == 1)
+                if (User.IsInRole(CustomRoles.Administrator) && AccountInfoHelper.NumberAdminsLeft() == 1)
                     ViewBag.ResultMessageError = "Cannot delete " + UserName + " because they are the last admin. This action would result in a lockout.";
 
                 else
@@ -203,37 +228,61 @@ namespace Genome.Controllers
             ViewBag.Roles = list;
         }
 
-        /// <summary>
-        /// Retrieves a user's current role.
-        /// </summary>
-        /// <param name="UserName">The user whose role we are retrieving.</param>
-        /// <returns>Returns the user's role as a string.</returns>
-        private string GetUserRole(string UserName)
-        {
-            if (!string.IsNullOrWhiteSpace(UserName))
-            {
-                UserName = UserName.Trim();
+        ///// <summary>
+        ///// Retrieves a user's current role.
+        ///// </summary>
+        ///// <param name="UserName">The user whose role we are retrieving.</param>
+        ///// <returns>Returns the user's role as a string.</returns>
+        //private string GetUserRole(string UserName)
+        //{
+        //    if (!string.IsNullOrWhiteSpace(UserName))
+        //    {
+        //        UserName = UserName.Trim();
 
-                ApplicationUser user = context.Users.FirstOrDefault(u => u.UserName.Equals(UserName, StringComparison.CurrentCultureIgnoreCase));
+        //        ApplicationUser user = context.Users.FirstOrDefault(u => u.UserName.Equals(UserName, StringComparison.CurrentCultureIgnoreCase));
+
+        //        if (user != null)
+        //        {
+        //            if (UserManager.GetRoles(user.Id).Count <= 0)
+        //                return ViewBag.ResultMessageError = "This user doesn't have any roles assigned to them.";
+
+        //            else
+        //            {
+        //                ViewBag.ResultMessage = "The user's role was successfully retrieved!";
+        //                return (string)UserManager.GetRoles(user.Id).ElementAt(0);
+        //            }
+        //        }
+
+        //        else
+        //            return ViewBag.ResultMessageError = "Cannot find \"" + UserName + "\" in the database.";
+        //    }
+
+        //    else
+        //        return ViewBag.ResultMessageError = "Cannot find \"" + UserName + "\" in the database.";
+        //}
+
+        /// <summary>
+        /// Minimal method for returning just the user role. Used only when deleting a user.
+        /// </summary>
+        /// <param name="Username">The username of the whose role needs to be found.</param>
+        /// <returns>Returns the role of the user.</returns>
+        private string GetUserRole(string Username)
+        {
+            if (!string.IsNullOrWhiteSpace(Username))
+            {
+                Username = Username.Trim();
+
+                ApplicationUser user = context.Users.FirstOrDefault(u => u.UserName.Equals(Username, StringComparison.CurrentCultureIgnoreCase));
 
                 if (user != null)
-                {
-                    if (UserManager.GetRoles(user.Id).Count <= 0)
-                        return ViewBag.ResultMessageError = "This user doesn't have any roles assigned to them.";
-
-                    else
-                    {
-                        ViewBag.ResultMessage = "The user's role was successfully retrieved!";
-                        return (string)UserManager.GetRoles(user.Id).ElementAt(0);
-                    }
-                }
+                    return (string)UserManager.GetRoles(user.Id).ElementAt(0);
 
                 else
-                    return ViewBag.ResultMessageError = "Cannot find \"" + UserName + "\" in the database.";
+                    throw new NullReferenceException("We could not find the user.");
             }
 
             else
-                return ViewBag.ResultMessageError = "Cannot find \"" + UserName + "\" in the database.";
+                throw new ArgumentNullException(Username, "Username must be a valid parameter and not null.");
         }
 
         /// <summary>

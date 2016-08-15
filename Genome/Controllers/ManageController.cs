@@ -47,25 +47,31 @@ namespace Genome.Controllers
         {
             string permissionsError = "";
             string quotaError = "";
-            ViewBag.RecQuota = Convert.ToString(Locations.MINIMUM_QUOTA) + "Gb+";
+            ViewBag.RecQuota = Convert.ToString(Accessors.MINIMUM_QUOTA) + "Gb+";
             //ViewBag.ShowResults = null; // Need to null this so if the user tries to check again in the SAME session and there is an error it won't display.
 
             // Make sure there is actually information. Otherwise we just return them to the form.
             if (!string.IsNullOrEmpty(SSHUser) && !string.IsNullOrEmpty(SSHPass))
             {
                 // Check if they have sufficient permissions.
-                if (VerifyAccount.VerifyPermissions(SSHUser, SSHPass, out permissionsError))
+                if (VerifyAccount.VerifyPermissions(SSHUser, SSHPass))
                     ViewBag.PermissionsSuccess = "Your permissions validated successfully!";
 
                 else
-                    ViewBag.PermissionsError = permissionsError;
+                    ViewBag.PermissionsError = LinuxErrorHandling.error;
 
                 // Check if they have sufficient quota.
-                if(VerifyAccount.VerifyQuota(SSHUser, SSHPass, out quotaError))
+                if (VerifyAccount.VerifyQuota(SSHUser, SSHPass))
+                {
                     ViewBag.QuotaSuccess = "You have sufficient quota!";
+                    ViewBag.QuotaAmount = "OK";
+                }
 
                 else
-                    ViewBag.QuotaError = quotaError;
+                {
+                    ViewBag.QuotaError = LinuxErrorHandling.error;
+                    ViewBag.QuotaAmount = "NO";
+                }
 
                 // Get the user.
                 ApplicationUser Model = UserManager.FindById(User.Identity.GetUserId());
@@ -80,7 +86,6 @@ namespace Genome.Controllers
                 // Save the user information.
                 IdentityResult result = await UserManager.UpdateAsync(Model);
 
-                ViewBag.QuotaAmount = "OK";
                 ViewBag.ShowResults = "Show Results";
 
                 return View();

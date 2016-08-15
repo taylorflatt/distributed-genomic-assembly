@@ -16,8 +16,10 @@ namespace Genome.Controllers
         {
             try
             {
+                string username = Helpers.HelperMethods.GetUsername();
+
                 var temp = from u in db.Users
-                           where u.UserName.Equals(Helpers.HelperMethods.GetUsername())
+                           where u.UserName.Equals(username)
                            select u;
 
                 // This should only ever be iterated through once.

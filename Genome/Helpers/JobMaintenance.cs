@@ -9,7 +9,7 @@ using System.Collections;
 
 namespace Genome.Helpers
 {
-    public class CheckJobStatus
+    public class JobMaintenance
     {
         /// <summary>
         /// Creates the private key connection that we use to do the updates to jobs.
@@ -25,7 +25,7 @@ namespace Genome.Helpers
             var methods = new List<AuthenticationMethod>();
             methods.Add(new PrivateKeyAuthenticationMethod(username, keyFiles));
 
-            return new ConnectionInfo(Locations.BD_IP, 22, username, methods.ToArray());
+            return new ConnectionInfo(Accessors.BD_IP, 22, username, methods.ToArray());
         }
 
         // This will be called by a scheduler on a timed basis.
@@ -38,10 +38,8 @@ namespace Genome.Helpers
         /// <param name="jobUuid">The unique ID of the job.</param>
         /// <param name="jobsToUpload">Returns, by reference, a flag indicating whether or not the job needs to be uploaded.</param>
         /// <param name="error">Returns, by value, a string that indicates whether there has been an error. </param>
-        protected internal static void UpdateStatus(int jobUuid, ref bool jobsToUpload, out string error)
+        protected internal static void UpdateStatus(int jobUuid, ref bool jobsToUpload)
         {
-            error = "";
-
             using (var client = new SshClient(CreatePrivateKeyConnectionInfo()))
             {
                 try
@@ -65,17 +63,17 @@ namespace Genome.Helpers
                         #region Check if the job is currently running
 
                         // Checks to see if the job is running.
-                        if (LinuxCommands.JobRunning(client, Convert.ToInt32(genomeModel.SGEJobId), out error))
+                        if (LinuxCommands.JobRunning(client, Convert.ToInt32(genomeModel.SGEJobId)))
                         {
                             // Now we need to check the status of EACH assembler, updating their statuses before we know the overall status.
-                            if (string.IsNullOrEmpty(error))
+                            if (string.IsNullOrEmpty(LinuxErrorHandling.error))
                             {
                                 #region Check if Masurca is running
 
-                                if (LinuxCommands.DirectoryHasFiles(client, Locations.GetMasurcaOutputPath(jobUuid), out error))
+                                if (LinuxCommands.DirectoryHasFiles(client, Accessors.GetMasurcaOutputPath(jobUuid)))
                                 {
                                     // Now we need to check if it has completed those assembly jobs.
-                                    int masurcaCurrentStep = LinuxCommands.GetCurrentStep(client, Locations.GetMasurcaOutputPath(jobUuid), jobUuid, StepDescriptions.GetMasurcaStepList(), out error);
+                                    int masurcaCurrentStep = LinuxCommands.GetCurrentStep(client, Accessors.GetMasurcaOutputPath(jobUuid), jobUuid, StepDescriptions.GetMasurcaStepList());
 
                                     // Now we need to set the step/status values for masurca.
                                     if (masurcaCurrentStep != -1)
@@ -107,7 +105,7 @@ namespace Genome.Helpers
                             #region Check if the assemblers completed successfully
 
                             // Now I need to go through all the assemblers and see if they exited successfully or not.
-                            if (LinuxCommands.AssemblerSuccess(client, Locations.GetMasurcaSuccessLogPath(jobUuid), jobUuid, out error))
+                            if (LinuxCommands.AssemblerSuccess(client, Accessors.GetMasurcaSuccessLogPath(jobUuid), jobUuid))
                             {
                                 int masurcaCurrentStep = StepDescriptions.GetMasurcaStepList().Last().step;
 
@@ -139,19 +137,19 @@ namespace Genome.Helpers
                 // SSH Connection couldn't be established.
                 catch (SocketException e)
                 {
-                    error = "The SSH connection couldn't be established. " + e.Message;
+                    LinuxErrorHandling.error = "The SSH connection couldn't be established. " + e.Message;
                 }
 
                 // Authentication failure.
                 catch (SshAuthenticationException e)
                 {
-                    error = "The credentials were entered incorrectly. " + e.Message;
+                    LinuxErrorHandling.error = "The credentials were entered incorrectly. " + e.Message;
                 }
 
                 // The SSH connection was dropped.
                 catch (SshConnectionException e)
                 {
-                    error = "The connection was terminated unexpectedly. " + e.Message;
+                    LinuxErrorHandling.error = "The connection was terminated unexpectedly. " + e.Message;
                 }
             }
         }
@@ -165,21 +163,21 @@ namespace Genome.Helpers
         /// <param name="client">Current SSH session client.</param>
         /// <param name="uuid">An integer number representing the particular job ID via the website (key-value of the submitted job).</param>
         /// <param name="error">Any error encountered by the command.</param>
-        protected internal static void UploadData(SshClient client, int uuid, out string error)
+        protected internal static void UploadData(SshClient client, int uuid)
         {
             using (GenomeAssemblyDbContext db = new GenomeAssemblyDbContext())
             {
                 // Pull the model data.
                 GenomeModel genomeModel = db.GenomeModels.Find(uuid);
 
-                // Move to the overall job directory.
-                LinuxCommands.ChangeDirectory(client, Locations.GetJobPath(uuid), out error);
+                // Move to the overall job directory. (NOTE: THIS WILL NOT WORK...NEED TO MAKE SURE I USE ABSOLUTE PATHS.
+                LinuxCommands.ChangeDirectory(client, Accessors.GetJobPath(uuid));
 
                 // Grab the unique list of steps for this particular model.
                 Hashtable overallStepList = StepDescriptions.GenerateOverallStepList(genomeModel.NumAssemblers);
 
                 #region Compress Data
-                if (string.IsNullOrEmpty(error))
+                if (string.IsNullOrEmpty(LinuxErrorHandling.error))
                 {
                     // Get the compressing data step number.
                     int stepNum = StepDescriptions.GetCompressingDataStepNum(overallStepList.Count);
@@ -190,9 +188,9 @@ namespace Genome.Helpers
                     db.SaveChanges();
 
                     // Compress Data.
-                    LinuxCommands.ZipFiles(client, 9, Locations.GetCompressedDataPath(uuid), Locations.masterPath, out error, "-y -r");
+                    LinuxCommands.ZipFiles(client, 9, Accessors.GetCompressedDataPath(uuid), Accessors.masterPath, "-y -r");
 
-                    if (!string.IsNullOrEmpty(error))
+                    if (!string.IsNullOrEmpty(LinuxErrorHandling.error))
                     {
                         genomeModel.OverallStatus = StepDescriptions.COMPRESSION_ERROR;
                         db.SaveChanges();
@@ -202,7 +200,7 @@ namespace Genome.Helpers
                 #endregion
 
                 #region Connect to SFTP
-                if (string.IsNullOrEmpty(error))
+                if (string.IsNullOrEmpty(LinuxErrorHandling.error))
                 {
                     // Get the connecting to sftp data step number.
                     int stepNum = StepDescriptions.GetConnectingToSftpStepNum(overallStepList.Count);
@@ -213,9 +211,9 @@ namespace Genome.Helpers
                     db.SaveChanges();
 
                     // Connect to SFTP.
-                    LinuxCommands.ConnectSFTP(client, Locations.FTP_URL, Locations.PUBLIC_KEY_PATH, out error);
+                    LinuxCommands.ConnectSFTP(client, Accessors.FTP_URL, Accessors.PUBLIC_KEY_PATH);
 
-                    if (!string.IsNullOrEmpty(error))
+                    if (!string.IsNullOrEmpty(LinuxErrorHandling.error))
                     {
                         genomeModel.OverallStatus = StepDescriptions.SFTP_CONNECTION_ERROR;
                         db.SaveChanges();
@@ -226,7 +224,7 @@ namespace Genome.Helpers
 
                 #region Upload Data and Set Download Link
 
-                if (string.IsNullOrEmpty(error))
+                if (string.IsNullOrEmpty(LinuxErrorHandling.error))
                 {
                     // Get the upload data step number.
                     int stepNum = StepDescriptions.GetUploadDataStepNum(overallStepList.Count);
@@ -237,14 +235,14 @@ namespace Genome.Helpers
                     db.SaveChanges();
 
                     // Upload files.
-                    LinuxCommands.SftpUploadFile(client, Locations.ZIP_STORAGE_PATH, out error);
+                    LinuxCommands.SftpUploadFile(client, Accessors.ZIP_STORAGE_PATH);
 
-                    if (!string.IsNullOrEmpty(error))
+                    if (!string.IsNullOrEmpty(LinuxErrorHandling.error))
                         genomeModel.OverallStatus = StepDescriptions.UPLOAD_TO_FTP_ERROR;
 
                     else
                     {
-                        genomeModel.DownloadLink = Locations.GetDataDownloadLink(genomeModel.CreatedBy, uuid);
+                        genomeModel.DownloadLink = Accessors.GetDataDownloadLink(genomeModel.CreatedBy, uuid);
                         genomeModel.CompletedDate = DateTime.UtcNow; // Set the completed date of the job.
                         genomeModel.OverallStatus = StepDescriptions.FINAL_STEP;
                     }
