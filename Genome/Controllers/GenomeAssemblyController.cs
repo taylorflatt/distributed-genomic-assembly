@@ -75,8 +75,6 @@ namespace Genome.Controllers
                     Random rand = new Random();
                     int seed = rand.Next(198, 1248712);
 
-                    
-
                     JobBuilder builder = new JobBuilder(genomeModel, dataSources, seed);
                     builder.GenerateConfigs();
 
@@ -183,10 +181,25 @@ namespace Genome.Controllers
         {
             GenomeModel genomeModel = db.GenomeModels.Find(id);
 
-            bool jobsToUpload = false;
-
             if (command == "Update Status" && string.IsNullOrEmpty(genomeModel.DownloadLink))
-                JobMaintenance.UpdateStatus(genomeModel, ref jobsToUpload);
+                JobMaintenance.UpdateStatus(genomeModel);
+
+            // If we are not at the final step or currently uploading data, we need to run the upload data method.
+            if (genomeModel.OverallCurrentStep < genomeModel.OverallStepSize - 1)
+            {
+                using (var client = new SshClient(Accessors.BD_IP, Accessors.BD_UPDATE_KEY_PATH))
+                {
+                    client.Connect();
+
+                    JobMaintenance.UploadData(client, genomeModel);
+
+                    if (string.IsNullOrEmpty(genomeModel.DownloadLink))
+                    {
+                        // Run background task that will upload the data to the web server FTP for download by the user.
+                        ViewBag.DataUploading = "Your job has completed executing on BigDog and is currently being packaged and uploaded to our server so that you may access it. Please be patient as this could take some time depending on the size of the data. Once it has successfully uploaded, a link will be made available from which you will be able to download your data.";
+                    }
+                }
+            }
 
             if (command == "Cancel Job")
             {
@@ -202,19 +215,6 @@ namespace Genome.Controllers
                     else
                         ViewBag.JobCancelFailure = "Your job has not been successfully cancelled with the following error: " + LinuxErrorHandling.error;
                 }
-            }
-
-            if(string.IsNullOrEmpty(LinuxErrorHandling.error))
-            {
-                // If the job is ready to be uploaded (according to our UpdateStatus method) and a download link hasn't been assigned (upload hasn't 
-                // finished), then we will display to the user that their data is currently being uploaded.
-                if(jobsToUpload && string.IsNullOrEmpty(genomeModel.DownloadLink))
-                {
-                    // Run background task that will upload the data to the web server FTP for download by the user.
-                    ViewBag.DataUploading = "Your job has completed executing on BigDog and is currently being packaged and uploaded to our server so that you may access it. Please be patient as this could take some time depending on the size of the data. Once it has successfully uploaded, a link will be made available from which you will be able to download your data.";
-                }
-
-                return View("Details");
             }
 
             db.SaveChanges();

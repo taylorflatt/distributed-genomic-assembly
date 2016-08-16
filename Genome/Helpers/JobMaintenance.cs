@@ -28,16 +28,11 @@ namespace Genome.Helpers
             return new ConnectionInfo(Accessors.BD_IP, Accessors.BD_PORT, username, methods.ToArray());
         }
 
-        // This will be called by a scheduler on a timed basis.
-        // In the main method where this is called, it will loop through all the job uuids that need to be run and then call this method 
-        // successively. This allows me to use the SAME method for a single update of a batch update.
-        // Returns a jobsToUpload = true if this job is ready to be uploaded.
         /// <summary>
         /// Updates the status of a single job. But it does not perform the upload if that needs to happen.
         /// </summary>
-        /// <param name="jobUuid">The unique ID of the job.</param>
-        /// <param name="jobsToUpload">Returns, by reference, a flag indicating whether or not the job needs to be uploaded.</param>
-        protected internal static void UpdateStatus(GenomeModel genomeModel, ref bool jobsToUpload)
+        /// <param name="genomeModel">The model of the particular job.</param>
+        protected internal static void UpdateStatus(GenomeModel genomeModel)
         {
             using (var client = new SshClient(CreatePrivateKeyConnectionInfo()))
             {
@@ -61,9 +56,8 @@ namespace Genome.Helpers
                         // Checks to see if the job is running.
                         if (LinuxCommands.JobRunning(client, Convert.ToInt32(genomeModel.SGEJobId)))
                         {
-                            genomeModel.OverallCurrentStep = StepDescriptions.GetRunningAssemblersStepNum();
+                            StepDescriptions.SetAssemblersRunningStep(genomeModel);
 
-                            // Now we need to check the status of EACH assembler, updating their statuses before we know the overall status.
                             if (string.IsNullOrEmpty(LinuxErrorHandling.error))
                             {
                                 #region Check if Masurca is running
@@ -78,7 +72,12 @@ namespace Genome.Helpers
                                     {
                                         genomeModel.MasurcaCurrentStep = masurcaCurrentStep;
                                         genomeModel.MasurcaStatus = StepDescriptions.GetCurrentStepDescription(StepDescriptions.GetMasurcaStepList(), masurcaCurrentStep);
+
+                                        StepDescriptions.NextOverallStep(genomeModel);
                                     }
+
+                                    else
+                                        StepDescriptions.NextOverallStep(genomeModel, true);
                                 }
 
                                 #endregion
@@ -112,9 +111,6 @@ namespace Genome.Helpers
 
                                     genomeModel.MasurcaCurrentStep = masurcaCurrentStep;
                                     genomeModel.MasurcaStatus = StepDescriptions.GetCurrentStepDescription(StepDescriptions.GetMasurcaStepList(), masurcaCurrentStep);
-
-                                    // Update the overall step list to move forward a spot.
-                                    genomeModel.OverallCurrentStep++;
                                 }
                             }
 
@@ -128,9 +124,6 @@ namespace Genome.Helpers
 
                                     genomeModel.MasurcaCurrentStep = masurcaCurrentStep;
                                     genomeModel.MasurcaStatus = StepDescriptions.GetCurrentStepDescription(StepDescriptions.GetMasurcaStepList(), masurcaCurrentStep) + " - Error"; // explicitly note an error for the description.
-
-                                    // This may need to be investigated further. Not sure how the failure of a single assembler will have on the entire process. (Forking etc).
-                                    genomeModel.OverallCurrentStep++;
                                 }
 
                             }
@@ -139,12 +132,12 @@ namespace Genome.Helpers
 
                             /// NOW CHECK WGS.
 
-                            // Update the status description.
-                            genomeModel.OverallStatus = StepDescriptions.GetCurrentStepDescription(overallStepList, genomeModel.OverallCurrentStep);
-
-                            // If ALL assemblers have finished in some capacity, then we need to move focus to uploading the data.
-                            if(genomeModel.MasurcaCurrentStep.Equals(StepDescriptions.GetMasurcaStepList().Last().step))
-                                jobsToUpload = true;
+                            // Need to be careful here. I need to make sure that when there are multiple assemblers that I update them accordingly. NextOverallStep increments the 
+                            // number. So I ought to call this upon each assembler SUCCESS or cross-reference it with each assembler's currentStep list.
+                            if (!string.IsNullOrEmpty(LinuxErrorHandling.error))
+                                StepDescriptions.NextOverallStep(genomeModel, true);
+                            else
+                                StepDescriptions.NextOverallStep(genomeModel);
 
                             #endregion
                         }
@@ -182,7 +175,6 @@ namespace Genome.Helpers
         /// and sets the download link provided it uploads properly. Note, this ought to be called after the UpdateStatus method.
         /// </summary>
         /// <param name="client">Current SSH session client.</param>
-        /// <param name="uuid">An integer unqiue to each job so we can pull the job information.</param>
         protected internal static void UploadData(SshClient client, GenomeModel genomeModel)
         {
             using (GenomeAssemblyDbContext db = new GenomeAssemblyDbContext())
@@ -193,18 +185,28 @@ namespace Genome.Helpers
                 #region Compress Data
                 if (string.IsNullOrEmpty(LinuxErrorHandling.error))
                 {
-                    // Get the compressing data step number.
-                    int stepNum = StepDescriptions.GetCompressingDataStepNum(genomeModel.OverallStepSize);
+                    //int stepNum = StepDescriptions.GetCompressingDataStepNum(genomeModel.OverallStepSize);
 
-                    // Set the overall status and step number to compressing.
-                    genomeModel.OverallStatus = StepDescriptions.GetCurrentStepDescription(overallStepList, stepNum);
-                    genomeModel.OverallCurrentStep = StepDescriptions.GetCompressingDataStepNum(genomeModel.OverallStepSize);
+                    //// Set the overall status and step number to compressing.
+                    //genomeModel.OverallStatus = StepDescriptions.GetCurrentStepDescription(overallStepList, stepNum);
+                    //genomeModel.OverallCurrentStep = StepDescriptions.GetCompressingDataStepNum(genomeModel.OverallStepSize);
 
-                    // Compress Data.
+                    //// Compress Data.
+                    //LinuxCommands.ZipFiles(client, 9, Accessors.GetCompressedDataPath(genomeModel.Seed), Accessors.masterPath, "-y -r");
+
+                    //if (!string.IsNullOrEmpty(LinuxErrorHandling.error))
+                    //    genomeModel.OverallStatus = StepDescriptions.COMPRESSION_ERROR;
+
+
+
+
+
                     LinuxCommands.ZipFiles(client, 9, Accessors.GetCompressedDataPath(genomeModel.Seed), Accessors.masterPath, "-y -r");
 
                     if (!string.IsNullOrEmpty(LinuxErrorHandling.error))
-                        genomeModel.OverallStatus = StepDescriptions.COMPRESSION_ERROR;
+                        StepDescriptions.NextOverallStep(genomeModel, true);
+                    else
+                        StepDescriptions.NextOverallStep(genomeModel);
                 }
 
                 #endregion
@@ -212,17 +214,28 @@ namespace Genome.Helpers
                 #region Connect to SFTP
                 if (string.IsNullOrEmpty(LinuxErrorHandling.error))
                 {
-                    // Get the connecting to sftp data step number.
-                    int stepNum = StepDescriptions.GetConnectingToSftpStepNum(genomeModel.OverallStepSize);
+                    //// Get the connecting to sftp data step number.
+                    //int stepNum = StepDescriptions.GetConnectingToSftpStepNum(genomeModel.OverallStepSize);
 
-                    // Set the overall status to connecting to sftp.
-                    genomeModel.OverallStatus = StepDescriptions.GetCurrentStepDescription(overallStepList, stepNum);
+                    //// Set the overall status to connecting to sftp.
+                    //genomeModel.OverallStatus = StepDescriptions.GetCurrentStepDescription(overallStepList, stepNum);
 
-                    // Connect to SFTP.
+                    //// Connect to SFTP.
+                    
+
+                    //if (!string.IsNullOrEmpty(LinuxErrorHandling.error))
+                    //    genomeModel.OverallStatus = StepDescriptions.SFTP_CONNECTION_ERROR;
+
+
+
+
+
                     LinuxCommands.ConnectSftpToFtp(client, Accessors.FTP_URL, Accessors.PUBLIC_KEY_PATH);
 
                     if (!string.IsNullOrEmpty(LinuxErrorHandling.error))
-                        genomeModel.OverallStatus = StepDescriptions.SFTP_CONNECTION_ERROR;
+                        StepDescriptions.NextOverallStep(genomeModel, true);
+                    else
+                        StepDescriptions.NextOverallStep(genomeModel);
                 }
 
                 #endregion
@@ -231,31 +244,44 @@ namespace Genome.Helpers
 
                 if (string.IsNullOrEmpty(LinuxErrorHandling.error))
                 {
-                    // Get the upload data step number.
-                    int stepNum = StepDescriptions.GetUploadDataStepNum(genomeModel.OverallStepSize);
+                    //// Get the upload data step number.
+                    //int stepNum = StepDescriptions.GetUploadDataStepNum(genomeModel.OverallStepSize);
 
-                    // Set the overall status to uploading data.
-                    genomeModel.OverallStatus = StepDescriptions.GetCurrentStepDescription(overallStepList, stepNum);
+                    //// Set the overall status to uploading data.
+                    //genomeModel.OverallStatus = StepDescriptions.GetCurrentStepDescription(overallStepList, stepNum);
 
-                    // Upload files as background as we may continue.
+                    //// Upload files as background as we may continue.
+                    //LinuxCommands.SftpUploadFile(client, Accessors.ZIP_STORAGE_PATH, true);
+
+                    //if (!string.IsNullOrEmpty(LinuxErrorHandling.error))
+                    //    genomeModel.OverallStatus = StepDescriptions.UPLOAD_TO_FTP_ERROR;
+
+                    //else
+                    //{
+                    //    genomeModel.OverallCurrentStep = StepDescriptions.GetUploadDataStepNum(genomeModel.OverallStepSize);
+                    //    genomeModel.OverallStatus = StepDescriptions.GetCurrentStepDescription(overallStepList, genomeModel.OverallCurrentStep);
+
+                    //    // These cannot be done yet because the upload will be run as a background task on the linux machine. Need a condition to 
+                    //    // check if genomeModel.OverallCurrentStep == UploadDataStep then we need to check the some file to determine if it was 
+                    //    // finished OR compare the sizes remotely with the local version. But need to be careful with differing sizes between 
+                    //    // Windows and Linux.
+                    //    //genomeModel.DownloadLink = Accessors.GetDataDownloadLink(genomeModel.CreatedBy, uuid);
+                    //    //genomeModel.CompletedDate = DateTime.UtcNow; // Set the completed date of the job.
+                    //    //genomeModel.OverallStatus = StepDescriptions.FINAL_STEP;
+                    //}
+
+
+
+
+
+
+
                     LinuxCommands.SftpUploadFile(client, Accessors.ZIP_STORAGE_PATH, true);
 
                     if (!string.IsNullOrEmpty(LinuxErrorHandling.error))
-                        genomeModel.OverallStatus = StepDescriptions.UPLOAD_TO_FTP_ERROR;
-
+                        StepDescriptions.NextOverallStep(genomeModel, true);
                     else
-                    {
-                        genomeModel.OverallCurrentStep = StepDescriptions.GetUploadDataStepNum(genomeModel.OverallStepSize);
-                        genomeModel.OverallStatus = StepDescriptions.GetCurrentStepDescription(overallStepList, genomeModel.OverallCurrentStep);
-
-                        // These cannot be done yet because the upload will be run as a background task on the linux machine. Need a condition to 
-                        // check if genomeModel.OverallCurrentStep == UploadDataStep then we need to check the some file to determine if it was 
-                        // finished OR compare the sizes remotely with the local version. But need to be careful with differing sizes between 
-                        // Windows and Linux.
-                        //genomeModel.DownloadLink = Accessors.GetDataDownloadLink(genomeModel.CreatedBy, uuid);
-                        //genomeModel.CompletedDate = DateTime.UtcNow; // Set the completed date of the job.
-                        //genomeModel.OverallStatus = StepDescriptions.FINAL_STEP;
-                    }
+                        StepDescriptions.NextOverallStep(genomeModel);
                 }
 
                 #endregion
