@@ -30,6 +30,11 @@ namespace Genome.Helpers
     public static class StepDescriptions
     {
         /// <summary>
+        /// Number of BASE steps to each job. This will vary depending on the particular job (how many assemblers they choose).
+        /// </summary>
+        public const int NUM_BASE_OVERALL_STEPS = 7;
+
+        /// <summary>
         /// List of errors for the steps.
         /// </summary>
         public const string COMPRESSION_ERROR = "Error compressing data";
@@ -63,33 +68,33 @@ namespace Genome.Helpers
         /// <summary>
         /// Dynamically creates a list of steps and descriptions for a current job given the total number of assemblers.
         /// </summary>
-        /// <param name="numAssemblers"> The total number of assemblers that the job is currently running on.</param>
+        /// <param name="numOverallSteps"> The total number of steps that the list will contain</param>
         /// <returns> Returns a hashtable that consists of a key corresponding to the step number and a description.</returns>
-        /// <remarks>IMPORTANT: Since the number of overall steps is dynamic for a particular job, if the base number of steps change 
-        /// then they will need to be updated both here AND in ~/GenomeAssembly/Details in order to accurately reflect the change. 
-        /// This is in contrast to updating the model to contain the total number of overall steps which I may end up revising.</remarks>
-        public static Hashtable GenerateOverallStepList(int numAssemblers)
+        /// <remarks>If the total number of base steps changes, be sure to change that at the top of the class as well.</remarks>
+        public static Hashtable GenerateOverallStepList(int numOverallSteps)
         {
-            Hashtable stepList = new Hashtable();
+            int numAssemblers = numOverallSteps - NUM_BASE_OVERALL_STEPS;
+            int stepNum = 1;
 
-            int offset = 1;
-
-            stepList.Add(offset++, INITIAL_STEP);
-            stepList.Add(offset++, "Data Conversion");
-            stepList.Add(offset++, "Running Assemblers");
+            Hashtable stepList = new Hashtable(numOverallSteps);
+            stepList.Add(stepNum++, INITIAL_STEP);
+            stepList.Add(stepNum++, "Data Conversion");
+            stepList.Add(stepNum++, "Running Assemblers");
 
             for (int index = 1; index <= numAssemblers; index++)
             {
-                stepList.Add(offset++, "Finished Assembler (" + index + " of " + numAssemblers + ")");
+                stepList.Add(stepNum++, "Finished Assembler (" + index + " of " + numAssemblers + ")");
             }
 
-            stepList.Add(offset++, "Data Analysis");                    // offset - 4
-            stepList.Add(offset++, "Compressing Data");                 // offset - 3
-            stepList.Add(offset++, "Connecting to SFTP");               // offset - 2
-            stepList.Add(offset++, "Uploading Data to FTP");            // offset - 1
+            stepList.Add(stepNum++, "Data Analysis");
+            stepList.Add(stepNum++, "Compressing Data");
+            stepList.Add(stepNum++, "Connecting to SFTP");
+            stepList.Add(stepNum++, "Uploading Data to FTP");
+            stepList.Add(stepNum, FINAL_STEP);
 
-            // If you change this, you MUST change it in the CheckJobStatus.cs file in the jobList variable.
-            stepList.Add(offset, FINAL_STEP);                           // offset - 0 = 8 + numAssemblers
+            if (stepNum != numOverallSteps)
+                throw new ArgumentOutOfRangeException(Convert.ToString(stepNum), "While creating the overall step list, the method ran into an error. "
+                    + "The values of the overall step list and that of the internal counter should not be different. numOverallSteps = " + numOverallSteps + " and stepNum = " + stepNum + ".");
 
             return stepList;
         }

@@ -59,8 +59,7 @@ namespace Genome.Controllers
 
                     HelperMethods.SetDefaultMasurcaValues(genomeModel);
 
-                    genomeModel.NumAssemblers = HelperMethods.NumberOfAssemblers(genomeModel);
-
+                    genomeModel.OverallStepSize = StepDescriptions.NUM_BASE_OVERALL_STEPS + HelperMethods.NumberOfAssemblers(genomeModel);
                     genomeModel.OverallCurrentStep = 1;
                     genomeModel.OverallStatus = StepDescriptions.INITIAL_STEP;
 
@@ -76,7 +75,7 @@ namespace Genome.Controllers
                     Random rand = new Random();
                     int seed = rand.Next(198, 1248712);
 
-                    string badUrl = "";
+                    
 
                     JobBuilder builder = new JobBuilder(genomeModel, dataSources, seed);
                     builder.GenerateConfigs();
@@ -88,10 +87,9 @@ namespace Genome.Controllers
 
                     #region Connect To BigDog and Test Data Connection
 
-                    /// TODO: Start the download of their data on BigDog to see if we can get each URL. If we cannot, then we just terminate 
-                    /// and tell them the error we receieved.
+                    string badUrl = HelperMethods.TestJobUrls(genomeModel);
 
-                    if (string.IsNullOrEmpty(HelperMethods.TestJobUrls(genomeModel)) && string.IsNullOrEmpty(LinuxErrorHandling.error))
+                    if (string.IsNullOrEmpty(badUrl) && string.IsNullOrEmpty(LinuxErrorHandling.error))
                     {
                         /// We can instead pass in the SEED variable which will be used to reference the method in Locations to grab the correct file(s).
                         /// This is the ideal solution which will be implemented only once we know that the system works with the direct URL.
@@ -104,9 +102,6 @@ namespace Genome.Controllers
                             db.SaveChanges();
 
                             return RedirectToAction("Details", new { id = genomeModel.uuid });
-                            // DEBUG ONLY BELOW:
-                            //ViewBag.ConnectionError = "Successfully did everything except add it to the DB!";
-                            //return View(genomeModel);
                         }
 
                         // Redisplay the data and display the error.

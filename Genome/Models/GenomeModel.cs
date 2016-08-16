@@ -1,8 +1,11 @@
 ﻿using System;
+using System.Collections;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
+/// TODO: Need to make a decision on whether to keep OverallStepSize or NumAssemblers. I really only need 1 since I could just do the math
+/// to figure out the other. I'm leaning towards the former since I use that more in determining step values than I do the latter.
 namespace Genome.Models
 {
     [Serializable]
@@ -31,7 +34,7 @@ namespace Genome.Models
         [Display(Name = "Big Dog Password:")]
         public string SSHPass { get; set; }
 
-        public int NumAssemblers { get; set; }
+        //public int NumAssemblers { get; set; }
 
         //////////////////////////////
         // Data specific parameters //
@@ -151,6 +154,11 @@ namespace Genome.Models
         [Display(Name = "Current Step")]
         [DefaultValue(1)]
         public int OverallCurrentStep { get; set; }
+
+        /// <summary>
+        /// The total number of steps that this particular job has. This is determined by the number of assemblers they have chosen.
+        /// </summary>
+        public int OverallStepSize { get; set; }
 
         // WE NEED TO RESET THIS VALUE TO NULL WHEN THE DOWNLOAD IS EVENTUALLY PRUNED.
         [DefaultValue("")]

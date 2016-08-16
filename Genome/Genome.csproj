@@ -255,13 +255,9 @@
     <Compile Include="Helpers\Unique.cs" />
     <Compile Include="Helpers\VerifyAccount.cs" />
     <Compile Include="Logging\ExceptionUtility.cs" />
-    <Compile Include="Migrations\201607260340361_test.cs" />
-    <Compile Include="Migrations\201607260340361_test.Designer.cs">
-      <DependentUpon>201607260340361_test.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\201608161601089_SeedValue.cs" />
-    <Compile Include="Migrations\201608161601089_SeedValue.Designer.cs">
-      <DependentUpon>201608161601089_SeedValue.cs</DependentUpon>
+    <Compile Include="Migrations\201608161706548_RemovedNumAssemblers.cs" />
+    <Compile Include="Migrations\201608161706548_RemovedNumAssemblers.Designer.cs">
+      <DependentUpon>201608161706548_RemovedNumAssemblers.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\AccountViewModels.cs" />
@@ -381,15 +377,12 @@
     <None Include="Project_Readme.html" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Migrations\201607260340361_test.resx">
-      <DependentUpon>201607260340361_test.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\201608161601089_SeedValue.resx">
-      <DependentUpon>201608161601089_SeedValue.cs</DependentUpon>
-    </EmbeddedResource>
+    <Service Include="{3259AA49-8AA1-44D3-9025-A0B520596A8C}" />
   </ItemGroup>
   <ItemGroup>
-    <Service Include="{3259AA49-8AA1-44D3-9025-A0B520596A8C}" />
+    <EmbeddedResource Include="Migrations\201608161706548_RemovedNumAssemblers.resx">
+      <DependentUpon>201608161706548_RemovedNumAssemblers.cs</DependentUpon>
+    </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

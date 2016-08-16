@@ -50,10 +50,8 @@ namespace Genome.Helpers
                     {
                         #region Checking how many assemblers chosen
 
-                        // Get the overallstep list generated from the number of assemblers the user chose to use.
-                        Hashtable overallStepList = StepDescriptions.GenerateOverallStepList(genomeModel.NumAssemblers);
-
-                        // Get the masurca step list.
+                        // Get the step lists.
+                        Hashtable overallStepList = StepDescriptions.GenerateOverallStepList(genomeModel.OverallStepSize);
                         HashSet<Assembler> masurcaStepList = StepDescriptions.GetMasurcaStepList();
 
                         #endregion
@@ -185,38 +183,28 @@ namespace Genome.Helpers
         /// </summary>
         /// <param name="client">Current SSH session client.</param>
         /// <param name="uuid">An integer unqiue to each job so we can pull the job information.</param>
-        protected internal static void UploadData(SshClient client, int uuid)
+        protected internal static void UploadData(SshClient client, GenomeModel genomeModel)
         {
             using (GenomeAssemblyDbContext db = new GenomeAssemblyDbContext())
             {
-                // Pull the model data.
-                GenomeModel genomeModel = db.GenomeModels.Find(uuid);
-
-                // Move to the overall job directory. (NOTE: THIS WILL NOT WORK...NEED TO MAKE SURE I USE ABSOLUTE PATHS.
-                //LinuxCommands.ChangeDirectory(client, Accessors.GetJobPath(uuid));
-
                 // Grab the unique list of steps for this particular model.
-                Hashtable overallStepList = StepDescriptions.GenerateOverallStepList(genomeModel.NumAssemblers);
+                Hashtable overallStepList = StepDescriptions.GenerateOverallStepList(genomeModel.OverallStepSize);
 
                 #region Compress Data
                 if (string.IsNullOrEmpty(LinuxErrorHandling.error))
                 {
                     // Get the compressing data step number.
-                    int stepNum = StepDescriptions.GetCompressingDataStepNum(overallStepList.Count);
+                    int stepNum = StepDescriptions.GetCompressingDataStepNum(genomeModel.OverallStepSize);
 
-                    // Set the overall status compressing.
+                    // Set the overall status and step number to compressing.
                     genomeModel.OverallStatus = StepDescriptions.GetCurrentStepDescription(overallStepList, stepNum);
-
-                    db.SaveChanges();
+                    genomeModel.OverallCurrentStep = StepDescriptions.GetCompressingDataStepNum(genomeModel.OverallStepSize);
 
                     // Compress Data.
-                    LinuxCommands.ZipFiles(client, 9, Accessors.GetCompressedDataPath(uuid), Accessors.masterPath, "-y -r");
+                    LinuxCommands.ZipFiles(client, 9, Accessors.GetCompressedDataPath(genomeModel.Seed), Accessors.masterPath, "-y -r");
 
                     if (!string.IsNullOrEmpty(LinuxErrorHandling.error))
-                    {
                         genomeModel.OverallStatus = StepDescriptions.COMPRESSION_ERROR;
-                        db.SaveChanges();
-                    }
                 }
 
                 #endregion
@@ -225,21 +213,16 @@ namespace Genome.Helpers
                 if (string.IsNullOrEmpty(LinuxErrorHandling.error))
                 {
                     // Get the connecting to sftp data step number.
-                    int stepNum = StepDescriptions.GetConnectingToSftpStepNum(overallStepList.Count);
+                    int stepNum = StepDescriptions.GetConnectingToSftpStepNum(genomeModel.OverallStepSize);
 
                     // Set the overall status to connecting to sftp.
                     genomeModel.OverallStatus = StepDescriptions.GetCurrentStepDescription(overallStepList, stepNum);
-
-                    db.SaveChanges();
 
                     // Connect to SFTP.
                     LinuxCommands.ConnectSftpToFtp(client, Accessors.FTP_URL, Accessors.PUBLIC_KEY_PATH);
 
                     if (!string.IsNullOrEmpty(LinuxErrorHandling.error))
-                    {
                         genomeModel.OverallStatus = StepDescriptions.SFTP_CONNECTION_ERROR;
-                        db.SaveChanges();
-                    }
                 }
 
                 #endregion
@@ -249,12 +232,10 @@ namespace Genome.Helpers
                 if (string.IsNullOrEmpty(LinuxErrorHandling.error))
                 {
                     // Get the upload data step number.
-                    int stepNum = StepDescriptions.GetUploadDataStepNum(overallStepList.Count);
+                    int stepNum = StepDescriptions.GetUploadDataStepNum(genomeModel.OverallStepSize);
 
                     // Set the overall status to uploading data.
                     genomeModel.OverallStatus = StepDescriptions.GetCurrentStepDescription(overallStepList, stepNum);
-
-                    db.SaveChanges();
 
                     // Upload files as background as we may continue.
                     LinuxCommands.SftpUploadFile(client, Accessors.ZIP_STORAGE_PATH, true);
@@ -264,7 +245,7 @@ namespace Genome.Helpers
 
                     else
                     {
-                        genomeModel.OverallCurrentStep = StepDescriptions.GetUploadDataStepNum(overallStepList.Count);
+                        genomeModel.OverallCurrentStep = StepDescriptions.GetUploadDataStepNum(genomeModel.OverallStepSize);
                         genomeModel.OverallStatus = StepDescriptions.GetCurrentStepDescription(overallStepList, genomeModel.OverallCurrentStep);
 
                         // These cannot be done yet because the upload will be run as a background task on the linux machine. Need a condition to 
@@ -275,8 +256,6 @@ namespace Genome.Helpers
                         //genomeModel.CompletedDate = DateTime.UtcNow; // Set the completed date of the job.
                         //genomeModel.OverallStatus = StepDescriptions.FINAL_STEP;
                     }
-
-                    db.SaveChanges();
                 }
 
                 #endregion
