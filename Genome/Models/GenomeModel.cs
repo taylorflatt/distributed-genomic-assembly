@@ -12,6 +12,14 @@ namespace Genome.Models
         [DisplayName("UUID")]
         public int uuid { get; set; }
 
+        /// <summary>
+        /// This is different from the UUID. Unfortunately we cannot access UUID at creation of a job to know a unique value to 
+        /// give our job. So instead we must create a random one and use THAT throughout the system.
+        /// </summary>
+        [DisplayName("Seed")]
+        [Index(IsUnique=true)]
+        public int Seed { get; set; } 
+
         // The job ID that is seen in the scheduler of BigDog so we can use this to check for updates.
         public int SGEJobId { get; set; }
 

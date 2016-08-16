@@ -32,7 +32,7 @@ namespace Genome.Helpers
         /// Tests whether the URLs entered by the user in the wizard are connectable.
         /// </summary>
         /// <returns>Returns a null string if the URL is connectable. Otherwise it will return the URL that is malfunctioning.</returns>
-        protected internal static string TestJobUrls(GenomeModel genomeModel, int seed)
+        protected internal static string TestJobUrls(GenomeModel genomeModel)
         {
             using (var client = new SshClient(Accessors.BD_IP, genomeModel.SSHUser, genomeModel.SSHPass))
             {

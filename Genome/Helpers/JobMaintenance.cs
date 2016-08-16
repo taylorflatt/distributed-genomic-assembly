@@ -37,7 +37,7 @@ namespace Genome.Helpers
         /// </summary>
         /// <param name="jobUuid">The unique ID of the job.</param>
         /// <param name="jobsToUpload">Returns, by reference, a flag indicating whether or not the job needs to be uploaded.</param>
-        protected internal static void UpdateStatus(int jobUuid, ref bool jobsToUpload)
+        protected internal static void UpdateStatus(GenomeModel genomeModel, ref bool jobsToUpload)
         {
             using (var client = new SshClient(CreatePrivateKeyConnectionInfo()))
             {
@@ -48,8 +48,6 @@ namespace Genome.Helpers
                     /// TODO: Modify the code to skip entire sections if they have already been completed. This will be based off the CURRENT STEP stored in the model data.
                     using (GenomeAssemblyDbContext db = new GenomeAssemblyDbContext())
                     {
-                        GenomeModel genomeModel = db.GenomeModels.Find(jobUuid);
-
                         #region Checking how many assemblers chosen
 
                         // Get the overallstep list generated from the number of assemblers the user chose to use.
@@ -72,10 +70,10 @@ namespace Genome.Helpers
                             {
                                 #region Check if Masurca is running
 
-                                if (LinuxCommands.DirectoryHasFiles(client, Accessors.GetMasurcaOutputPath(jobUuid)))
+                                if (LinuxCommands.DirectoryHasFiles(client, Accessors.GetMasurcaOutputPath(genomeModel.Seed)))
                                 {
                                     // Now we need to check if it has completed those assembly jobs.
-                                    int masurcaCurrentStep = LinuxCommands.GetCurrentStep(client, Accessors.GetMasurcaOutputPath(jobUuid), jobUuid, StepDescriptions.GetMasurcaStepList());
+                                    int masurcaCurrentStep = LinuxCommands.GetCurrentStep(client, Accessors.GetMasurcaOutputPath(genomeModel.Seed), StepDescriptions.GetMasurcaStepList());
 
                                     // Now we need to set the step/status values for masurca.
                                     if (masurcaCurrentStep != -1)
@@ -107,7 +105,7 @@ namespace Genome.Helpers
                             #region Check if the assemblers completed successfully
 
                             // Now I need to go through all the assemblers and see if they exited successfully or not.
-                            if (LinuxCommands.AssemblerSuccess(client, Accessors.GetMasurcaSuccessLogPath(jobUuid), jobUuid))
+                            if (LinuxCommands.AssemblerSuccess(client, Accessors.GetMasurcaSuccessLogPath(genomeModel.Seed)))
                             {
                                 // If masurca isn't finished, we need to check it.
                                 if (!genomeModel.MasurcaCurrentStep.Equals(StepDescriptions.GetMasurcaStepList().Count))
@@ -186,7 +184,7 @@ namespace Genome.Helpers
         /// and sets the download link provided it uploads properly. Note, this ought to be called after the UpdateStatus method.
         /// </summary>
         /// <param name="client">Current SSH session client.</param>
-        /// <param name="uuid">An integer number representing the particular job ID via the website (key-value of the submitted job).</param>
+        /// <param name="uuid">An integer unqiue to each job so we can pull the job information.</param>
         protected internal static void UploadData(SshClient client, int uuid)
         {
             using (GenomeAssemblyDbContext db = new GenomeAssemblyDbContext())
@@ -258,17 +256,24 @@ namespace Genome.Helpers
 
                     db.SaveChanges();
 
-                    // Upload files.
-                    LinuxCommands.SftpUploadFile(client, Accessors.ZIP_STORAGE_PATH);
+                    // Upload files as background as we may continue.
+                    LinuxCommands.SftpUploadFile(client, Accessors.ZIP_STORAGE_PATH, true);
 
                     if (!string.IsNullOrEmpty(LinuxErrorHandling.error))
                         genomeModel.OverallStatus = StepDescriptions.UPLOAD_TO_FTP_ERROR;
 
                     else
                     {
-                        genomeModel.DownloadLink = Accessors.GetDataDownloadLink(genomeModel.CreatedBy, uuid);
-                        genomeModel.CompletedDate = DateTime.UtcNow; // Set the completed date of the job.
-                        genomeModel.OverallStatus = StepDescriptions.FINAL_STEP;
+                        genomeModel.OverallCurrentStep = StepDescriptions.GetUploadDataStepNum(overallStepList.Count);
+                        genomeModel.OverallStatus = StepDescriptions.GetCurrentStepDescription(overallStepList, genomeModel.OverallCurrentStep);
+
+                        // These cannot be done yet because the upload will be run as a background task on the linux machine. Need a condition to 
+                        // check if genomeModel.OverallCurrentStep == UploadDataStep then we need to check the some file to determine if it was 
+                        // finished OR compare the sizes remotely with the local version. But need to be careful with differing sizes between 
+                        // Windows and Linux.
+                        //genomeModel.DownloadLink = Accessors.GetDataDownloadLink(genomeModel.CreatedBy, uuid);
+                        //genomeModel.CompletedDate = DateTime.UtcNow; // Set the completed date of the job.
+                        //genomeModel.OverallStatus = StepDescriptions.FINAL_STEP;
                     }
 
                     db.SaveChanges();

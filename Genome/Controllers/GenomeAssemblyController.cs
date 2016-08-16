@@ -81,6 +81,8 @@ namespace Genome.Controllers
                     JobBuilder builder = new JobBuilder(genomeModel, dataSources, seed);
                     builder.GenerateConfigs();
 
+                    genomeModel.Seed = builder.seed; // Set seed value here so we know it is 100% definitely set.
+
                     ViewBag.ConnectionErrorDetails = LinuxErrorHandling.error;
                     #endregion
 
@@ -89,7 +91,7 @@ namespace Genome.Controllers
                     /// TODO: Start the download of their data on BigDog to see if we can get each URL. If we cannot, then we just terminate 
                     /// and tell them the error we receieved.
 
-                    if (string.IsNullOrEmpty(HelperMethods.TestJobUrls(genomeModel, seed)) && string.IsNullOrEmpty(LinuxErrorHandling.error))
+                    if (string.IsNullOrEmpty(HelperMethods.TestJobUrls(genomeModel)) && string.IsNullOrEmpty(LinuxErrorHandling.error))
                     {
                         /// We can instead pass in the SEED variable which will be used to reference the method in Locations to grab the correct file(s).
                         /// This is the ideal solution which will be implemented only once we know that the system works with the direct URL.
@@ -188,8 +190,8 @@ namespace Genome.Controllers
 
             bool jobsToUpload = false;
 
-            if (command == "Update Status")
-                JobMaintenance.UpdateStatus(id, ref jobsToUpload);
+            if (command == "Update Status" && string.IsNullOrEmpty(genomeModel.DownloadLink))
+                JobMaintenance.UpdateStatus(genomeModel, ref jobsToUpload);
 
             if (command == "Cancel Job")
             {

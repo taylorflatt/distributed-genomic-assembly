@@ -15,7 +15,6 @@ namespace Genome.Helpers
         /// </summary>
         /// <param name="client">The current SSH client session.</param>
         /// <param name="url">The file URL that needs to be verified.</param>
-        /// <param name="seed">The seed of the particular context.</param>
         /// <returns>Returns a boolean value as to whether or not a URL is accessible from the BigDog cluster.</returns>
         /// <remarks>This may need to include additional greps in the future to catch more cases. These are the only two I could think to include. </remarks>
         protected internal static bool CheckDataAvailability(SshClient client, string url)
@@ -152,10 +151,9 @@ namespace Genome.Helpers
         /// Determines whether or not an assembler has completed successfully.
         /// </summary>
         /// <param name="client">The current SSH client session.</param>
-        /// <param name="successLog">Filename associated with a successful run.</param>
-        /// <param name="jobUuid">An integer number representing the particular job ID via the website (key-value of the submitted job).</param>
+        /// <param name="successLog">Absolute path to a file that is the result of a successful run.</param>
         /// <returns>Returns a boolean value whether the assembler has successfully finished.</returns>
-        protected internal static bool AssemblerSuccess(SshClient client, string successLog, int jobUuid)
+        protected internal static bool AssemblerSuccess(SshClient client, string successLog)
         {
             // Determine if the job has finished successfully by searching for the success log.
             using (var cmd = client.CreateCommand("find " + successLog))
@@ -178,10 +176,9 @@ namespace Genome.Helpers
         /// </summary>
         /// <param name="client">The current SSH client session.</param>
         /// <param name="workingDirectory">The particular assembler output directory.</param>
-        /// <param name="jobUuid">An integer number representing the particular job ID via the website (key-value of the submitted job).</param>
         /// <param name="stepList">The list of steps for a particular assembler.</param>
         /// <returns>Returns an integer representing the current step of a particular assembler or a -1 if there was an error.</returns>
-        protected internal static int GetCurrentStep(SshClient client, string workingDirectory, int jobUuid, HashSet<Assembler> stepList)
+        protected internal static int GetCurrentStep(SshClient client, string workingDirectory, HashSet<Assembler> stepList)
         {
             int currentStep = 1;
 
@@ -410,10 +407,17 @@ namespace Genome.Helpers
         /// </summary>
         /// <param name="client">The current SSH client session.</param>
         /// <param name="fileLocation">The local path for the file that will be uploaded (probably the zipped completed file).</param>
-        protected internal static void SftpUploadFile(SshClient client, string fileLocation)
+        protected internal static void SftpUploadFile(SshClient client, string fileLocation, bool runAsBackground)
         {
+            string linuxCmd;
+
+            if (runAsBackground)
+                linuxCmd = "put " + fileLocation + " &";
+            else
+                linuxCmd = "put " + fileLocation;
+
             // Puts a file from the local machine onto the server we have connected with previously. (See "ConnectSFTP" method).
-            using (var cmd = client.CreateCommand("put " + fileLocation))
+            using (var cmd = client.CreateCommand(linuxCmd))
             {
                 cmd.Execute();
 

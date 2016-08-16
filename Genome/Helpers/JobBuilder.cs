@@ -15,7 +15,7 @@ namespace Genome.Helpers
         public string SchedulerConfigURL { get; set; }
 
         private string username { get; set; }
-        private int seed { get; set; }
+        public int seed { get; set; }
         private string urlPath { get; set; }
         private string localPath { get; set; }
 
@@ -42,6 +42,7 @@ namespace Genome.Helpers
             localPath = @"D:\AssemblerConfigs\Job-" + username + "-" + seed + "\\";
 
             CreateDirectory();
+
             BuildInitConfig();
             if (genomeModel.UseMasurca) { BuildMasurcaConfig(); }
         }

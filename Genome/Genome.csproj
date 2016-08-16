@@ -259,6 +259,10 @@
     <Compile Include="Migrations\201607260340361_test.Designer.cs">
       <DependentUpon>201607260340361_test.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201608161601089_SeedValue.cs" />
+    <Compile Include="Migrations\201608161601089_SeedValue.Designer.cs">
+      <DependentUpon>201608161601089_SeedValue.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\AccountViewModels.cs" />
     <Compile Include="Models\GenomeModel.cs" />
@@ -379,6 +383,9 @@
   <ItemGroup>
     <EmbeddedResource Include="Migrations\201607260340361_test.resx">
       <DependentUpon>201607260340361_test.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201608161601089_SeedValue.resx">
+      <DependentUpon>201608161601089_SeedValue.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
