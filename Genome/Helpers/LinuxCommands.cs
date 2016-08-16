@@ -120,8 +120,6 @@ namespace Genome.Helpers
             if (string.IsNullOrEmpty(LinuxErrorHandling.error) && byteType.Equals("M")) { quotaAmount = ConvertToGigabyte(quotaAmount); }
 
             return quotaAmount;
-
-
         }
 
         /// <summary>
@@ -129,17 +127,18 @@ namespace Genome.Helpers
         /// </summary>
         /// <param name="client">The current SSH client session.</param>
         /// <param name="compressionSpeed">The speed of the compression where 9 is the slowest. Recommend: 9</param>
-        /// <param name="outputName">The name of the resulting compression.</param>
-        /// <param name="sourceDirectory">The directory that needs compressed.</param>
-        /// <param name="parameters">Any optional parameters for the zip command. Every optional parameter needs to conform to typical Linux bash syntax (must be preceeded by a dash). </param>
-        protected internal static void ZipFiles(SshClient client, int compressionSpeed, string outputName, string sourceDirectory, string parameters = "")
+        /// <param name="outputPath">The absolute path to the resulting compressed file.</param>
+        /// <param name="userJobDirectory">The user's directory which contains all of his/her jobs.</param>
+        /// <param name="sourceDirectory">The relative path to the file you wish to zip.</param>
+        /// <param name="parameters">Any optional parameters for the zip command. Every optional parameter needs to conform to typical Linux bash syntax. (NO LEADING DASH) </param>
+        protected internal static void ZipFiles(SshClient client, int compressionSpeed, string userJobDirectory, string outputPath, string sourceDirectory, string parameters = "")
         {
             // USAGE (optimal run): zip -9 -y -r -q file.zip folder/
             // -9 optimal compression speed
             // -y store symbolic links
             // -r recursively traverse the directory
             // -q quiet mode 
-            using (var cmd = client.CreateCommand("zip " + "-" + compressionSpeed + " " + outputName + " " + sourceDirectory + " " + parameters))
+            using (var cmd = client.CreateCommand("cd " + userJobDirectory + " && zip " + "-" + compressionSpeed + " " + outputPath + " " + sourceDirectory + " -" + parameters))
             {
                 cmd.Execute();
 

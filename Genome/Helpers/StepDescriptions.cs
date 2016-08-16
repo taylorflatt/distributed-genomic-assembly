@@ -35,6 +35,7 @@ namespace Genome.Helpers
         /// </summary>
         public const int NUM_BASE_OVERALL_STEPS = 8;
         public const string INITIAL_STEP = "Program Queued";
+        public const string UPLOAD_DATA_STEP = "Uploading Data to FTP";
 
         /// <summary>
         /// Gets the list of masurca steps.
@@ -79,7 +80,7 @@ namespace Genome.Helpers
             stepList.Add(stepNum++, "Data Analysis");
             stepList.Add(stepNum++, "Compressing Data");
             stepList.Add(stepNum++, "Connecting to SFTP");
-            stepList.Add(stepNum++, "Uploading Data to FTP");
+            stepList.Add(stepNum++, UPLOAD_DATA_STEP);
             stepList.Add(stepNum, "Completed");
 
             if (stepNum != numOverallSteps)

@@ -64,6 +64,8 @@ namespace Genome.Controllers
                     genomeModel.OverallStatus = StepDescriptions.INITIAL_STEP;
 
                     genomeModel.CreatedBy = User.Identity.Name;
+
+                    // TODO: Need to look into this to see about a translation to display to a user rather than the UK time it gives.
                     genomeModel.CreatedDate = DateTime.UtcNow;
 
                     #endregion
@@ -184,21 +186,29 @@ namespace Genome.Controllers
             if (command == "Update Status" && string.IsNullOrEmpty(genomeModel.DownloadLink))
                 JobMaintenance.UpdateStatus(genomeModel);
 
-            // If we are not at the final step or currently uploading data, we need to run the upload data method.
-            if (genomeModel.OverallCurrentStep < genomeModel.OverallStepSize - 1)
+            int lowerBound = genomeModel.OverallStepSize - 4;
+            int upperBound = genomeModel.OverallStepSize - 2;
+
+            // If we have finished with the assemblers but are not currently uploading, then we need to do so.
+            // TODO: Need to really give reliability a thought here. What if they refresh the page twice in two browsers? 
+            // What if we are caught inbetween steps? Need to make sure this is definitely going to be good to go here.
+            if (genomeModel.OverallCurrentStep.IsBetween(lowerBound, upperBound, true))
             {
-                using (var client = new SshClient(Accessors.BD_IP, Accessors.BD_UPDATE_KEY_PATH))
+                JobMaintenance.UploadData(genomeModel);
+
+                if (string.IsNullOrEmpty(genomeModel.DownloadLink))
                 {
-                    client.Connect();
-
-                    JobMaintenance.UploadData(client, genomeModel);
-
-                    if (string.IsNullOrEmpty(genomeModel.DownloadLink))
-                    {
-                        // Run background task that will upload the data to the web server FTP for download by the user.
-                        ViewBag.DataUploading = "Your job has completed executing on BigDog and is currently being packaged and uploaded to our server so that you may access it. Please be patient as this could take some time depending on the size of the data. Once it has successfully uploaded, a link will be made available from which you will be able to download your data.";
-                    }
+                    // Run background task that will upload the data to the web server FTP for download by the user.
+                    ViewBag.DataUploading = "Your job has completed executing on BigDog and is currently being packaged and uploaded to "
+                        + "our server so that you may access it. Please be patient as this could take some time depending on the size of the "
+                        + "data. Once it has successfully uploaded, a link will be made available from which you will be able to download your data.";
                 }
+            }
+
+            // If our current state is uploading, then we need to check the status of our upload.
+            else if(genomeModel.OverallStatus.Equals(StepDescriptions.UPLOAD_DATA_STEP))
+            {
+
             }
 
             if (command == "Cancel Job")

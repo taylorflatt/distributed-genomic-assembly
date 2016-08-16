@@ -229,7 +229,7 @@ namespace Genome.Helpers
             using (var client = new SshClient(Accessors.BD_IP, genomeModel.SSHUser, genomeModel.SSHPass))
             {
                 // Set defaults
-                Accessors.masterPath = "/share/scratch/bioinfo/" + HelperMethods.GetUsername();
+                //Accessors.masterPath = "/share/scratch/bioinfo/" + HelperMethods.GetUsername();
                 string node = Accessors.BD_COMPUTE_NODE1; // default  
                 string wgetLogParameter = "--output-file=" + Accessors.GetJobLogPath(seed) + "wget.error";
                 string initPath = Accessors.GetJobConfigPath(seed) + "init.sh";
@@ -240,7 +240,7 @@ namespace Genome.Helpers
                 {
                     client.Connect();
 
-                    if (string.IsNullOrEmpty(LinuxErrorHandling.error)) { LinuxCommands.CreateDirectory(client, Accessors.masterPath, "-p"); }
+                    if (string.IsNullOrEmpty(LinuxErrorHandling.error)) { LinuxCommands.CreateDirectory(client, Accessors.USER_ROOT_JOB_DIRECTORY, "-p"); }
                     if (string.IsNullOrEmpty(LinuxErrorHandling.error)) { LinuxCommands.CreateDirectory(client, Accessors.GetJobPath(seed), "-p"); }
                     if (string.IsNullOrEmpty(LinuxErrorHandling.error)) { LinuxCommands.CreateDirectory(client, Accessors.GetJobDataPath(seed), "-p"); }
                     if (string.IsNullOrEmpty(LinuxErrorHandling.error)) { LinuxCommands.CreateDirectory(client, Accessors.GetJobConfigPath(seed), "-p"); }

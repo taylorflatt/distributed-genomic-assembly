@@ -7,23 +7,54 @@ using Renci.SshNet;
 
 namespace Genome.Helpers
 {
-    public class HelperMethods
+    public static class HelperMethods
     {
         /// <summary>
         /// Splits the list of URLs by commas (,) created by the wizard.
         /// </summary>
         /// <param name="urlString">The concatenated string of URLs from the wizard.</param>
         /// <returns>A list of split urls.</returns>
-        protected internal static List<string> ParseUrlString(string urlString)
+        public static List<string> ParseUrlString(string urlString)
         {
             return urlString.Split(',').Select(sValue => sValue.Trim()).ToList();
+        }
+
+        /// <summary>
+        /// Determines if an integer is between two other integers. Inclusivity is optional but not default.
+        /// </summary>
+        /// <param name="num">An integer representing the calling object. The thing we are testing.</param>
+        /// <param name="lowerBound">The lowest bound.</param>
+        /// <param name="upperBound">The highest bound.</param>
+        /// <param name="inclusive">Forces the check to be inclusive (includes the boundary).</param>
+        /// <returns>Returns true is the number is between the boundary points, false otherwise.</returns>
+        public static bool IsBetween(this int num, int lowerBound, int upperBound, bool inclusive=false)
+        {
+            if(inclusive)
+            {
+                if (num > upperBound)
+                    return false;
+                else if (num < lowerBound)
+                    return false;
+                else
+                    return true;
+            }
+
+            else
+            {
+                if (num >= upperBound)
+                    return false;
+                else if (num <= lowerBound)
+                    return false;
+                else
+                    return true;
+            }
         }
 
         /// <summary>
         /// Gets the username of the current user. 
         /// </summary>
         /// <returns>Returns the username (email without everything after the @ symbol) of the current user.</returns>
-        protected internal static string GetUsername()
+        public static string GetUsername()
         {
             return HttpContext.Current.User.Identity.Name.ToString().Split('@')[0];
         }
@@ -32,7 +63,7 @@ namespace Genome.Helpers
         /// Tests whether the URLs entered by the user in the wizard are connectable.
         /// </summary>
         /// <returns>Returns a null string if the URL is connectable. Otherwise it will return the URL that is malfunctioning.</returns>
-        protected internal static string TestJobUrls(GenomeModel genomeModel)
+        public static string TestJobUrls(GenomeModel genomeModel)
         {
             using (var client = new SshClient(Accessors.BD_IP, genomeModel.SSHUser, genomeModel.SSHPass))
             {
@@ -55,7 +86,7 @@ namespace Genome.Helpers
         /// </summary>
         /// <param name="genomeModel">The model data for a particular job.</param>
         /// <returns>An integer representing how many assemblers have been chosen for a particular job.</returns>
-        protected internal static int NumberOfAssemblers(GenomeModel genomeModel)
+        public static int NumberOfAssemblers(GenomeModel genomeModel)
         {
             int numAssemblers = 0;
 
@@ -77,7 +108,7 @@ namespace Genome.Helpers
         /// <param name="dataSources">List of string datasources alternating between left and right reads in order.</param>
         /// <param name="leftReads">List of string datasources representing the left reads being sent out of the method.</param>
         /// <param name="rightReads">List of string datasources representing the right reads being sent out of the method.</param>
-        protected internal static void CreateUrlLists(List<string> dataSources, out List<string> leftReads, out List<string> rightReads)
+        public static void CreateUrlLists(List<string> dataSources, out List<string> leftReads, out List<string> rightReads)
         {
             leftReads = new List<string>();
             rightReads = new List<string>();
@@ -97,7 +128,7 @@ namespace Genome.Helpers
         /// </summary>
         /// <param name="genomeModel">The model data for a particular job.</param>
         /// <returns>Returns the new job model with the default values.</returns>
-        protected internal static GenomeModel SetDefaultMasurcaValues(GenomeModel genomeModel)
+        public static GenomeModel SetDefaultMasurcaValues(GenomeModel genomeModel)
         {
             // If they don't have jump reads.
             if (genomeModel.JumpReads == false)

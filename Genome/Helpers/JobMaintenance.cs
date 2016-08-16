@@ -53,6 +53,14 @@ namespace Genome.Helpers
 
                         #region Check if the job is currently running
 
+                        /////////////////////////////////
+                        /// DEBUGGING WITHOUT RUNNING AN ASSEMBLER - NEED TO SET IT TO RUNNING TO MAKE IT DO THE CORRECT CHECKS.
+                        /////////////////////////////////
+                        StepDescriptions.SetAssemblersRunningStep(genomeModel);
+                        /////////////////////////////////
+                        /// END DEBUG
+                        /////////////////////////////////
+
                         // Checks to see if the job is running.
                         if (LinuxCommands.JobRunning(client, Convert.ToInt32(genomeModel.SGEJobId)))
                         {
@@ -112,6 +120,14 @@ namespace Genome.Helpers
                                     genomeModel.MasurcaCurrentStep = masurcaCurrentStep;
                                     genomeModel.MasurcaStatus = StepDescriptions.GetCurrentStepDescription(StepDescriptions.GetMasurcaStepList(), masurcaCurrentStep);
                                 }
+
+                                /////////////////////////////////
+                                /// DEBUGGING WITHOUT RUNNING AN ASSEMBLER - NEED TO SIGNIFY THAT WE HAVE COMPLETED THE ASSEMBLER.
+                                /////////////////////////////////
+                                StepDescriptions.NextOverallStep(genomeModel);
+                                /////////////////////////////////
+                                /// END DEBUG
+                                /////////////////////////////////
                             }
 
                             // Error.
@@ -131,6 +147,14 @@ namespace Genome.Helpers
                             /// NOW CHECK SGA.
 
                             /// NOW CHECK WGS.
+
+                            /////////////////////////////////
+                            /// DEBUGGING WITHOUT RUNNING AN ASSEMBLER - NEED TO RESET THE ERROR SO THAT IT DOESN'T ERROR CHECKING FOR DIRECTORY.
+                            /////////////////////////////////
+                            LinuxErrorHandling.error = "";
+                            /////////////////////////////////
+                            /// END DEBUG
+                            /////////////////////////////////
 
                             // Need to be careful here. I need to make sure that when there are multiple assemblers that I update them accordingly. NextOverallStep increments the 
                             // number. So I ought to call this upon each assembler SUCCESS or cross-reference it with each assembler's currentStep list.
@@ -154,12 +178,6 @@ namespace Genome.Helpers
                     LinuxErrorHandling.error = "The SSH connection couldn't be established. " + e.Message;
                 }
 
-                // Authentication failure.
-                catch (SshAuthenticationException e)
-                {
-                    LinuxErrorHandling.error = "The credentials were entered incorrectly. " + e.Message;
-                }
-
                 // The SSH connection was dropped.
                 catch (SshConnectionException e)
                 {
@@ -175,117 +193,76 @@ namespace Genome.Helpers
         /// and sets the download link provided it uploads properly. Note, this ought to be called after the UpdateStatus method.
         /// </summary>
         /// <param name="client">Current SSH session client.</param>
-        protected internal static void UploadData(SshClient client, GenomeModel genomeModel)
+        protected internal static void UploadData(GenomeModel genomeModel)
         {
-            using (GenomeAssemblyDbContext db = new GenomeAssemblyDbContext())
+            using (var client = new SshClient(CreatePrivateKeyConnectionInfo()))
             {
-                // Grab the unique list of steps for this particular model.
-                Hashtable overallStepList = StepDescriptions.GenerateOverallStepList(genomeModel.OverallStepSize);
-
-                #region Compress Data
-                if (string.IsNullOrEmpty(LinuxErrorHandling.error))
+                try
                 {
-                    //int stepNum = StepDescriptions.GetCompressingDataStepNum(genomeModel.OverallStepSize);
+                    client.Connect();
 
-                    //// Set the overall status and step number to compressing.
-                    //genomeModel.OverallStatus = StepDescriptions.GetCurrentStepDescription(overallStepList, stepNum);
-                    //genomeModel.OverallCurrentStep = StepDescriptions.GetCompressingDataStepNum(genomeModel.OverallStepSize);
+                    using (GenomeAssemblyDbContext db = new GenomeAssemblyDbContext())
+                    {
+                        // Grab the unique list of steps for this particular model.
+                        //Hashtable overallStepList = StepDescriptions.GenerateOverallStepList(genomeModel.OverallStepSize);
 
-                    //// Compress Data.
-                    //LinuxCommands.ZipFiles(client, 9, Accessors.GetCompressedDataPath(genomeModel.Seed), Accessors.masterPath, "-y -r");
+                        #region Compress Data
+                        if (string.IsNullOrEmpty(LinuxErrorHandling.error))
+                        {
+                            LinuxCommands.ZipFiles(client, 9, Accessors.USER_ROOT_JOB_DIRECTORY, Accessors.GetCompressedDataPath(genomeModel.Seed) 
+                                , Accessors.GetRelativeJobDirectory(genomeModel.Seed), "yr");
 
-                    //if (!string.IsNullOrEmpty(LinuxErrorHandling.error))
-                    //    genomeModel.OverallStatus = StepDescriptions.COMPRESSION_ERROR;
+                            if (!string.IsNullOrEmpty(LinuxErrorHandling.error))
+                                StepDescriptions.NextOverallStep(genomeModel, true);
+                            else
+                                StepDescriptions.NextOverallStep(genomeModel);
+                        }
 
+                        #endregion
 
+                        #region Connect to SFTP
+                        if (string.IsNullOrEmpty(LinuxErrorHandling.error))
+                        {
+                            LinuxCommands.ConnectSftpToFtp(client, Accessors.FTP_URL, Accessors.PUBLIC_KEY_PATH);
 
+                            if (!string.IsNullOrEmpty(LinuxErrorHandling.error))
+                                StepDescriptions.NextOverallStep(genomeModel, true);
+                            else
+                                StepDescriptions.NextOverallStep(genomeModel);
+                        }
 
+                        #endregion
 
-                    LinuxCommands.ZipFiles(client, 9, Accessors.GetCompressedDataPath(genomeModel.Seed), Accessors.masterPath, "-y -r");
+                        #region Upload Data and Set Download Link
 
-                    if (!string.IsNullOrEmpty(LinuxErrorHandling.error))
-                        StepDescriptions.NextOverallStep(genomeModel, true);
-                    else
-                        StepDescriptions.NextOverallStep(genomeModel);
+                        if (string.IsNullOrEmpty(LinuxErrorHandling.error))
+                        {
+                            LinuxCommands.SftpUploadFile(client, Accessors.ZIP_STORAGE_PATH, true);
+
+                            if (!string.IsNullOrEmpty(LinuxErrorHandling.error))
+                                StepDescriptions.NextOverallStep(genomeModel, true);
+                            else
+                                StepDescriptions.NextOverallStep(genomeModel);
+                        }
+
+                        #endregion
+                    }
+
                 }
 
-                #endregion
-
-                #region Connect to SFTP
-                if (string.IsNullOrEmpty(LinuxErrorHandling.error))
+                // SSH Connection couldn't be established.
+                catch (SocketException e)
                 {
-                    //// Get the connecting to sftp data step number.
-                    //int stepNum = StepDescriptions.GetConnectingToSftpStepNum(genomeModel.OverallStepSize);
-
-                    //// Set the overall status to connecting to sftp.
-                    //genomeModel.OverallStatus = StepDescriptions.GetCurrentStepDescription(overallStepList, stepNum);
-
-                    //// Connect to SFTP.
-                    
-
-                    //if (!string.IsNullOrEmpty(LinuxErrorHandling.error))
-                    //    genomeModel.OverallStatus = StepDescriptions.SFTP_CONNECTION_ERROR;
-
-
-
-
-
-                    LinuxCommands.ConnectSftpToFtp(client, Accessors.FTP_URL, Accessors.PUBLIC_KEY_PATH);
-
-                    if (!string.IsNullOrEmpty(LinuxErrorHandling.error))
-                        StepDescriptions.NextOverallStep(genomeModel, true);
-                    else
-                        StepDescriptions.NextOverallStep(genomeModel);
+                    LinuxErrorHandling.error = "The SSH connection couldn't be established. " + e.Message;
                 }
 
-                #endregion
-
-                #region Upload Data and Set Download Link
-
-                if (string.IsNullOrEmpty(LinuxErrorHandling.error))
+                // The SSH connection was dropped.
+                catch (SshConnectionException e)
                 {
-                    //// Get the upload data step number.
-                    //int stepNum = StepDescriptions.GetUploadDataStepNum(genomeModel.OverallStepSize);
-
-                    //// Set the overall status to uploading data.
-                    //genomeModel.OverallStatus = StepDescriptions.GetCurrentStepDescription(overallStepList, stepNum);
-
-                    //// Upload files as background as we may continue.
-                    //LinuxCommands.SftpUploadFile(client, Accessors.ZIP_STORAGE_PATH, true);
-
-                    //if (!string.IsNullOrEmpty(LinuxErrorHandling.error))
-                    //    genomeModel.OverallStatus = StepDescriptions.UPLOAD_TO_FTP_ERROR;
-
-                    //else
-                    //{
-                    //    genomeModel.OverallCurrentStep = StepDescriptions.GetUploadDataStepNum(genomeModel.OverallStepSize);
-                    //    genomeModel.OverallStatus = StepDescriptions.GetCurrentStepDescription(overallStepList, genomeModel.OverallCurrentStep);
-
-                    //    // These cannot be done yet because the upload will be run as a background task on the linux machine. Need a condition to 
-                    //    // check if genomeModel.OverallCurrentStep == UploadDataStep then we need to check the some file to determine if it was 
-                    //    // finished OR compare the sizes remotely with the local version. But need to be careful with differing sizes between 
-                    //    // Windows and Linux.
-                    //    //genomeModel.DownloadLink = Accessors.GetDataDownloadLink(genomeModel.CreatedBy, uuid);
-                    //    //genomeModel.CompletedDate = DateTime.UtcNow; // Set the completed date of the job.
-                    //    //genomeModel.OverallStatus = StepDescriptions.FINAL_STEP;
-                    //}
-
-
-
-
-
-
-
-                    LinuxCommands.SftpUploadFile(client, Accessors.ZIP_STORAGE_PATH, true);
-
-                    if (!string.IsNullOrEmpty(LinuxErrorHandling.error))
-                        StepDescriptions.NextOverallStep(genomeModel, true);
-                    else
-                        StepDescriptions.NextOverallStep(genomeModel);
+                    LinuxErrorHandling.error = "The connection was terminated unexpectedly. " + e.Message;
                 }
-
-                #endregion
             }
+            
         }
 
         #endregion
