@@ -33,8 +33,9 @@ namespace Genome.Helpers
         /// <summary>
         /// Number of BASE steps to each job. This will vary depending on the particular job (how many assemblers they choose).
         /// </summary>
-        public const int NUM_BASE_OVERALL_STEPS = 8;
+        public const int NUM_BASE_OVERALL_STEPS = 7;
         public const string INITIAL_STEP = "Program Queued";
+        public const string FINISHED_ASSEMBLERS_STEP = "Finished Running All Assemblers";
         public const string UPLOAD_DATA_STEP = "Uploading Data to FTP";
 
         /// <summary>
@@ -77,9 +78,8 @@ namespace Genome.Helpers
                 stepList.Add(stepNum++, "Finished Assembler (" + index + " of " + numAssemblers + ")");
             }
 
+            stepList.Add(stepNum++, FINISHED_ASSEMBLERS_STEP);
             stepList.Add(stepNum++, "Data Analysis");
-            stepList.Add(stepNum++, "Compressing Data");
-            stepList.Add(stepNum++, "Connecting to SFTP");
             stepList.Add(stepNum++, UPLOAD_DATA_STEP);
             stepList.Add(stepNum, "Completed");
 
@@ -88,6 +88,27 @@ namespace Genome.Helpers
                     + "The values of the overall step list and that of the internal counter should not be different. numOverallSteps = " + numOverallSteps + " and stepNum = " + stepNum + ".");
 
             return stepList;
+        }
+
+        /// <summary>
+        /// Determines if the current step is the finished assembler step.
+        /// </summary>
+        /// <param name="currentStep">The current step that the job is on.</param>
+        /// <param name="totalSteps">The total number of steps for this particular job.</param>
+        /// <returns>Returns true if the job has finished with the assemblers, false otherwise.</returns>
+        /// <remarks>The finishedAssemblerStep must reflect the correct number relative to the job steps. So if the steps change, this number may change.</remarks>
+        public static bool FinishedAssemblers(int currentStep, int totalSteps)
+        {
+            int finishedAssemblerStep = totalSteps - 3;
+
+            if (!GenerateOverallStepList(totalSteps)[finishedAssemblerStep].Equals(FINISHED_ASSEMBLERS_STEP))
+                throw new Exception("The finished assembler step is not the correct step. This must be rectified within the step list. We expect the step to be: " + finishedAssemblerStep + ".");
+
+            if (currentStep == finishedAssemblerStep)
+                return true;
+
+            else
+                return false;
         }
 
         /// <summary>
@@ -111,9 +132,8 @@ namespace Genome.Helpers
                 errorList.Add(stepNum++, "Internal error with one or more assemblers.");
             }
 
+            errorList.Add(stepNum++, "Internal error with one or more assemblers.");
             errorList.Add(stepNum++, "Error with data analysis.");
-            errorList.Add(stepNum++, "Error compressing data.");
-            errorList.Add(stepNum++, "Error connecting to the FTP.");
             errorList.Add(stepNum++, "Error uploading data to the FTP.");
             errorList.Add(stepNum, "Error completing the job.");
 
@@ -156,64 +176,6 @@ namespace Genome.Helpers
             genomeModel.OverallStatus = GenerateOverallStepList(genomeModel.OverallStepSize)[3].ToString();
             genomeModel.OverallCurrentStep = 3;
         }
-
-        ///// <summary>
-        ///// Gets the Data Conversion step number for the job.
-        ///// </summary>
-        ///// <returns>Returns an integer representing the conversion step number.</returns>
-        //public static int GetDataConversionStepNum()
-        //{
-        //    return 2;
-        //}
-
-        ///// <summary>
-        ///// Gets the Running Assembler step number for the job.
-        ///// </summary>
-        ///// <returns>Returns an integer representing the running assembler step number.</returns>
-        //public static int GetRunningAssemblersStepNum()
-        //{
-        //    return 3;
-        //}
-
-        ///// <summary>
-        ///// Gets the upload data step number for the job.
-        ///// </summary>
-        ///// <param name="listSize">The size of the list containing the job steps.</param>
-        ///// <returns>Returns locations of the step in the list. </returns>
-        //public static int GetUploadDataStepNum(int listSize)
-        //{
-        //    return listSize - 1;
-        //}
-
-        ///// <summary>
-        ///// Gets the connecting to SFTP step number for the job.
-        ///// </summary>
-        ///// <param name="listSize">The size of the list containing the job steps.</param>
-        ///// <returns>Returns locations of the step in the list. </returns>
-        //public static int GetConnectingToSftpStepNum(int listSize)
-        //{
-        //    return listSize - 2;
-        //}
-
-        ///// <summary>
-        ///// Gets the compressing data step number for the job.
-        ///// </summary>
-        ///// <param name="listSize">The size of the list containing the job steps.</param>
-        ///// <returns>Returns locations of the step in the list. </returns>
-        //public static int GetCompressingDataStepNum(int listSize)
-        //{
-        //    return listSize - 3;
-        //}
-
-        ///// <summary>
-        ///// Gets the data analysis step number for the job.
-        ///// </summary>
-        ///// <param name="listSize">The size of the list containing the job steps.</param>
-        ///// <returns>Returns locations of the step in the list. </returns>
-        //public static int GetDataAnalysisStepNum(int listSize)
-        //{
-        //    return listSize - 4;
-        //}
 
         /// <summary>
         /// This will return the particular description for the given step.

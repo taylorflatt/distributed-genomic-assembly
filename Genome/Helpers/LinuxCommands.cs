@@ -62,6 +62,44 @@ namespace Genome.Helpers
         }
 
         /// <summary>
+        /// Uploads the user's zipped data to the FTP using curl.
+        /// </summary>
+        /// <param name="client">The current SSH client session.</param>
+        /// <param name="outputLocation">The absolute path to the resulting file on the FTP server.</param>
+        /// <param name="fileLocation">The absolute path to the file you wish to upload.</param>
+        /// <param name="asBackground">Whether to run the command as a background process. This is, by default, true. Recommended to not change this.</param>
+        protected internal static void UploadJobData(SshClient client, string outputLocation, string fileLocation, bool asBackground=true)
+        {
+            using (var cmd = client.CreateCommand("curl " + outputLocation + "--ftp-ssl-reqd --netrc --insecure -T " + fileLocation + (asBackground ? " &" : " ")))
+            {
+                cmd.Execute();
+
+                LinuxErrorHandling.CommandError(cmd);
+            }
+        }
+
+        /// <summary>
+        /// Compresses specific files/directories then uploads the user data to the FTP. WARNING: UNTESTED METHOD!!!
+        /// </summary>
+        /// <param name="client">The current SSH client session.</param>
+        /// <param name="userJobDirectory">The user's directory which contains all of his/her jobs.</param>
+        /// <param name="zipName">The path to the file you wish to zip.</param>
+        /// <param name="outputLocation">The name to the resulting compressed file.</param>
+        /// <param name="fileLocation">The absolute path to the file you wish to upload.</param>
+        /// <param name="asBackground">Whether to run the command as a background process. This is, by default, true. Recommended to not change this.</param>
+        /// <param name="parameters">Any optional parameters for the zip command. Every optional parameter needs to conform to typical Linux bash syntax. (NO LEADING DASH) </param>
+        protected internal static void UploadJob(SshClient client, string userJobDirectory, string zipName, string fileLocation, string outputLocation, bool asBackground = true, string parameters = "")
+        {
+            using (var cmd = client.CreateCommand("cd " + userJobDirectory + " && zip " + "-9" + " " + zipName + " " + fileLocation + " -" 
+                + parameters + " | curl " + outputLocation + "--ftp-ssl-reqd --netrc --insecure -T " + fileLocation + (asBackground ? " &" : " ")))
+            {
+                cmd.Execute();
+
+                LinuxErrorHandling.CommandError(cmd);
+            }
+        }
+
+        /// <summary>
         /// Determines whether or not the quota is in GB or MB.
         /// </summary>
         /// <param name="client">The current SSH client session.</param>
@@ -147,6 +185,28 @@ namespace Genome.Helpers
         }
 
         /// <summary>
+        /// Determines if a process is currently runing under the executing user. This is not 100% infallable.
+        /// </summary>
+        /// <param name="client">The current SSH client session.</param>
+        /// <param name="uniqueSearch">The command or process that needs to be searched.</param>
+        /// <returns></returns>
+        protected internal static bool IsProcessRunning(SshClient client, string uniqueSearch)
+        {
+            using (var cmd = client.CreateCommand("ps aux | grep " + uniqueSearch + " | wc -l"))
+            {
+                cmd.Execute();
+
+                LinuxErrorHandling.CommandError(cmd);
+
+                // Returns 1 due to grep being returned. So if 1 is returned, nothing is found.
+                if (Convert.ToInt32(cmd.Result) > 1)
+                    return false;
+                else
+                    return true;
+            }
+        }
+
+        /// <summary>
         /// Determines whether or not an assembler has completed successfully.
         /// </summary>
         /// <param name="client">The current SSH client session.</param>
@@ -167,6 +227,24 @@ namespace Genome.Helpers
 
                 else
                     return true;
+            }
+        }
+
+        protected internal static bool AssemblerQueued(SshClient client, string sgeId)
+        {
+            // Determine if the job has finished successfully by searching for the success log.
+            using (var cmd = client.CreateCommand("qstat -j " + sgeId + " | grep qw | wc -l"))
+            {
+                cmd.Execute();
+
+                LinuxErrorHandling.CommandError(cmd);
+
+                // The job is currently queued.
+                if (Convert.ToInt32(cmd.Result) >= 1)
+                    return true;
+
+                else
+                    return false;
             }
         }
 

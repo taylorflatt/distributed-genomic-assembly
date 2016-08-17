@@ -28,13 +28,13 @@
         protected internal const string PRIVATE_KEY_PATH = @"C:\Connection Information\private-key-openssh-tf.ppk";
         protected internal const string UPDATE_ACCT = "tflatt"; // BigDog acct we use to update jobs.
         protected internal const string BD_IP = "login-0-0.research.siu.edu";
-        protected internal const string BD_UPDATE_KEY_PATH = "FILE SERVER LOCATION OF BIG DOG PRIVATE KEY LOCATION";
         protected internal const string BD_COMPUTE_NODE1 = "compute-0-24";
         protected internal const string BD_COMPUTE_NODE2 = "compute-0-25";
-        protected internal const string ZIP_STORAGE_PATH = "LOCATION ON THE FTP SERVER";
+        protected internal static string ZIP_STORAGE_PATH = @"D:\AssemblerJobs\" + HelperMethods.GetUsername();
         protected internal const string FTP_URL = "ftp://" + WEBSITE_IP;
         protected internal const string VERIFY_PERMISSIONS_TEST_DIR = "/share/scratch/bioinfo/testPermissions";
         protected internal const int MINIMUM_QUOTA = 500;
+        protected internal const string FTP_DEFAULT_DIRECTORY = FTP_URL + "/AssemblerJobs";
 
         /// <summary>
         /// Gets the name of the job (or relative path to the job folder). 
@@ -55,7 +55,7 @@
         /// <returns>A string url to the init script.</returns>
         protected internal static string GetInitScriptPath(int seed, string username)
         {
-            return FTP_URL + "AssemblerConfigs/" + "Job-" + username + seed + "/" + "init_" + seed + ".sh";
+            return FTP_URL + FTP_DEFAULT_DIRECTORY + "/Job-" + username + seed + "/init_" + seed + ".sh";
         }
 
         /// <summary>
@@ -66,19 +66,17 @@
         /// <returns>A string url to the masurca script.</returns>
         protected internal static string GetMasurcaScriptPath(int seed, string username)
         {
-            return FTP_URL + "AssemblerConfigs/" + "Job-" + username + seed + "/" + "MasurcaConfig_" + seed + ".txt";
+            return FTP_URL + "AssemblerJobs/" + "Job-" + username + seed + "/" + "MasurcaConfig_" + seed + ".txt";
         }
 
         /// <summary>
         /// Get the link for the data download for the user.
         /// </summary>
-        /// <param name="username">Username of the user (without the @).</param>
         /// <param name="seed">The unique identifier for a particular job.</param>
-        /// <param name="zipName">The name of the zip.</param>
         /// <returns>The path to the download link on the FTP server.</returns>
-        protected internal static string GetDataDownloadLink(int seed, string username, string zipName)
+        protected internal static string GetDownloadLocation(int seed)
         {
-            return FTP_URL + "AssemblerJobs/" + "Job-" + username + seed + "/" + zipName;
+            return ZIP_STORAGE_PATH + @"\Job-" + seed + ".zip";
         }
 
         /// <summary>

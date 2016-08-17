@@ -44,132 +44,111 @@ namespace Genome.Helpers
                     using (GenomeAssemblyDbContext db = new GenomeAssemblyDbContext())
                     {
                         #region Checking how many assemblers chosen
-
-                        // Get the step lists.
                         Hashtable overallStepList = StepDescriptions.GenerateOverallStepList(genomeModel.OverallStepSize);
                         HashSet<Assembler> masurcaStepList = StepDescriptions.GetMasurcaStepList();
-
                         #endregion
 
-                        #region Check if the job is currently running
-
-                        /////////////////////////////////
-                        /// DEBUGGING WITHOUT RUNNING AN ASSEMBLER - NEED TO SET IT TO RUNNING TO MAKE IT DO THE CORRECT CHECKS.
-                        /////////////////////////////////
-                        StepDescriptions.SetAssemblersRunningStep(genomeModel);
-                        /////////////////////////////////
-                        /// END DEBUG
-                        /////////////////////////////////
-
-                        // Checks to see if the job is running.
+                        #region Check if the job is currently running on BigDog
+                        // Will return true if the job is still currently IN the scheduler (queued or running).
                         if (LinuxCommands.JobRunning(client, Convert.ToInt32(genomeModel.SGEJobId)))
                         {
-                            StepDescriptions.SetAssemblersRunningStep(genomeModel);
+                            // Do nothing. It is still queued. Skip everything else.
+                            if (LinuxCommands.AssemblerQueued(client, genomeModel.SGEJobId.ToString())) { }
 
-                            if (string.IsNullOrEmpty(LinuxErrorHandling.error))
+                            else if (LinuxCommands.IsProcessRunning(client, "conversionScript.sh"))
                             {
-                                #region Check if Masurca is running
+                                // Set overall step: Data Conversion
+                                StepDescriptions.NextOverallStep(genomeModel);
+                            }
 
-                                if (LinuxCommands.DirectoryHasFiles(client, Accessors.GetMasurcaOutputPath(genomeModel.Seed)))
-                                {
-                                    // Now we need to check if it has completed those assembly jobs.
-                                    int masurcaCurrentStep = LinuxCommands.GetCurrentStep(client, Accessors.GetMasurcaOutputPath(genomeModel.Seed), StepDescriptions.GetMasurcaStepList());
+                            // The Assemblers are running.
+                            else
+                            {
+                                // Set overall step: Running Assemblers
+                                StepDescriptions.SetAssemblersRunningStep(genomeModel);
 
-                                    // Now we need to set the step/status values for masurca.
-                                    if (masurcaCurrentStep != -1)
-                                    {
-                                        genomeModel.MasurcaCurrentStep = masurcaCurrentStep;
-                                        genomeModel.MasurcaStatus = StepDescriptions.GetCurrentStepDescription(StepDescriptions.GetMasurcaStepList(), masurcaCurrentStep);
+                                if (string.IsNullOrEmpty(LinuxErrorHandling.error)) { UpdateMasurcaStatus(client, genomeModel); }
 
-                                        StepDescriptions.NextOverallStep(genomeModel);
-                                    }
-
-                                    else
-                                        StepDescriptions.NextOverallStep(genomeModel, true);
-                                }
-
+                                #region Check if SGA is running
                                 #endregion
 
-                                #region Check if SGA is running.
-                                // Similar code to the masurca check.
-                                #endregion
-
-                                #region Check if WGS is running.
-                                // Similar code to the masurca check.
+                                #region Check if WGS is running
                                 #endregion
                             }
                         }
 
-                        #endregion
-
-                        #region Check if the job has completed successfully or errored out
-
-                        // The job isn't running according to the scheduler. So it finished either successfully or errored out.
+                        // The job isn't running so it has either completed successfully or run across an error.
                         else
                         {
-                            #region Check if the assemblers completed successfully
+                            if (string.IsNullOrEmpty(LinuxErrorHandling.error)) { UpdateMasurcaStatus(client, genomeModel); }
 
-                            // Now I need to go through all the assemblers and see if they exited successfully or not.
-                            if (LinuxCommands.AssemblerSuccess(client, Accessors.GetMasurcaSuccessLogPath(genomeModel.Seed)))
+                            #region Check if SGA is running
+                            #endregion
+
+                            #region Check if WGS is running
+                            #endregion
+
+                            // If ALL assemblers finished running:
+                            if (genomeModel.MasurcaCurrentStep.Equals(StepDescriptions.GetMasurcaStepList().Last().step))
                             {
-                                // If masurca isn't finished, we need to check it.
-                                if (!genomeModel.MasurcaCurrentStep.Equals(StepDescriptions.GetMasurcaStepList().Count))
-                                {
-                                    int masurcaCurrentStep = StepDescriptions.GetMasurcaStepList().Last().step;
-
-                                    genomeModel.MasurcaCurrentStep = masurcaCurrentStep;
-                                    genomeModel.MasurcaStatus = StepDescriptions.GetCurrentStepDescription(StepDescriptions.GetMasurcaStepList(), masurcaCurrentStep);
-                                }
-
-                                /////////////////////////////////
-                                /// DEBUGGING WITHOUT RUNNING AN ASSEMBLER - NEED TO SIGNIFY THAT WE HAVE COMPLETED THE ASSEMBLER.
-                                /////////////////////////////////
+                                // Set overall step: Finished Running All Assemblers
                                 StepDescriptions.NextOverallStep(genomeModel);
-                                /////////////////////////////////
-                                /// END DEBUG
-                                /////////////////////////////////
                             }
 
-                            // Error.
+                            // At least one assembler did not complete successfully.
                             else
                             {
-                                // Don't re-assign values if we have already done it.
-                                if (!genomeModel.MasurcaCurrentStep.Equals(StepDescriptions.GetMasurcaStepList().Count))
-                                {
-                                    int masurcaCurrentStep = StepDescriptions.GetMasurcaStepList().Last().step;
-
-                                    genomeModel.MasurcaCurrentStep = masurcaCurrentStep;
-                                    genomeModel.MasurcaStatus = StepDescriptions.GetCurrentStepDescription(StepDescriptions.GetMasurcaStepList(), masurcaCurrentStep) + " - Error"; // explicitly note an error for the description.
-                                }
-
+                                // Set overall step: Error step
+                                StepDescriptions.NextOverallStep(genomeModel, true);
                             }
 
-                            /// NOW CHECK SGA.
+                        }
+                        #endregion
 
-                            /// NOW CHECK WGS.
+                        #region Check if data upload is complete
 
-                            /////////////////////////////////
-                            /// DEBUGGING WITHOUT RUNNING AN ASSEMBLER - NEED TO RESET THE ERROR SO THAT IT DOESN'T ERROR CHECKING FOR DIRECTORY.
-                            /////////////////////////////////
-                            LinuxErrorHandling.error = "";
-                            /////////////////////////////////
-                            /// END DEBUG
-                            /////////////////////////////////
+                        // We run this prior to setting it below so it isn't run immediately after we initiate an upload.
+                        if (genomeModel.OverallStatus.Equals(StepDescriptions.UPLOAD_DATA_STEP))
+                        {
+                            if(!LinuxCommands.IsProcessRunning(client, "curl"))
+                            {
+                                // Set overall step: Completed
+                                if (!string.IsNullOrEmpty(LinuxErrorHandling.error))
+                                    StepDescriptions.NextOverallStep(genomeModel, true);
+                                else
+                                    StepDescriptions.NextOverallStep(genomeModel);
+                            }
+                        }
+                        #endregion
 
-                            // Need to be careful here. I need to make sure that when there are multiple assemblers that I update them accordingly. NextOverallStep increments the 
-                            // number. So I ought to call this upon each assembler SUCCESS or cross-reference it with each assembler's currentStep list.
+                        // Only runs if the current step is the Finished Assemblers step. Otherwise we just ignore it. This should run ONCE.
+                        if (string.IsNullOrEmpty(LinuxErrorHandling.error) && StepDescriptions.FinishedAssemblers(genomeModel.OverallCurrentStep, genomeModel.OverallStepSize))
+                        {
+                            #region Run Data Analysis
+                            // Run data analysis logic
+
+                            // Set overall step: Data Analysis
                             if (!string.IsNullOrEmpty(LinuxErrorHandling.error))
                                 StepDescriptions.NextOverallStep(genomeModel, true);
                             else
                                 StepDescriptions.NextOverallStep(genomeModel);
+                            #endregion
 
+                            #region Compress and Upload Data
+                            if(string.IsNullOrEmpty(LinuxErrorHandling.error) && !genomeModel.OverallStatus.Equals(StepDescriptions.UPLOAD_DATA_STEP))
+                            {
+                                LinuxCommands.UploadJob(client, Accessors.USER_ROOT_JOB_DIRECTORY, Accessors.GetCompressedDataPath(genomeModel.Seed)
+                                    , Accessors.GetRelativeJobDirectory(genomeModel.Seed), Accessors.GetDownloadLocation(genomeModel.Seed), true, "yr");
+
+                                // Set overall step: Uploading Data to FTP
+                                if (!string.IsNullOrEmpty(LinuxErrorHandling.error))
+                                    StepDescriptions.NextOverallStep(genomeModel, true);
+                                else
+                                    StepDescriptions.NextOverallStep(genomeModel);
+                            }
                             #endregion
                         }
-
-                        db.SaveChanges(); // Save the changes to the model in the database.
                     }
-
-                    #endregion
                 }
 
                 // SSH Connection couldn't be established.
@@ -185,86 +164,42 @@ namespace Genome.Helpers
                 }
             }
         }
-
-        #region Compile and ship data to FTP for download by user.
 
         /// <summary>
-        /// This method completes all the final steps for a completed job. It compresses the data, initiates a SFTP connection, uploads the data to the file server, 
-        /// and sets the download link provided it uploads properly. Note, this ought to be called after the UpdateStatus method.
+        /// Updates the status of the masurca assembler as well as the job.
         /// </summary>
-        /// <param name="client">Current SSH session client.</param>
-        protected internal static void UploadData(GenomeModel genomeModel)
+        /// <param name="client">The current SSH client session.</param>
+        /// <param name="genomeModel">The model of the particular job.</param>
+        private static void UpdateMasurcaStatus(SshClient client, GenomeModel genomeModel)
         {
-            using (var client = new SshClient(CreatePrivateKeyConnectionInfo()))
+            if (string.IsNullOrEmpty(LinuxErrorHandling.error))
             {
-                try
+                if (LinuxCommands.DirectoryHasFiles(client, Accessors.GetMasurcaOutputPath(genomeModel.Seed)))
                 {
-                    client.Connect();
+                    int currentMasurcaStep = LinuxCommands.GetCurrentStep(client, Accessors.GetMasurcaOutputPath(genomeModel.Seed), StepDescriptions.GetMasurcaStepList());
 
-                    using (GenomeAssemblyDbContext db = new GenomeAssemblyDbContext())
+                    // Provided we didn't encounter an error, set the status of masurca and the job.
+                    if (currentMasurcaStep != -1)
                     {
-                        // Grab the unique list of steps for this particular model.
-                        //Hashtable overallStepList = StepDescriptions.GenerateOverallStepList(genomeModel.OverallStepSize);
+                        genomeModel.MasurcaCurrentStep = currentMasurcaStep;
+                        genomeModel.MasurcaStatus = StepDescriptions.GetCurrentStepDescription(StepDescriptions.GetMasurcaStepList(), currentMasurcaStep);
 
-                        #region Compress Data
-                        if (string.IsNullOrEmpty(LinuxErrorHandling.error))
-                        {
-                            LinuxCommands.ZipFiles(client, 9, Accessors.USER_ROOT_JOB_DIRECTORY, Accessors.GetCompressedDataPath(genomeModel.Seed) 
-                                , Accessors.GetRelativeJobDirectory(genomeModel.Seed), "yr");
-
-                            if (!string.IsNullOrEmpty(LinuxErrorHandling.error))
-                                StepDescriptions.NextOverallStep(genomeModel, true);
-                            else
-                                StepDescriptions.NextOverallStep(genomeModel);
-                        }
-
-                        #endregion
-
-                        #region Connect to SFTP
-                        if (string.IsNullOrEmpty(LinuxErrorHandling.error))
-                        {
-                            LinuxCommands.ConnectSftpToFtp(client, Accessors.FTP_URL, Accessors.PUBLIC_KEY_PATH);
-
-                            if (!string.IsNullOrEmpty(LinuxErrorHandling.error))
-                                StepDescriptions.NextOverallStep(genomeModel, true);
-                            else
-                                StepDescriptions.NextOverallStep(genomeModel);
-                        }
-
-                        #endregion
-
-                        #region Upload Data and Set Download Link
-
-                        if (string.IsNullOrEmpty(LinuxErrorHandling.error))
-                        {
-                            LinuxCommands.SftpUploadFile(client, Accessors.ZIP_STORAGE_PATH, true);
-
-                            if (!string.IsNullOrEmpty(LinuxErrorHandling.error))
-                                StepDescriptions.NextOverallStep(genomeModel, true);
-                            else
-                                StepDescriptions.NextOverallStep(genomeModel);
-                        }
-
-                        #endregion
+                        // Set overall step: Finished Assembler (x of n)
+                        StepDescriptions.NextOverallStep(genomeModel);
                     }
 
+                    // We found an error and are aborting.
+                    else
+                        StepDescriptions.NextOverallStep(genomeModel, true);
                 }
 
-                // SSH Connection couldn't be established.
-                catch (SocketException e)
+                // Either masurca hasn't started or it has but no files have been created yet.
+                else
                 {
-                    LinuxErrorHandling.error = "The SSH connection couldn't be established. " + e.Message;
-                }
-
-                // The SSH connection was dropped.
-                catch (SshConnectionException e)
-                {
-                    LinuxErrorHandling.error = "The connection was terminated unexpectedly. " + e.Message;
+                    genomeModel.MasurcaCurrentStep = 1;
+                    genomeModel.MasurcaStatus = StepDescriptions.GetCurrentStepDescription(StepDescriptions.GetMasurcaStepList(), 1);
                 }
             }
-            
         }
-
-        #endregion
     }
 }
