@@ -59,9 +59,9 @@ namespace Genome.Controllers
 
                     HelperMethods.SetDefaultMasurcaValues(genomeModel);
 
-                    genomeModel.OverallStepSize = StepDescriptions.NUM_BASE_OVERALL_STEPS + HelperMethods.NumberOfAssemblers(genomeModel);
                     genomeModel.OverallCurrentStep = 1;
                     genomeModel.OverallStatus = StepDescriptions.INITIAL_STEP;
+                    genomeModel.NumberOfAssemblers = HelperMethods.NumberOfAssemblers(genomeModel.UseMasurca, genomeModel.UseSGA, genomeModel.UseWGS);
 
                     genomeModel.CreatedBy = User.Identity.Name;
 
@@ -87,7 +87,7 @@ namespace Genome.Controllers
 
                     #region Connect To BigDog and Test Data Connection
 
-                    string badUrl = HelperMethods.TestJobUrls(genomeModel);
+                    string badUrl = HelperMethods.TestJobUrls(genomeModel.SSHUser, genomeModel.SSHPass, genomeModel.DataSource);
 
                     if (string.IsNullOrEmpty(badUrl) && string.IsNullOrEmpty(LinuxErrorHandling.error))
                     {
@@ -189,18 +189,6 @@ namespace Genome.Controllers
             if (command == "Cancel Job")
             {
                 // Add a method in JobMaintenance that reflects cancelling a job. Best place for it.
-                //using (var client = new SshClient(Accessors.BD_IP, Accessors.BD_UPDATE_KEY_PATH))
-                //{
-                //    client.Connect();
-
-                //    LinuxCommands.CancelJob(client, genomeModel.SGEJobId);
-
-                //    if(string.IsNullOrEmpty(LinuxErrorHandling.error))
-                //        ViewBag.JobCancelSuccess = "Your job has been successfully cancelled. All progress will reflect its current position at the time it was cancelled.";
-
-                //    else
-                //        ViewBag.JobCancelFailure = "Your job has not been successfully cancelled with the following error: " + LinuxErrorHandling.error;
-                //}
             }
 
             db.SaveChanges();

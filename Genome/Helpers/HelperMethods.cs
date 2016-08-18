@@ -50,6 +50,27 @@ namespace Genome.Helpers
             }
         }
 
+        public static bool IsAssemblyFinished(this GenomeModel genomeModel)
+        {
+            int assemblersFinished = 0;
+
+            if(genomeModel.UseMasurca)
+            {
+                if (genomeModel.MasurcaCurrentStep.Equals(StepDescriptions.GetMasurcaStepList().Last().step))
+                    assemblersFinished++;
+            }
+
+            if (genomeModel.UseSGA) { }
+
+            if (genomeModel.UseWGS) { }
+
+            if (assemblersFinished.Equals(genomeModel.NumberOfAssemblers))
+                return true;
+
+            else
+                return false;
+        }
+
         /// <summary>
         /// Gets the username of the current user. 
         /// </summary>
@@ -62,14 +83,17 @@ namespace Genome.Helpers
         /// <summary>
         /// Tests whether the URLs entered by the user in the wizard are connectable.
         /// </summary>
+        /// <param name="sshUser">The user's SSH username.</param>
+        /// <param name="sshPass">The user's SSH paswword.</param>
+        /// <param name="dataSource">The list of URLs separated by commas.</param>
         /// <returns>Returns a null string if the URL is connectable. Otherwise it will return the URL that is malfunctioning.</returns>
-        public static string TestJobUrls(GenomeModel genomeModel)
+        public static string TestJobUrls(string sshUser, string sshPass, string dataSource)
         {
-            using (var client = new SshClient(Accessors.BD_IP, genomeModel.SSHUser, genomeModel.SSHPass))
+            using (var client = new SshClient(Accessors.BD_IP, sshUser, sshPass))
             {
                 client.Connect();
 
-                List<string> urlList = ParseUrlString(genomeModel.DataSource);
+                List<string> urlList = ParseUrlString(dataSource);
 
                 foreach (var url in urlList)
                 {
@@ -84,19 +108,21 @@ namespace Genome.Helpers
         /// <summary>
         /// Determines how many assemblers have been chosen by the user for a particular job.
         /// </summary>
-        /// <param name="genomeModel">The model data for a particular job.</param>
+        /// <param name="useMasurca">Does this job use Masurca?</param>
+        /// <param name="useSga">Does this job use SGA?</param>
+        /// <param name="useWgs">Does this job use WGS?</param>
         /// <returns>An integer representing how many assemblers have been chosen for a particular job.</returns>
-        public static int NumberOfAssemblers(GenomeModel genomeModel)
+        public static int NumberOfAssemblers(bool useMasurca, bool useSga, bool useWgs)
         {
             int numAssemblers = 0;
 
-            if (genomeModel.UseMasurca)
+            if (useMasurca)
                 numAssemblers++;
 
-            if (genomeModel.UseSGA)
+            if (useSga)
                 numAssemblers++;
 
-            if (genomeModel.UseWGS)
+            if (useWgs)
                 numAssemblers++;
 
             return numAssemblers;

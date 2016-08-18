@@ -246,20 +246,12 @@
                 <td>
                     <div class="progress" style="background-color: grey;">
                         @{
-                            @* Need to calculate the number of overall steps since it is a dynamic number. This cannot be avoided. *@
-                        var totalStepsOverall = 8; // If this changes, they will need to be reflecte both here AND in StepDescriptions.cs
+                        var totalNumSteps = 6;
+                        var overallPercentage = (Model.OverallCurrentStep / totalNumSteps) * 100;
+                        string barWidthOverall = Convert.ToString(overallPercentage) + "%";
 
-                        if (Model.UseMasurca) { totalStepsOverall++; }
-                        if (Model.UseSGA) { totalStepsOverall++; }
-                        if (Model.UseWGS) { totalStepsOverall++; }
-
-                        var currentStepOverall = Model.OverallCurrentStep;
-                        double currentStatusOverall = ((double)currentStepOverall / totalStepsOverall) * 100;
-                        var currentStatusTextOverall = Model.OverallStatus;
-                        string barWidthOverall = Convert.ToString(currentStatusOverall) + "%";
-
-                        <div class="progress-bar" role="progressbar" aria-valuenow="@currentStatusOverall" aria-valuemin="0" aria-valuemax="100" style="width:@barWidthOverall">
-                            <strong style="text-indent: 20px; color: #FFFFFF">@currentStatusTextOverall (Step @currentStepOverall of @totalStepsOverall)</strong>
+                        <div class="progress-bar" role="progressbar" aria-valuenow="@overallPercentage" aria-valuemin="0" aria-valuemax="100" style="width:@barWidthOverall">
+                            <strong style="text-indent: 20px; color: #FFFFFF">@Model.OverallStatus (Step @Model.OverallCurrentStep of @totalNumSteps)</strong>
                         </div>
                         }
                     </div>
@@ -273,19 +265,17 @@
                 <td>
                     @if (Model.UseMasurca.Equals(true))
                     {
-                        var totalStepsMasurca = 7;
-                        var currentStepMasurca = Model.MasurcaCurrentStep;
-                        var currentStatusMasurca = (currentStepMasurca / totalStepsMasurca) * 100;
-                        var currentStatusTextMasurca = Model.MasurcaStatus;
+                        var totalNumMasurcaSteps = 7;
+                        var currentStatusMasurca = (Model.MasurcaCurrentStep / totalNumMasurcaSteps) * 100;
                         string barWidthMasurca = Convert.ToString(currentStatusMasurca) + "%";
 
                         <div class="progress-bar" role="progressbar" aria-valuenow="@currentStatusMasurca" aria-valuemin="0" aria-valuemax="100" style="width:@barWidthMasurca">
-                            <strong style="text-indent: 20px; color: #FFFFFF">@currentStatusTextMasurca (Step @currentStepMasurca of @totalStepsMasurca)</strong>
+                            <strong style="text-indent: 20px; color: #FFFFFF">@Model.MasurcaStatus (Step @Model.MasurcaCurrentStep of @totalNumMasurcaSteps)</strong>
                         </div>
                     }
 
-                            else
-                            {
+                    else
+                    {
                         <p>
                             Not Running
                         </p>

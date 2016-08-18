@@ -5,19 +5,6 @@
     /// </summary>
     public class Accessors
     {
-        //protected internal static string masterPath
-        //{
-        //    get
-        //    {
-        //        return masterPath;
-        //    }
-
-        //    set
-        //    {
-        //        masterPath = "/share/scratch/bioinfo/" + HelperMethods.GetUsername();
-        //    }
-        //}
-
         /// <summary>
         /// List of constants. Here, BigDog is referred to as BD for brevity.
         /// </summary>

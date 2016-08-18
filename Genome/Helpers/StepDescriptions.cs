@@ -1,4 +1,5 @@
 ﻿using Genome.Models;
+using Renci.SshNet;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -33,10 +34,7 @@ namespace Genome.Helpers
         /// <summary>
         /// Number of BASE steps to each job. This will vary depending on the particular job (how many assemblers they choose).
         /// </summary>
-        public const int NUM_BASE_OVERALL_STEPS = 7;
         public const string INITIAL_STEP = "Program Queued";
-        public const string FINISHED_ASSEMBLERS_STEP = "Finished Running All Assemblers";
-        public const string UPLOAD_DATA_STEP = "Uploading Data to FTP";
 
         /// <summary>
         /// Gets the list of masurca steps.
@@ -56,59 +54,30 @@ namespace Genome.Helpers
             return masurcaStepFiles;
         }
 
+        public static void SetMasurcaError(SshClient client, GenomeModel genomeModel)
+        {
+            genomeModel.MasurcaCurrentStep = -1;
+            genomeModel.MasurcaStatus = LinuxCommands.GetMasurcaError(client, genomeModel.Seed);
+        }
+
         /// <summary>
         /// Dynamically creates a list of steps and descriptions for a current job given the total number of assemblers.
         /// </summary>
         /// <param name="numOverallSteps"> The total number of steps that the list will contain</param>
         /// <returns> Returns a hashtable that consists of a key corresponding to the step number and a description.</returns>
-        /// <remarks>IMPORTANT: If the total number of base steps changes, be sure to change that at the top of the class as well.</remarks>
-        /// <remarks>IMPORTANT: If the RUNNING ASSEMBLERS position changes, then the SetAssemblersRunningStep() needs to be changed as well.</remarks>
-        public static Hashtable GenerateOverallStepList(int numOverallSteps)
+        /// <remarks>IMPORTANT: If the total number of base steps changes, be sure to change the total number of steps in GenomeAssembly/Details.cshtml</remarks>
+        public static Hashtable GetOverallStepList()
         {
-            int numAssemblers = numOverallSteps - NUM_BASE_OVERALL_STEPS;
-            int stepNum = 1;
+            Hashtable stepList = new Hashtable(6);
 
-            Hashtable stepList = new Hashtable(numOverallSteps);
-            stepList.Add(stepNum++, INITIAL_STEP);
-            stepList.Add(stepNum++, "Data Conversion");
-            stepList.Add(stepNum++, "Running Assemblers");
-
-            for (int index = 1; index <= numAssemblers; index++)
-            {
-                stepList.Add(stepNum++, "Finished Assembler (" + index + " of " + numAssemblers + ")");
-            }
-
-            stepList.Add(stepNum++, FINISHED_ASSEMBLERS_STEP);
-            stepList.Add(stepNum++, "Data Analysis");
-            stepList.Add(stepNum++, UPLOAD_DATA_STEP);
-            stepList.Add(stepNum, "Completed");
-
-            if (stepNum != numOverallSteps)
-                throw new ArgumentOutOfRangeException(Convert.ToString(stepNum), "While creating the overall step list, the method ran into an error. "
-                    + "The values of the overall step list and that of the internal counter should not be different. numOverallSteps = " + numOverallSteps + " and stepNum = " + stepNum + ".");
+            stepList.Add(1, INITIAL_STEP);
+            stepList.Add(2, "Data Conversion");
+            stepList.Add(3, "Running Assemblers");
+            stepList.Add(4, "Data Analysis");
+            stepList.Add(5, "Uploading Data to FTP");
+            stepList.Add(6, "Completed");
 
             return stepList;
-        }
-
-        /// <summary>
-        /// Determines if the current step is the finished assembler step.
-        /// </summary>
-        /// <param name="currentStep">The current step that the job is on.</param>
-        /// <param name="totalSteps">The total number of steps for this particular job.</param>
-        /// <returns>Returns true if the job has finished with the assemblers, false otherwise.</returns>
-        /// <remarks>The finishedAssemblerStep must reflect the correct number relative to the job steps. So if the steps change, this number may change.</remarks>
-        public static bool FinishedAssemblers(int currentStep, int totalSteps)
-        {
-            int finishedAssemblerStep = totalSteps - 3;
-
-            if (!GenerateOverallStepList(totalSteps)[finishedAssemblerStep].Equals(FINISHED_ASSEMBLERS_STEP))
-                throw new Exception("The finished assembler step is not the correct step. This must be rectified within the step list. We expect the step to be: " + finishedAssemblerStep + ".");
-
-            if (currentStep == finishedAssemblerStep)
-                return true;
-
-            else
-                return false;
         }
 
         /// <summary>
@@ -117,29 +86,16 @@ namespace Genome.Helpers
         /// <param name="numOverallSteps">The number of steps for a particular job.</param>
         /// <returns>Returns a hashtable containing the list of errors for a job.</returns>
         /// <remarks>The NeedsUploaded() method depends upon the state of this list. So if you change this list, you might have to change that method so it remains correct.</remarks>
-        private static Hashtable GenerateOverallStepErrors(int numOverallSteps)
+        private static Hashtable GetOverallStepErrors()
         {
-            int numAssemblers = numOverallSteps - NUM_BASE_OVERALL_STEPS;
-            int stepNum = 1;
+            Hashtable errorList = new Hashtable(6);
 
-            Hashtable errorList = new Hashtable(numOverallSteps);
-            errorList.Add(stepNum++, "Error queueing program.");
-            errorList.Add(stepNum++, "Error converting the sequenced data.");
-            errorList.Add(stepNum++, "Error running assembler(s).");
-
-            for (int index = 1; index <= numAssemblers; index++)
-            {
-                errorList.Add(stepNum++, "Internal error with one or more assemblers.");
-            }
-
-            errorList.Add(stepNum++, "Internal error with one or more assemblers.");
-            errorList.Add(stepNum++, "Error with data analysis.");
-            errorList.Add(stepNum++, "Error uploading data to the FTP.");
-            errorList.Add(stepNum, "Error completing the job.");
-
-            if (stepNum != numOverallSteps)
-                throw new ArgumentOutOfRangeException(Convert.ToString(stepNum), "While creating the overall step error list, the method ran into an error. "
-                    + "The values of the overall step list and that of the internal counter should not be different. numOverallSteps = " + numOverallSteps + " and stepNum = " + stepNum + ".");
+            errorList.Add(1, "Error queueing program.");
+            errorList.Add(2, "Error converting the sequenced data.");
+            errorList.Add(3, "Error running assembler(s).");
+            errorList.Add(4, "Error with data analysis.");
+            errorList.Add(5, "Error uploading data to the FTP.");
+            errorList.Add(6, "Error completing the job.");
 
             return errorList;
         }
@@ -149,32 +105,20 @@ namespace Genome.Helpers
         /// </summary>
         /// <param name="genomeModel">The model that represents the current job.</param>
         /// <param name="hasError">If there is an error during execution, it will set the current status of the job to an error state and sets the step number to the final step.</param>
-        public static void NextOverallStep(GenomeModel genomeModel, bool hasError = false, string customErrorMsg = "")
+        /// <param name="customErrorMsg">Instead of the default error messages associated with each step, you may list your own.</param>
+        public static void NextStep(this GenomeModel genomeModel, bool hasError = false, string customErrorMsg = "")
         {
             if (hasError)
             {
                 if (string.IsNullOrWhiteSpace(customErrorMsg))
-                    genomeModel.OverallStatus = GenerateOverallStepErrors(genomeModel.OverallStepSize)[genomeModel.OverallCurrentStep].ToString();
+                    genomeModel.OverallStatus = GetOverallStepErrors()[genomeModel.OverallCurrentStep].ToString();
+
                 else
                     genomeModel.OverallStatus = customErrorMsg;
-
-                genomeModel.OverallCurrentStep = genomeModel.OverallStepSize;
             }
 
             else
-                genomeModel.OverallStatus = GenerateOverallStepList(genomeModel.OverallStepSize)[++genomeModel.OverallCurrentStep].ToString();
-        }
-
-        /// <summary>
-        /// Sets the current step to 3 (the step number running assemblers) and sets the appropriate status.
-        /// </summary>
-        /// <param name="genomeModel">The model that represents the current job.</param>
-        /// <remarks>Since the running assemblers is always checked, there needs to be a way to keep consistency. So I simply "reset" the value
-       ///  here which will be modified if needed later.</remarks>
-        public static void SetAssemblersRunningStep(GenomeModel genomeModel)
-        {
-            genomeModel.OverallStatus = GenerateOverallStepList(genomeModel.OverallStepSize)[3].ToString();
-            genomeModel.OverallCurrentStep = 3;
+                genomeModel.OverallStatus = GetOverallStepList()[++genomeModel.OverallCurrentStep].ToString();
         }
 
         /// <summary>
@@ -193,35 +137,5 @@ namespace Genome.Helpers
 
             return "We could not find that step. " + stepId;
         }
-
-        ///// <summary>
-        ///// This will return the particular description for the given step.
-        ///// </summary>
-        ///// <param name="stepList"> The particular step list.</param>
-        ///// <param name="stepId"> The step id that corresponds to the description that you want.</param>
-        ///// <returns> Returns the description of the associated step id or returns that it could not be found.</returns>
-        //public static string GetCurrentStepDescription(Hashtable stepList, int stepId)
-        //{
-        //    foreach (DictionaryEntry item in stepList)
-        //    {
-        //        if (Convert.ToInt32(item.Key) == stepId)
-        //            return item.Value.ToString();
-        //    }
-
-        //    return "We could not find that step. " + stepId;
-        //}
-
-        ///// <summary>
-        ///// This will return the particular description for the given step.
-        ///// </summary>
-        ///// <param name="stepList"> The particular step list.</param>
-        ///// <param name="stepId"> The step id that corresponds to the description that you want.</param>
-        ///// <returns> Returns the description of the associated step id or returns that it could not be found.</returns>
-        //public static string GetCurrentStepDescription(Hashtable stepList, int stepId)
-        //{
-        //    var stepDescription = stepList[stepId].ToString();
-
-        //    return string.IsNullOrWhiteSpace(stepDescription) ?  "We could not find that step and/or description." : stepDescription;
-        //}
     }
 }

@@ -10,6 +10,19 @@ namespace Genome.Helpers
 
         #region General Commands
 
+        protected internal static string GetMasurcaError(SshClient client, int seed)
+        {
+            using (var cmd = client.CreateCommand("cat " + Accessors.GetMasurcaFailureLogPath(seed, true))) 
+            {
+                cmd.Execute();
+
+                LinuxErrorHandling.CommandError(cmd);
+
+                return cmd.Result.ToString();
+            }
+        }
+
+        ///////////////////////////////////////////////////BEING USED///////////////////////////////////////////////////////
         /// <summary>
         /// Checks to see if a particular file is accessible remotely from the BigDog cluster using the wget spider command.
         /// </summary>
@@ -61,22 +74,22 @@ namespace Genome.Helpers
             }
         }
 
-        /// <summary>
-        /// Uploads the user's zipped data to the FTP using curl.
-        /// </summary>
-        /// <param name="client">The current SSH client session.</param>
-        /// <param name="outputLocation">The absolute path to the resulting file on the FTP server.</param>
-        /// <param name="fileLocation">The absolute path to the file you wish to upload.</param>
-        /// <param name="asBackground">Whether to run the command as a background process. This is, by default, true. Recommended to not change this.</param>
-        protected internal static void UploadJobData(SshClient client, string outputLocation, string fileLocation, bool asBackground=true)
-        {
-            using (var cmd = client.CreateCommand("curl " + outputLocation + "--ftp-ssl-reqd --netrc --insecure -T " + fileLocation + (asBackground ? " &" : " ")))
-            {
-                cmd.Execute();
+        ///// <summary>
+        ///// Uploads the user's zipped data to the FTP using curl.
+        ///// </summary>
+        ///// <param name="client">The current SSH client session.</param>
+        ///// <param name="ftpOutputLocation">The absolute path to the resulting file on the FTP server.</param>
+        ///// <param name="compressedDataLocation">The absolute path to the file you wish to upload.</param>
+        ///// <param name="asBackground">Whether to run the command as a background process. This is, by default, true. Recommended to not change this.</param>
+        //protected internal static void UploadJobData(SshClient client, string ftpOutputLocation, string compressedDataLocation, bool asBackground=true)
+        //{
+        //    using (var cmd = client.CreateCommand("curl " + ftpOutputLocation + "--ftp-ssl-reqd --netrc --insecure -T " + compressedDataLocation + (asBackground ? " &" : " ")))
+        //    {
+        //        cmd.Execute();
 
-                LinuxErrorHandling.CommandError(cmd);
-            }
-        }
+        //        LinuxErrorHandling.CommandError(cmd);
+        //    }
+        //}
 
         /// <summary>
         /// Compresses specific files/directories then uploads the user data to the FTP. WARNING: UNTESTED METHOD!!!
@@ -88,14 +101,38 @@ namespace Genome.Helpers
         /// <param name="fileLocation">The absolute path to the file you wish to upload.</param>
         /// <param name="asBackground">Whether to run the command as a background process. This is, by default, true. Recommended to not change this.</param>
         /// <param name="parameters">Any optional parameters for the zip command. Every optional parameter needs to conform to typical Linux bash syntax. (NO LEADING DASH) </param>
-        protected internal static void UploadJob(SshClient client, string userJobDirectory, string zipName, string fileLocation, string outputLocation, bool asBackground = true, string parameters = "")
+        protected internal static void UploadJobData(SshClient client, string userJobDirectory, string zipName, string fileLocation, string outputLocation, bool asBackground = true, string parameters = "")
         {
-            using (var cmd = client.CreateCommand("cd " + userJobDirectory + " && zip " + "-9" + " " + zipName + " " + fileLocation + " -" 
-                + parameters + " | curl " + outputLocation + "--ftp-ssl-reqd --netrc --insecure -T " + fileLocation + (asBackground ? " &" : " ")))
+            using (var cmd = client.CreateCommand("cd " + userJobDirectory + " && zip " + "-9" + " " + zipName + " " + fileLocation + " -"
+                + parameters + " | curl " + outputLocation + "--ftp-ssl-reqd --netrc --insecure -T " + fileLocation + (asBackground ? " &" : "")))
             {
                 cmd.Execute();
 
                 LinuxErrorHandling.CommandError(cmd);
+            }
+        }
+
+        /// <summary>
+        /// Determines if the job is currently uploading by checking whether the curl command is currently running.
+        /// </summary>
+        /// <param name="client">The current SSH client session.</param>
+        /// <param name="outputLocation">The absolute path to the resulting file on the FTP server.</param>
+        /// <param name="fileLocation">The absolute path to the file you wish to upload.</param>
+        /// <returns>Returns true if the curl command is currently running, otherwise false.</returns>
+        /// <remarks>If the UploadJobData() method changes, this command will likely have to change. It was made to be as restrictive as possible to reduce false positives.</remarks>
+        protected internal static bool IsJobUploading(SshClient client, string outputLocation, string fileLocation)
+        {
+            using (var cmd = client.CreateCommand("ps aux | grep \"curl " + outputLocation + "--ftp-ssl-reqd --netrc --insecure -T " + fileLocation + "\""))
+            {
+                cmd.Execute();
+
+                LinuxErrorHandling.CommandError(cmd);
+
+                if (Convert.ToInt32(cmd.Result).Equals(2))
+                    return true;
+
+                else
+                    return false;
             }
         }
 
@@ -288,6 +325,32 @@ namespace Genome.Helpers
 
             else
                 return -1;
+        }
+
+        protected internal static bool FileExists(SshClient client, string directory)
+        {
+            using (var cmd = client.CreateCommand("find  " + directory + " | wc -l"))
+            {
+                cmd.Execute();
+
+                LinuxErrorHandling.CommandError(cmd);
+
+                if (Convert.ToInt32(cmd.Result) == 0)
+                    return false;
+
+                else
+                    return true;
+            }
+        }
+
+        protected internal static void RunDataAnalysis(SshClient client)
+        {
+            using (var cmd = client.CreateCommand("RUN DATA ANALYSIS COMMAND"))
+            {
+                //cmd.Execute();
+
+                LinuxErrorHandling.CommandError(cmd);
+            }
         }
 
         #endregion

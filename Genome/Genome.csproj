@@ -259,6 +259,10 @@
     <Compile Include="Migrations\201608161706548_RemovedNumAssemblers.Designer.cs">
       <DependentUpon>201608161706548_RemovedNumAssemblers.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201608181731537_NumAssemblers.cs" />
+    <Compile Include="Migrations\201608181731537_NumAssemblers.Designer.cs">
+      <DependentUpon>201608181731537_NumAssemblers.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\AccountViewModels.cs" />
     <Compile Include="Models\GenomeModel.cs" />
@@ -382,6 +386,9 @@
   <ItemGroup>
     <EmbeddedResource Include="Migrations\201608161706548_RemovedNumAssemblers.resx">
       <DependentUpon>201608161706548_RemovedNumAssemblers.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201608181731537_NumAssemblers.resx">
+      <DependentUpon>201608181731537_NumAssemblers.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>

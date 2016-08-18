@@ -20,8 +20,8 @@ namespace Genome.Models
         /// give our job. So instead we must create a random one and use THAT throughout the system.
         /// </summary>
         [DisplayName("Seed")]
-        [Index(IsUnique=true)]
-        public int Seed { get; set; } 
+        [Index(IsUnique = true)]
+        public int Seed { get; set; }
 
         // The job ID that is seen in the scheduler of BigDog so we can use this to check for updates.
         public int SGEJobId { get; set; }
@@ -33,8 +33,6 @@ namespace Genome.Models
         [NotMapped]
         [Display(Name = "Big Dog Password:")]
         public string SSHPass { get; set; }
-
-        //public int NumAssemblers { get; set; }
 
         //////////////////////////////
         // Data specific parameters //
@@ -106,7 +104,7 @@ namespace Genome.Models
         public int? MasurcaKMerErrorCount { get; set; }
 
         [Display(Name = "Masurca CPU Thread Count")]
-        [Range(1,20)]
+        [Range(1, 20)]
         public int? MasurcaThreadNum { get; set; }
 
         [Required]
@@ -120,7 +118,7 @@ namespace Genome.Models
         /////////////////////////////////
         // SGA specific parameters     //
         /////////////////////////////////
-        [Display(Name ="SGA Assembler")]
+        [Display(Name = "SGA Assembler")]
         public bool UseSGA { get; set; }
 
         /////////////////////////////////
@@ -148,17 +146,15 @@ namespace Genome.Models
         [Display(Name = "Completed Date")]
         public DateTime? CompletedDate { get; set; }
 
+        [Display(Name = "Number of Assemblers Choosen")]
+        public int NumberOfAssemblers { get; set; }
+
         [Display(Name = "Current Status")]
         public string OverallStatus { get; set; }
 
         [Display(Name = "Current Step")]
         [DefaultValue(1)]
         public int OverallCurrentStep { get; set; }
-
-        /// <summary>
-        /// The total number of steps that this particular job has. This is determined by the number of assemblers they have chosen.
-        /// </summary>
-        public int OverallStepSize { get; set; }
 
         // WE NEED TO RESET THIS VALUE TO NULL WHEN THE DOWNLOAD IS EVENTUALLY PRUNED.
         [DefaultValue("")]
