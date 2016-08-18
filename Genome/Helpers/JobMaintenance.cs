@@ -47,9 +47,9 @@ namespace Genome.Helpers
                         HashSet<Assembler> masurcaStepList = StepDescriptions.GetMasurcaStepList();
                         #endregion
 
-                        // Determines whether we will continue checking the job status.
-                        bool continueUpdate = true;
-                        bool DEBUG_MODE = true;
+                        bool continueUpdate = true;     // Determines whether we will continue checking the job status.
+                        bool DEBUG_MODE = true;         // Debug mode to skip some assembler steps.
+                        bool outOfRange = false;        // If the overall step is out of bounds, then we set this to true to attempt a correction.
 
                         while (continueUpdate)
                         {
@@ -140,15 +140,45 @@ namespace Genome.Helpers
                                     //break;
                                 }
 
+                                // TODO: Create a more robust method in checking for a completed upload. Maybe connect to the FTP and compare file sizes and see if they are close.
                                 // Uploading Data step
                                 case 5:
                                 {
                                     if (LinuxCommands.IsJobUploading(client, Accessors.USER_ROOT_JOB_DIRECTORY, Accessors.GetCompressedDataPath(genomeModel.Seed)))
                                         continueUpdate = false;
 
+                                    else if(LinuxCommands.FileExists(client, Accessors.GetCompressedDataPath(genomeModel.Seed)))
+                                        genomeModel.NextStep();
+
                                     else
                                         LinuxCommands.UploadJobData(client, Accessors.USER_ROOT_JOB_DIRECTORY, Accessors.GetCompressedDataPath(genomeModel.Seed)
                                             , Accessors.GetRelativeJobDirectory(genomeModel.Seed), Accessors.GetDownloadLocation(genomeModel.Seed), true, "yr");
+
+                                    break;
+                                }
+
+                                // Completed step
+                                case 6:
+                                {
+                                    continueUpdate = false;
+
+                                    break;
+                                }
+
+                                default:
+                                {
+                                    // If we have attempted a correction and failed, throw in the towel.
+                                    if (outOfRange)
+                                        throw new IndexOutOfRangeException("The current step of the program is out of bounds after an attempted correction. The current step: " + genomeModel.OverallCurrentStep);
+
+                                    else
+                                    {
+                                        outOfRange = true;
+                                        
+                                        // Reset the state to default and have it run through the update method again.
+                                        genomeModel.OverallCurrentStep = 1;
+                                        genomeModel.OverallStatus = StepDescriptions.GetOverallStepList()[genomeModel.OverallCurrentStep].ToString();
+                                    }
 
                                     break;
                                 }
