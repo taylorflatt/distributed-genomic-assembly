@@ -144,15 +144,20 @@ namespace Genome.Helpers
                                 // Uploading Data step
                                 case 5:
                                 {
-                                    if (LinuxCommands.IsJobUploading(client, Accessors.USER_ROOT_JOB_DIRECTORY, Accessors.GetCompressedDataPath(genomeModel.Seed)))
-                                        continueUpdate = false;
+                                    //if (LinuxCommands.IsJobUploading(client, Accessors.USER_ROOT_JOB_DIRECTORY, Accessors.GetCompressedDataPath(genomeModel.Seed)))
+                                    //    continueUpdate = false;
 
-                                    else if(LinuxCommands.FileExists(client, Accessors.GetCompressedDataPath(genomeModel.Seed)))
-                                        genomeModel.NextStep();
+                                    //else if (LinuxCommands.FileExists(client, Accessors.GetCompressedDataPath(genomeModel.Seed)))
+                                    //    genomeModel.NextStep();
 
-                                    else
+                                    //else
+                                    //{
                                         LinuxCommands.UploadJobData(client, Accessors.USER_ROOT_JOB_DIRECTORY, Accessors.GetCompressedDataPath(genomeModel.Seed)
-                                            , Accessors.GetRelativeJobDirectory(genomeModel.Seed), Accessors.GetDownloadLocation(genomeModel.Seed), true, "yr");
+                                            , Accessors.GetRelativeJobDirectory(genomeModel.Seed), Accessors.GetRemoteDownloadLocation(genomeModel.Seed), true, "yr");
+
+                                        continueUpdate = false;
+                                    //}
+
 
                                     break;
                                 }

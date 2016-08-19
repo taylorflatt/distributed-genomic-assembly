@@ -96,15 +96,18 @@ namespace Genome.Helpers
         /// </summary>
         /// <param name="client">The current SSH client session.</param>
         /// <param name="userJobDirectory">The user's directory which contains all of his/her jobs.</param>
-        /// <param name="zipName">The path to the file you wish to zip.</param>
+        /// <param name="zippedFile">The absolute path to the file you wish to zip and upload.</param>
+        /// <param name="toZipFile">The file/folder you wish to zip.</param>
         /// <param name="outputLocation">The name to the resulting compressed file.</param>
-        /// <param name="fileLocation">The absolute path to the file you wish to upload.</param>
         /// <param name="asBackground">Whether to run the command as a background process. This is, by default, true. Recommended to not change this.</param>
         /// <param name="parameters">Any optional parameters for the zip command. Every optional parameter needs to conform to typical Linux bash syntax. (NO LEADING DASH) </param>
-        protected internal static void UploadJobData(SshClient client, string userJobDirectory, string zipName, string fileLocation, string outputLocation, bool asBackground = true, string parameters = "")
+        /// <remarks>Need to change the CWD to that of the job so the zipping will work. Absolute pathing doesn't like to work with zip for some reason. 
+        /// Additionally, I use the FS parameters with the zip command to preserve symlinks, force updates if the zip already exists.</remarks>
+        protected internal static void UploadJobData(SshClient client, string userJobDirectory, string zippedFile, string toZipFile, string remoteOutputLocation, bool asBackground = true, string parameters = "")
         {
-            using (var cmd = client.CreateCommand("cd " + userJobDirectory + " && zip " + "-9" + " " + zipName + " " + fileLocation + " -"
-                + parameters + " | curl " + outputLocation + "--ftp-ssl-reqd --netrc --insecure -T " + fileLocation + (asBackground ? " &" : "")))
+            // THERE IS AN ISSUE WITH THIS COMMAND. IT ISN'T JUST LETTING THE PAGE RELOAD AND RESULTS IN LONG WAITS.
+            using (var cmd = client.CreateCommand("cd " + userJobDirectory + " && zip " + "-9" + " " + zippedFile + " " + toZipFile + " -FS"
+                + parameters + " | curl -T " + zippedFile + " " + remoteOutputLocation + " --ftp-ssl-reqd --ftp-create-dirs --netrc --insecure &> /dev/null " + (asBackground ? " &" : "")))
             {
                 cmd.Execute();
 
@@ -122,13 +125,13 @@ namespace Genome.Helpers
         /// <remarks>If the UploadJobData() method changes, this command will likely have to change. It was made to be as restrictive as possible to reduce false positives.</remarks>
         protected internal static bool IsJobUploading(SshClient client, string outputLocation, string fileLocation)
         {
-            using (var cmd = client.CreateCommand("ps aux | grep \"curl " + outputLocation + "--ftp-ssl-reqd --netrc --insecure -T " + fileLocation + "\""))
+            using (var cmd = client.CreateCommand("ps aux | grep \"curl " + outputLocation + " --ftp-ssl-reqd --netrc --insecure -T " + fileLocation + "\" | wc -l"))
             {
                 cmd.Execute();
 
                 LinuxErrorHandling.CommandError(cmd);
 
-                if (Convert.ToInt32(cmd.Result).Equals(2))
+                if (Convert.ToInt32(cmd.Result) > 2)
                     return true;
 
                 else

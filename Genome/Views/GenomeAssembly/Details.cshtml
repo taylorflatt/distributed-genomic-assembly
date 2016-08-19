@@ -246,11 +246,12 @@
                 <td>
                     <div class="progress" style="background-color: grey;">
                         @{
-                        var totalNumSteps = 6;
-                        var overallPercentage = (Model.OverallCurrentStep / totalNumSteps) * 100;
-                        string barWidthOverall = Convert.ToString(overallPercentage) + "%";
+                            var totalNumSteps = 6;
+                            double currentStep = @Model.OverallCurrentStep;
+                            var currentOverallPercentage = Math.Round((currentStep / @totalNumSteps) * 100);
+                            string barWidthOverall = Convert.ToString(@currentOverallPercentage) + "%";
 
-                        <div class="progress-bar" role="progressbar" aria-valuenow="@overallPercentage" aria-valuemin="0" aria-valuemax="100" style="width:@barWidthOverall">
+                        <div class="progress-bar" role="progressbar" aria-valuenow="@currentOverallPercentage" aria-valuemin="0" aria-valuemax="100" style="width:@barWidthOverall">
                             <strong style="text-indent: 20px; color: #FFFFFF">@Model.OverallStatus (Step @Model.OverallCurrentStep of @totalNumSteps)</strong>
                         </div>
                         }

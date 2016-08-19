@@ -57,13 +57,23 @@
         }
 
         /// <summary>
+        /// Get the link for the data download for the user with the drive letter. (D:\Assembler\Job123 for instance).
+        /// </summary>
+        /// <param name="seed">The unique identifier for a particular job.</param>
+        /// <returns>The path to the download link on the FTP server.</returns>
+        protected internal static string GetLocalDownloadLocation(int seed)
+        {
+            return ZIP_STORAGE_PATH + @"\Job-" + seed + ".zip";
+        }
+
+        /// <summary>
         /// Get the link for the data download for the user.
         /// </summary>
         /// <param name="seed">The unique identifier for a particular job.</param>
         /// <returns>The path to the download link on the FTP server.</returns>
-        protected internal static string GetDownloadLocation(int seed)
+        protected internal static string GetRemoteDownloadLocation(int seed)
         {
-            return ZIP_STORAGE_PATH + @"\Job-" + seed + ".zip";
+            return FTP_DEFAULT_DIRECTORY + @"/" + HelperMethods.GetUsername() + "/Job-" + seed + ".zip";
         }
 
         /// <summary>
