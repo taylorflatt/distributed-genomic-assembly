@@ -105,7 +105,6 @@ namespace Genome.Helpers
         /// Additionally, I use the FS parameters with the zip command to preserve symlinks, force updates if the zip already exists.</remarks>
         protected internal static void UploadJobData(SshClient client, string userJobDirectory, string zippedFile, string toZipFile, string remoteOutputLocation, bool asBackground = true, string parameters = "")
         {
-            // THERE IS AN ISSUE WITH THIS COMMAND. IT ISN'T JUST LETTING THE PAGE RELOAD AND RESULTS IN LONG WAITS.
             using (var cmd = client.CreateCommand("cd " + userJobDirectory + " && zip " + "-9" + " " + zippedFile + " " + toZipFile + " -FS"
                 + parameters + " | curl -T " + zippedFile + " " + remoteOutputLocation + " --ftp-ssl-reqd --ftp-create-dirs --netrc --insecure &> /dev/null " + (asBackground ? " &" : "")))
             {
