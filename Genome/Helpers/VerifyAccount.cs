@@ -38,9 +38,9 @@ namespace Genome.Helpers
 
                     LinuxCommands.CreateDirectory(client, Accessors.VERIFY_PERMISSIONS_TEST_DIR);
 
-                    if (!string.IsNullOrEmpty(LinuxErrorHandling.error))
+                    if (!string.IsNullOrEmpty(ErrorHandling.error))
                     {
-                        LinuxErrorHandling.error = "You do not have sufficient permissions to write to the proper directories. Please contact the BigDog Linux team about addressing this problem.";
+                        ErrorHandling.error = "You do not have sufficient permissions to write to the proper directories. Please contact the BigDog Linux team about addressing this problem.";
 
                         return false;
                     }
@@ -57,7 +57,7 @@ namespace Genome.Helpers
                 // SSH Connection couldn't be established.
                 catch (SocketException e)
                 {
-                    LinuxErrorHandling.error = "The SSH connection couldn't be established. " + e.Message;
+                    ErrorHandling.error = "The SSH connection couldn't be established. " + e.Message;
 
                     return false;
                 }
@@ -65,7 +65,7 @@ namespace Genome.Helpers
                 // Authentication failure.
                 catch (SshAuthenticationException e)
                 {
-                    LinuxErrorHandling.error = "The credentials were entered incorrectly. " + e.Message;
+                    ErrorHandling.error = "The credentials were entered incorrectly. " + e.Message;
 
                     return false;
                 }
@@ -73,14 +73,14 @@ namespace Genome.Helpers
                 // The SSH connection was dropped.
                 catch (SshConnectionException e)
                 {
-                    LinuxErrorHandling.error = "The connection was terminated unexpectedly. " + e.Message;
+                    ErrorHandling.error = "The connection was terminated unexpectedly. " + e.Message;
 
                     return false;
                 }
 
                 catch (Exception e)
                 {
-                    LinuxErrorHandling.error = "There was an uncaught exception. " + e.Message;
+                    ErrorHandling.error = "There was an uncaught exception. " + e.Message;
 
                     return false;
                 }
@@ -107,7 +107,7 @@ namespace Genome.Helpers
                     // If they have less than 'minQuota' then we return an error telling them the problem and how to rectify it.
                     if (userQuota < Accessors.MINIMUM_QUOTA)
                     {
-                        LinuxErrorHandling.error = "You do not have the requisite amount of disk space (" + Accessors.MINIMUM_QUOTA + "Gb) for us to safely run a general assembly "
+                        ErrorHandling.error = "You do not have the requisite amount of disk space (" + Accessors.MINIMUM_QUOTA + "Gb) for us to safely run a general assembly "
                             + "job. Please contact the BigDog admin team to increase your quota. You currently have " + userQuota + "Gb space to use.";
 
                         return false;
@@ -121,7 +121,7 @@ namespace Genome.Helpers
                 // SSH Connection couldn't be established.
                 catch (SocketException e)
                 {
-                    LinuxErrorHandling.error = "The SSH connection couldn't be established. " + e.Message;
+                    ErrorHandling.error = "The SSH connection couldn't be established. " + e.Message;
 
                     return false;
                 }
@@ -129,7 +129,7 @@ namespace Genome.Helpers
                 // Authentication failure.
                 catch (SshAuthenticationException e)
                 {
-                    LinuxErrorHandling.error = "The credentials were entered incorrectly. " + e.Message;
+                    ErrorHandling.error = "The credentials were entered incorrectly. " + e.Message;
 
                     return false;
                 }
@@ -137,14 +137,14 @@ namespace Genome.Helpers
                 // The SSH connection was dropped.
                 catch (SshConnectionException e)
                 {
-                    LinuxErrorHandling.error = "The connection was terminated unexpectedly. " + e.Message;
+                    ErrorHandling.error = "The connection was terminated unexpectedly. " + e.Message;
 
                     return false;
                 }
 
                 catch (Exception e)
                 {
-                    LinuxErrorHandling.error = "There was an uncaught exception. " + e.Message;
+                    ErrorHandling.error = "There was an uncaught exception. " + e.Message;
 
                     return false;
                 }

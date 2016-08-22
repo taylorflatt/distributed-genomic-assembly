@@ -63,6 +63,9 @@ namespace Genome.Controllers
                     genomeModel.OverallStatus = StepDescriptions.INITIAL_STEP;
                     genomeModel.NumberOfAssemblers = HelperMethods.NumberOfAssemblers(genomeModel.UseMasurca, genomeModel.UseSGA, genomeModel.UseWGS);
 
+                    // TODO: Potentially add the model to the DB now with junk data to reserve the UUID so we don't have to use a SEED value at all. This 
+                    // reduces the potential of something going wrong and two people ending up with a race condition or something.
+
                     genomeModel.CreatedBy = User.Identity.Name;
 
                     // TODO: Need to look into this to see about a translation to display to a user rather than the UK time it gives.
@@ -81,22 +84,20 @@ namespace Genome.Controllers
                     builder.GenerateConfigs();
 
                     genomeModel.Seed = builder.seed; // Set seed value here so we know it is 100% definitely set.
-
-                    ViewBag.ConnectionErrorDetails = LinuxErrorHandling.error;
                     #endregion
 
                     #region Connect To BigDog and Test Data Connection
 
                     string badUrl = HelperMethods.TestJobUrls(genomeModel.SSHUser, genomeModel.SSHPass, genomeModel.DataSource);
 
-                    if (string.IsNullOrEmpty(badUrl) && string.IsNullOrEmpty(LinuxErrorHandling.error))
+                    if (string.IsNullOrEmpty(badUrl) && string.IsNullOrEmpty(ErrorHandling.error))
                     {
                         /// We can instead pass in the SEED variable which will be used to reference the method in Locations to grab the correct file(s).
                         /// This is the ideal solution which will be implemented only once we know that the system works with the direct URL.
                         builder.CreateJob();
 
                         // No error so proceed.
-                        if (string.IsNullOrEmpty(LinuxErrorHandling.error))
+                        if (ErrorHandling.NoError())
                         {
                             db.GenomeModels.Add(genomeModel);
                             db.SaveChanges();
@@ -107,8 +108,7 @@ namespace Genome.Controllers
                         // Redisplay the data and display the error.
                         else
                         {
-                            ViewBag.ConnectionError = "There was an error with the connection to BigDog. The following is the error we encountered: ";
-                            ViewBag.ConnectionErrorDetails = LinuxErrorHandling.error;
+                            genomeModel.JobError = "We encountered an error while trying to submit your job. The following is the error we encountered: " +  ErrorHandling.error;
 
                             return View(genomeModel);
                         }
@@ -117,13 +117,12 @@ namespace Genome.Controllers
                     // Redisplay the data and display the error.
                     else
                     {
-                        ViewBag.ConnectionError = "There was an error with the URLs provided. We weren't able to locate or download at least"
+                        genomeModel.JobError = "There was an error with the URLs provided. We weren't able to locate or download at least"
                             + " one of your files. The file we had a problem with was: " + badUrl + ". Please make sure you typed the URL correctly"
                             + " and it is accessible. If this is in error, please contact an administrator promptly with the details.";
 
-                        if (!string.IsNullOrEmpty(LinuxErrorHandling.error))
-                            ViewBag.ConnectionErrorDetails = "The following is additional error information that we encountered: " + LinuxErrorHandling.error;
-
+                        if (!string.IsNullOrEmpty(ErrorHandling.error))
+                            genomeModel.JobError = string.Concat(genomeModel.JobError, " The following is additional error information that we encountered: " + ErrorHandling.error);
 
                         return View(genomeModel);
                     }
@@ -133,7 +132,7 @@ namespace Genome.Controllers
 
                 catch (Exception e)
                 {
-                    Console.WriteLine(e.Message);
+                    genomeModel.JobError = "There has been an uncaught error. " + e;
                 }
             }
 
@@ -160,9 +159,6 @@ namespace Genome.Controllers
                 {
                     // We need to display the download link for the user which is set in CheckJobStatus.UploadData() and stored in the model 
                     // under DownloadLink.
-
-                    ViewBag.DataUploaded = "Your data has successfully uploaded and is ready for download. Using the credentials that you use to access this website, "
-                        + "please open the link and enter those credentials to begin the data download.";
                 }
 
                 return View(genomeModel);

@@ -100,6 +100,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Core" />
     <Reference Include="System.Data" />
     <Reference Include="System.Data.Linq" />
     <Reference Include="System.Drawing" />
@@ -113,7 +114,6 @@
     <Reference Include="System.Web.Entity" />
     <Reference Include="System.Web.ApplicationServices" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
-    <Reference Include="System.Core" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Web.Http, Version=5.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.AspNet.WebApi.Core.5.2.3\lib\net45\System.Web.Http.dll</HintPath>
@@ -251,7 +251,7 @@
     <Compile Include="Helpers\CustomRoles.cs" />
     <Compile Include="Helpers\HelperMethods.cs" />
     <Compile Include="Helpers\LinuxCommands.cs" />
-    <Compile Include="Helpers\LinuxErrorHandling.cs" />
+    <Compile Include="Helpers\ErrorHandling.cs" />
     <Compile Include="Helpers\Unique.cs" />
     <Compile Include="Helpers\VerifyAccount.cs" />
     <Compile Include="Logging\ExceptionUtility.cs" />
@@ -262,6 +262,10 @@
     <Compile Include="Migrations\201608181731537_NumAssemblers.cs" />
     <Compile Include="Migrations\201608181731537_NumAssemblers.Designer.cs">
       <DependentUpon>201608181731537_NumAssemblers.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201608212246290_AddedError.cs" />
+    <Compile Include="Migrations\201608212246290_AddedError.Designer.cs">
+      <DependentUpon>201608212246290_AddedError.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\AccountViewModels.cs" />
@@ -389,6 +393,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201608181731537_NumAssemblers.resx">
       <DependentUpon>201608181731537_NumAssemblers.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201608212246290_AddedError.resx">
+      <DependentUpon>201608212246290_AddedError.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>

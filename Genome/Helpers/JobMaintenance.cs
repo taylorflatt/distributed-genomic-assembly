@@ -42,16 +42,11 @@ namespace Genome.Helpers
                     /// TODO: Modify the code to skip entire sections if they have already been completed. This will be based off the CURRENT STEP stored in the model data.
                     using (GenomeAssemblyDbContext db = new GenomeAssemblyDbContext())
                     {
-                        #region Checking how many assemblers chosen
-                        Hashtable overallStepList = StepDescriptions.GetOverallStepList();
-                        HashSet<Assembler> masurcaStepList = StepDescriptions.GetMasurcaStepList();
-                        #endregion
-
                         bool continueUpdate = true;     // Determines whether we will continue checking the job status.
                         bool DEBUG_MODE = true;         // Debug mode to skip some assembler steps.
                         bool outOfRange = false;        // If the overall step is out of bounds, then we set this to true to attempt a correction.
 
-                        while (continueUpdate)
+                        while (continueUpdate && ErrorHandling.NoError())
                         {
                             // Depending on the current step, this switch will determine if the state of the job needs to change.
                             switch (genomeModel.OverallCurrentStep)
@@ -174,7 +169,8 @@ namespace Genome.Helpers
                                 {
                                     // If we have attempted a correction and failed, throw in the towel.
                                     if (outOfRange)
-                                        throw new IndexOutOfRangeException("The current step of the program is out of bounds after an attempted correction. The current step: " + genomeModel.OverallCurrentStep);
+                                        throw new IndexOutOfRangeException("The current step of the program is out of bounds after an attempted correction. The current step: " 
+                                            + genomeModel.OverallCurrentStep);
 
                                     else
                                     {
@@ -195,13 +191,13 @@ namespace Genome.Helpers
                 // SSH Connection couldn't be established.
                 catch (SocketException e)
                 {
-                    LinuxErrorHandling.error = "The SSH connection couldn't be established. " + e.Message;
+                    ErrorHandling.error = "The SSH connection couldn't be established. " + e.Message;
                 }
 
                 // The SSH connection was dropped.
                 catch (SshConnectionException e)
                 {
-                    LinuxErrorHandling.error = "The connection was terminated unexpectedly. " + e.Message;
+                    ErrorHandling.error = "The connection was terminated unexpectedly. " + e.Message;
                 }
             }
         }
@@ -213,7 +209,7 @@ namespace Genome.Helpers
         /// <param name="genomeModel">The model of the particular job.</param>
         private static void CheckMasurcaStep(SshClient client, GenomeModel genomeModel)
         {
-            if (string.IsNullOrEmpty(LinuxErrorHandling.error) 
+            if (string.IsNullOrEmpty(ErrorHandling.error) 
                     && !genomeModel.MasurcaCurrentStep.Equals(-1) 
                     && !genomeModel.MasurcaCurrentStep.Equals(StepDescriptions.GetMasurcaStepList().Last().step))
             {

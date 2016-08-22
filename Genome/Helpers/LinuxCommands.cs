@@ -16,7 +16,7 @@ namespace Genome.Helpers
             {
                 cmd.Execute();
 
-                LinuxErrorHandling.CommandError(cmd);
+                ErrorHandling.CommandError(cmd);
 
                 return cmd.Result.ToString();
             }
@@ -43,21 +43,21 @@ namespace Genome.Helpers
             using (var wget = client.CreateCommand(cmdList[0]))
             {
                 wget.Execute();
-                LinuxErrorHandling.CommandError(wget);
+                ErrorHandling.CommandError(wget);
 
-                if (string.IsNullOrEmpty(LinuxErrorHandling.error))
+                if (string.IsNullOrEmpty(ErrorHandling.error))
                 {
                     for (int i = 1; i < cmdList.Count; i++)
                     {
                         using (var grep = client.CreateCommand(cmdList[i]))
                         {
                             grep.Execute();
-                            LinuxErrorHandling.CommandError(grep);
+                            ErrorHandling.CommandError(grep);
 
-                            if (string.IsNullOrEmpty(LinuxErrorHandling.error))
+                            if (string.IsNullOrEmpty(ErrorHandling.error))
                             {
                                 // If the file is connectable, we can stop checking.
-                                if (string.IsNullOrEmpty(LinuxErrorHandling.error) && Convert.ToInt32(grep.Result) > 0)
+                                if (string.IsNullOrEmpty(ErrorHandling.error) && Convert.ToInt32(grep.Result) > 0)
                                 {
                                     fileConnectable = true;
                                     break;
@@ -92,7 +92,7 @@ namespace Genome.Helpers
         //}
 
         /// <summary>
-        /// Compresses specific files/directories then uploads the user data to the FTP. WARNING: UNTESTED METHOD!!!
+        /// Compresses specific files/directories then uploads the user data to the FTP.
         /// </summary>
         /// <param name="client">The current SSH client session.</param>
         /// <param name="userJobDirectory">The user's directory which contains all of his/her jobs.</param>
@@ -110,7 +110,7 @@ namespace Genome.Helpers
             {
                 cmd.Execute();
 
-                LinuxErrorHandling.CommandError(cmd);
+                ErrorHandling.CommandError(cmd);
             }
         }
 
@@ -128,7 +128,7 @@ namespace Genome.Helpers
             {
                 cmd.Execute();
 
-                LinuxErrorHandling.CommandError(cmd);
+                ErrorHandling.CommandError(cmd);
 
                 if (Convert.ToInt32(cmd.Result) > 2)
                     return true;
@@ -152,7 +152,7 @@ namespace Genome.Helpers
             {
                 cmd.Execute();
 
-                LinuxErrorHandling.CommandError(cmd);
+                ErrorHandling.CommandError(cmd);
 
                 if (!cmd.Result.ToString().Substring(0, 1).Equals("M") && !cmd.Result.ToString().Substring(0, 1).Equals("G"))
                     throw new Exception("There was undetermined behavior in the quota return value. We expected 'M' or 'G' but instead we got: " + cmd.Result.ToString());
@@ -173,7 +173,7 @@ namespace Genome.Helpers
             {
                 cmd.Execute();
 
-                LinuxErrorHandling.CommandError(cmd);
+                ErrorHandling.CommandError(cmd);
 
                 return Convert.ToInt32(cmd.Result);
             }
@@ -191,10 +191,10 @@ namespace Genome.Helpers
             string byteType = CheckQuotaType(client); // Check whether the quota is in MB or GB.
 
             // Now we need to get the quota size.
-            if (string.IsNullOrEmpty(LinuxErrorHandling.error)) { quotaAmount = CheckQuotaSize(client); }
+            if (string.IsNullOrEmpty(ErrorHandling.error)) { quotaAmount = CheckQuotaSize(client); }
 
             // If the quota is in MB, we need to convert it. Otherwise, we are fine.
-            if (string.IsNullOrEmpty(LinuxErrorHandling.error) && byteType.Equals("M")) { quotaAmount = ConvertToGigabyte(quotaAmount); }
+            if (string.IsNullOrEmpty(ErrorHandling.error) && byteType.Equals("M")) { quotaAmount = ConvertToGigabyte(quotaAmount); }
 
             return quotaAmount;
         }
@@ -219,7 +219,7 @@ namespace Genome.Helpers
             {
                 cmd.Execute();
 
-                LinuxErrorHandling.CommandError(cmd);
+                ErrorHandling.CommandError(cmd);
             }
         }
 
@@ -235,7 +235,7 @@ namespace Genome.Helpers
             {
                 cmd.Execute();
 
-                LinuxErrorHandling.CommandError(cmd);
+                ErrorHandling.CommandError(cmd);
 
                 // Returns 1 due to grep being returned. So if 1 is returned, nothing is found.
                 if (Convert.ToInt32(cmd.Result) > 1)
@@ -258,7 +258,7 @@ namespace Genome.Helpers
             {
                 cmd.Execute();
 
-                LinuxErrorHandling.CommandError(cmd);
+                ErrorHandling.CommandError(cmd);
 
                 // We couldn't find the success file.
                 if (cmd.Result.ToString().Contains("No such file or directory"))
@@ -276,7 +276,7 @@ namespace Genome.Helpers
             {
                 cmd.Execute();
 
-                LinuxErrorHandling.CommandError(cmd);
+                ErrorHandling.CommandError(cmd);
 
                 // The job is currently queued.
                 if (Convert.ToInt32(cmd.Result) >= 1)
@@ -316,13 +316,13 @@ namespace Genome.Helpers
                         break;
 
                     // Error Case: If we come across an error or recieve a negative number, break the loop.
-                    if (LinuxErrorHandling.CommandError(cmd))
+                    if (ErrorHandling.CommandError(cmd))
                         break;
                 }
             }
 
             // Provided there was no error, return the current step back to the user.
-            if (string.IsNullOrEmpty(LinuxErrorHandling.error))
+            if (string.IsNullOrEmpty(ErrorHandling.error))
                 return currentStep;
 
             else
@@ -335,7 +335,7 @@ namespace Genome.Helpers
             {
                 cmd.Execute();
 
-                LinuxErrorHandling.CommandError(cmd);
+                ErrorHandling.CommandError(cmd);
 
                 if (Convert.ToInt32(cmd.Result) == 0)
                     return false;
@@ -351,7 +351,7 @@ namespace Genome.Helpers
             {
                 //cmd.Execute();
 
-                LinuxErrorHandling.CommandError(cmd);
+                ErrorHandling.CommandError(cmd);
             }
         }
 
@@ -376,7 +376,7 @@ namespace Genome.Helpers
             {
                 cmd.Execute();
 
-                LinuxErrorHandling.CommandError(cmd);
+                ErrorHandling.CommandError(cmd);
             }
         }
 
@@ -400,17 +400,17 @@ namespace Genome.Helpers
                 // Grab only numbers, ignore the rest.
                 string[] jobNumber = Regex.Split(cmd.Result, @"\D+");
 
-                LinuxErrorHandling.CommandError(cmd);
+                ErrorHandling.CommandError(cmd);
 
                 // We return the second element [1] here because the first and last element of the array is always the empty "". Trimming
                 // doesn't remove it. So we will always return the first element which corresponds to the job number.
 
-                if (string.IsNullOrEmpty(LinuxErrorHandling.error))
+                if (string.IsNullOrEmpty(ErrorHandling.error))
                     return Convert.ToInt32(jobNumber[1]);
 
                 else
                 {
-                    LinuxErrorHandling.error = "Failed to get the job ID for the job. Something went wrong with the scheduler. Please contact an administrator.";
+                    ErrorHandling.error = "Failed to get the job ID for the job. Something went wrong with the scheduler. Please contact an administrator.";
                     return -1;
                 }
             }
@@ -429,7 +429,7 @@ namespace Genome.Helpers
             {
                 cmd.Execute();
 
-                if (LinuxErrorHandling.CommandError(cmd) == false)
+                if (ErrorHandling.CommandError(cmd) == false)
                     return Convert.ToDouble(cmd.Result);
 
                 else
@@ -451,13 +451,13 @@ namespace Genome.Helpers
             {
                 cmd.Execute();
 
-                LinuxErrorHandling.CommandError(cmd);
+                ErrorHandling.CommandError(cmd);
 
                 // Since NOT finding a job is considered "failing" on the part of the command, it will likely be erroneously caught by our error function. 
-                if (LinuxErrorHandling.error.Contains("Following jobs do not exist:"))
+                if (ErrorHandling.error.Contains("Following jobs do not exist:"))
                     return false;
 
-                else if (string.IsNullOrEmpty(LinuxErrorHandling.error))
+                else if (string.IsNullOrEmpty(ErrorHandling.error))
                 {
                     if (cmd.Result.Contains("Following jobs do not exist:"))
                         return false;
@@ -486,7 +486,7 @@ namespace Genome.Helpers
             {
                 cmd.Execute();
 
-                LinuxErrorHandling.CommandError(cmd);
+                ErrorHandling.CommandError(cmd);
             }
         }
 
@@ -516,7 +516,7 @@ namespace Genome.Helpers
             {
                 cmd.Execute();
 
-                LinuxErrorHandling.CommandError(cmd);
+                ErrorHandling.CommandError(cmd);
 
                 // The directory is not empty.
                 if (Convert.ToInt32(cmd.Result) > 0)
@@ -540,7 +540,7 @@ namespace Genome.Helpers
             {
                 cmd.Execute();
 
-                LinuxErrorHandling.CommandError(cmd);
+                ErrorHandling.CommandError(cmd);
             }
         }
 
@@ -563,7 +563,7 @@ namespace Genome.Helpers
             {
                 cmd.Execute();
 
-                LinuxErrorHandling.CommandError(cmd);
+                ErrorHandling.CommandError(cmd);
             }
         }
 
@@ -579,7 +579,7 @@ namespace Genome.Helpers
             {
                 cmd.Execute();
 
-                LinuxErrorHandling.CommandError(cmd);
+                ErrorHandling.CommandError(cmd);
             }
         }
 
@@ -596,7 +596,7 @@ namespace Genome.Helpers
             {
                 cmd.Execute();
 
-                LinuxErrorHandling.CommandError(cmd);
+                ErrorHandling.CommandError(cmd);
             }
         }
 
@@ -613,7 +613,7 @@ namespace Genome.Helpers
             {
                 cmd.Execute();
 
-                LinuxErrorHandling.CommandError(cmd);
+                ErrorHandling.CommandError(cmd);
             }
         }
 
@@ -629,7 +629,7 @@ namespace Genome.Helpers
             {
                 cmd.Execute();
 
-                LinuxErrorHandling.CommandError(cmd);
+                ErrorHandling.CommandError(cmd);
             }
         }
 
@@ -645,11 +645,11 @@ namespace Genome.Helpers
             {
                 cmd.Execute();
 
-                LinuxErrorHandling.CommandError(cmd);
+                ErrorHandling.CommandError(cmd);
 
                 // For some reason, this is an error but in reality it is actually the script doing its job correctly. So we nullify the "error".
-                if (LinuxErrorHandling.error.Equals("dos2unix: converting file " + scriptLocation + " to UNIX format ...\n"))
-                    LinuxErrorHandling.error = "";
+                if (ErrorHandling.error.Equals("dos2unix: converting file " + scriptLocation + " to UNIX format ...\n"))
+                    ErrorHandling.error = "";
             }
         }
 
@@ -667,7 +667,7 @@ namespace Genome.Helpers
             {
                 cmd.Execute();
 
-                LinuxErrorHandling.CommandError(cmd);
+                ErrorHandling.CommandError(cmd);
             }
         }
 

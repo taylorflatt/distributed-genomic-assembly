@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Sockets;
+using static Genome.Helpers.ErrorHandling;
 
 namespace Genome.Helpers
 {
@@ -124,14 +125,14 @@ namespace Genome.Helpers
 
                 catch (Exception e)
                 {
-                    LinuxErrorHandling.error = e.Message;
+                    ErrorHandling.error = e.Message;
                 }
             }
 
             // We have a problem since the file already exists.
             else
             {
-                LinuxErrorHandling.error = "Unfortunately, we couldn't create the necessary configuration files to submit your job. Please contact an administrator.";
+                ErrorHandling.error = "Unfortunately, we couldn't create the necessary configuration files to submit your job. Please contact an administrator.";
 
                 throw new IOException("Attempted to create \"" + fullPath + "\" but it already exists so we cannot create the file. Continuing is not advised. ");
             }
@@ -206,14 +207,14 @@ namespace Genome.Helpers
 
                 catch (Exception e)
                 {
-                    LinuxErrorHandling.error = e.Message;
+                    ErrorHandling.error = e.Message;
                 }
             }
 
             // We have a problem since the file already exists.
             else
             {
-                LinuxErrorHandling.error = "Unfortunately, we couldn't create the necessary configuration files to submit your job. Please contact an administrator.";
+                ErrorHandling.error = "Unfortunately, we couldn't create the necessary configuration files to submit your job. Please contact an administrator.";
 
                 throw new IOException("Attempted to create \"" + fullPath + "\" but it already exists so we cannot create the file. Continuing is not advised. ");
             }
@@ -240,22 +241,22 @@ namespace Genome.Helpers
                 {
                     client.Connect();
 
-                    if (string.IsNullOrEmpty(LinuxErrorHandling.error)) { LinuxCommands.CreateDirectory(client, Accessors.USER_ROOT_JOB_DIRECTORY, "-p"); }
-                    if (string.IsNullOrEmpty(LinuxErrorHandling.error)) { LinuxCommands.CreateDirectory(client, Accessors.GetJobPath(seed), "-p"); }
-                    if (string.IsNullOrEmpty(LinuxErrorHandling.error)) { LinuxCommands.CreateDirectory(client, Accessors.GetJobDataPath(seed), "-p"); }
-                    if (string.IsNullOrEmpty(LinuxErrorHandling.error)) { LinuxCommands.CreateDirectory(client, Accessors.GetJobConfigPath(seed), "-p"); }
-                    if (string.IsNullOrEmpty(LinuxErrorHandling.error)) { LinuxCommands.CreateDirectory(client, Accessors.GetJobOutputPath(seed), "-p"); }
-                    if (string.IsNullOrEmpty(LinuxErrorHandling.error)) { LinuxCommands.CreateDirectory(client, Accessors.GetJobLogPath(seed), "-p"); }
+                    if (NoError()) { LinuxCommands.CreateDirectory(client, Accessors.USER_ROOT_JOB_DIRECTORY, "-p"); }
+                    if (NoError()) { LinuxCommands.CreateDirectory(client, Accessors.GetJobPath(seed), "-p"); }
+                    if (NoError()) { LinuxCommands.CreateDirectory(client, Accessors.GetJobDataPath(seed), "-p"); }
+                    if (NoError()) { LinuxCommands.CreateDirectory(client, Accessors.GetJobConfigPath(seed), "-p"); }
+                    if (NoError()) { LinuxCommands.CreateDirectory(client, Accessors.GetJobOutputPath(seed), "-p"); }
+                    if (NoError()) { LinuxCommands.CreateDirectory(client, Accessors.GetJobLogPath(seed), "-p"); }
 
-                    if (string.IsNullOrEmpty(LinuxErrorHandling.error)) { LinuxCommands.DownloadFile(client, initPath, InitConfigURL, wgetLogParameter); }
-                    if (string.IsNullOrEmpty(LinuxErrorHandling.error)) { LinuxCommands.RunDos2Unix(client, initPath); }
+                    if (NoError()) { LinuxCommands.DownloadFile(client, initPath, InitConfigURL, wgetLogParameter); }
+                    if (NoError()) { LinuxCommands.RunDos2Unix(client, initPath); }
 
-                    if (string.IsNullOrEmpty(LinuxErrorHandling.error)) { LinuxCommands.DownloadFile(client, masurcaPath, MasurcaConfigURL, wgetLogParameter); }
-                    if (string.IsNullOrEmpty(LinuxErrorHandling.error)) { LinuxCommands.RunDos2Unix(client, masurcaPath); }
+                    if (NoError()) { LinuxCommands.DownloadFile(client, masurcaPath, MasurcaConfigURL, wgetLogParameter); }
+                    if (NoError()) { LinuxCommands.RunDos2Unix(client, masurcaPath); }
 
-                    if (string.IsNullOrEmpty(LinuxErrorHandling.error)) { LinuxCommands.ChangePermissions(client, Accessors.GetJobPath(seed), "777", "-R"); }
+                    if (NoError()) { LinuxCommands.ChangePermissions(client, Accessors.GetJobPath(seed), "777", "-R"); }
 
-                    if (string.IsNullOrEmpty(LinuxErrorHandling.error))
+                    if (NoError())
                     {
                         // So COMPUTENODE2 has a smaller load, we want to use that instead.
                         if (LinuxCommands.GetNodeLoad(client, Accessors.BD_COMPUTE_NODE1) > LinuxCommands.GetNodeLoad(client, Accessors.BD_COMPUTE_NODE2))
@@ -265,12 +266,12 @@ namespace Genome.Helpers
                             node = Accessors.BD_COMPUTE_NODE1;
                     }
 
-                    if (string.IsNullOrEmpty(LinuxErrorHandling.error)) { LinuxCommands.AddJobToScheduler(client, Accessors.GetJobDataPath(seed), Accessors.GetJobLogPath(seed), node, jobName, initPath); }
+                    if (NoError()) { LinuxCommands.AddJobToScheduler(client, Accessors.GetJobDataPath(seed), Accessors.GetJobLogPath(seed), node, jobName, initPath); }
 
-                    if (string.IsNullOrEmpty(LinuxErrorHandling.error)) { genomeModel.SGEJobId = LinuxCommands.SetJobNumber(client, genomeModel.SSHUser, jobName); }
+                    if (NoError()) { genomeModel.SGEJobId = LinuxCommands.SetJobNumber(client, genomeModel.SSHUser, jobName); }
 
                     // There were no errors.
-                    if (string.IsNullOrEmpty(LinuxErrorHandling.error))
+                    if (NoError())
                         return true;
 
                     else
@@ -280,7 +281,7 @@ namespace Genome.Helpers
                 // SSH Connection couldn't be established.
                 catch (SocketException e)
                 {
-                    LinuxErrorHandling.error = "The SSH connection couldn't be established. " + e.Message;
+                    ErrorHandling.error = "The SSH connection couldn't be established. " + e.Message;
 
                     return false;
                 }
@@ -288,7 +289,7 @@ namespace Genome.Helpers
                 // Authentication failure.
                 catch (SshAuthenticationException e)
                 {
-                    LinuxErrorHandling.error = "The credentials were entered incorrectly. " + e.Message;
+                    ErrorHandling.error = "The credentials were entered incorrectly. " + e.Message;
 
                     return false;
                 }
@@ -296,14 +297,14 @@ namespace Genome.Helpers
                 // The SSH connection was dropped.
                 catch (SshConnectionException e)
                 {
-                    LinuxErrorHandling.error = "The connection was terminated unexpectedly. " + e.Message;
+                    ErrorHandling.error = "The connection was terminated unexpectedly. " + e.Message;
 
                     return false;
                 }
 
                 catch (Exception e)
                 {
-                    LinuxErrorHandling.error = "There was an uncaught exception. " + e.Message;
+                    ErrorHandling.error = "There was an uncaught exception. " + e.Message;
 
                     return false;
                 }

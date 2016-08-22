@@ -12,31 +12,28 @@ namespace Genome.Controllers
     {
         private GenomeAssemblyDbContext db = new GenomeAssemblyDbContext();
 
-        public ActionResult Index()
+        public ActionResult Index(HomeViewModel model)
         {
+            string username = HttpContext.User.Identity.Name;
+
             try
             {
-                string username = Helpers.HelperMethods.GetUsername();
-
-                var temp = from u in db.Users
+                var user = from u in db.Users
                            where u.UserName.Equals(username)
                            select u;
 
-                // This should only ever be iterated through once.
-                foreach (var user in temp)
-                {
-                    if (user.ClusterAccountVerified)
-                        ViewBag.ShowCreateButton = "Show";
-                }
+                model.ClusterAccountVerified = user.Single().ClusterAccountVerified;
+
+                if (!ModelState.IsValid)
+                    return View(model);
             }
 
-            // DEBUG
-            catch(Exception e)
+            catch(InvalidOperationException e)
             {
-                ViewBag.SqlError = "Error Message: " + e.Message + ". The stack trace: " + e.StackTrace + ". The inner-exception: " + e.InnerException + ". The source: " + e.Source;
+                model.Error = "No user could be found when searching for a user to determine if their cluster account has been verified.";
             }
 
-            return View();
+            return View(model);
         }
         
         public ActionResult About()

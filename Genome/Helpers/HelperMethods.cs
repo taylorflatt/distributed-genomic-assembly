@@ -4,6 +4,10 @@ using System.Linq;
 using Microsoft.AspNet.Identity;
 using System.Web;
 using Renci.SshNet;
+using System;
+using System.Net.Mail;
+using System.Web.UI;
+using System.Configuration;
 
 namespace Genome.Helpers
 {
@@ -17,6 +21,52 @@ namespace Genome.Helpers
         public static List<string> ParseUrlString(string urlString)
         {
             return urlString.Split(',').Select(sValue => sValue.Trim()).ToList();
+        }
+
+        /// <summary>
+        /// Sends a user an email from an SIU email account.
+        /// </summary>
+        /// <param name="recipient">The user's email address to whom you wish to email.</param>
+        /// <param name="emailSubject">The subject of the email.</param>
+        /// <param name="emailBody">The contents of the email. This can include HTML in the email. </param>
+        /// <param name="fromDisplay">The display name of who the email is from. The default is "noreply".</param>
+        /// <remarks> Depending on the host, you may need to change the port and host along with the user/pass in the web config.</remarks>
+        public static void SendEmail(string recipient, string emailSubject, string emailBody, string fromDisplay="noreply")
+        {
+            var sUsername = ConfigurationManager.AppSettings["mailAccount"];
+
+            MailMessage mail = new MailMessage();
+            mail.To.Add(recipient);
+            mail.From = new MailAddress(sUsername, fromDisplay, System.Text.Encoding.UTF8);
+            mail.Subject = emailSubject;
+            mail.SubjectEncoding = System.Text.Encoding.UTF8;
+            mail.Body = emailBody;
+            mail.BodyEncoding = System.Text.Encoding.UTF8;
+            mail.IsBodyHtml = true;
+            mail.Priority = MailPriority.High;
+
+            SmtpClient client = new SmtpClient();
+            
+            var sPassword = ConfigurationManager.AppSettings["mailPassword"];
+            client.Credentials = new System.Net.NetworkCredential(sUsername, sPassword);
+            client.Port = 587;
+            client.Host = "outlook.office365.com";
+
+            client.EnableSsl = true;
+            try
+            {
+                client.Send(mail);
+            }
+            catch (Exception ex)
+            {
+                Exception ex2 = ex;
+                string errorMessage = string.Empty;
+                while (ex2 != null)
+                {
+                    errorMessage += ex2.ToString();
+                    ex2 = ex2.InnerException;
+                }
+            }
         }
 
         /// <summary>

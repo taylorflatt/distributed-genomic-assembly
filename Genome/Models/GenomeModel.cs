@@ -34,6 +34,11 @@ namespace Genome.Models
         [Display(Name = "Big Dog Password:")]
         public string SSHPass { get; set; }
 
+        // Add this throughout the program and set error to this. Then the step if error is encountered is either the step it
+        // happened on or the last step (end the job completely).
+        [Display(Name = "Error")]
+        public string JobError { get; set; }
+
         //////////////////////////////
         // Data specific parameters //
         /////////////////////////////

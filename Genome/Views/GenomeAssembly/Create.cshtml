@@ -4,7 +4,6 @@
     ViewBag.Title = "Create";
 }
 
-@*<script src="~/Scripts/jquery-1.10.2.min.js"></script>*@
 <script src="~/Scripts/jquery-3.1.0.min.js"></script>
 <script src="~/Scripts/GenomeCreate.js"></script>
 
@@ -16,15 +15,14 @@
 
     <div class="form-horizontal">
         <hr />
-        @ViewBag.ConnectionError
 
-        @if (ViewBag.ConnectionErrorDetails != null)
-        { 
+        @if (!string.IsNullOrEmpty(Model.JobError))
+        {
             <br />
             <br />
 
             <p style="margin-left: 40px; background-color: #FFFFCD; font-size: 16px; font-family: monospace; color: #B12F2F;">
-                @ViewBag.ConnectionErrorDetails
+                @Model.JobError;
             </p>
         }
 
@@ -526,7 +524,7 @@
 
         </div>
         <!-- There has been an error on the last step so we need to display that to the user. -->
-        if (ViewBag.ConnectionErrorDetails != null)
+        if (!string.IsNullOrEmpty(@Model.JobError))
         {
             <script type="text/javascript">
                 ChangeStep("Step1", "FinalStep");

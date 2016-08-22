@@ -76,6 +76,7 @@ namespace Genome.Helpers
             stepList.Add(4, "Data Analysis");
             stepList.Add(5, "Uploading Data to FTP");
             stepList.Add(6, "Completed");
+            stepList.Add(6, "Error");
 
             return stepList;
         }

@@ -8,18 +8,6 @@
 
 <div>
     <hr />
-
-    @if(ViewBag.DataUploaded != null || ViewBag.DataUploading != null)
-    {
-        @ViewBag.DataUploaded
-        @ViewBag.DataUploading
-    }
-
-    @if(ViewBag.DataUploaded != null)
-    {
-        @Html.DisplayFor(model => model.DownloadLink)
-    }
-
     <!-- Review Submitted Data Table-->
     <table frame="box" class="table" style="width: 100%;">
         <thead>

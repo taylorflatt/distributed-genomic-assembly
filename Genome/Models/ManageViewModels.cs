@@ -2,6 +2,7 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNet.Identity;
 using Microsoft.Owin.Security;
+using System.ComponentModel;
 
 namespace Genome.Models
 {
@@ -20,6 +21,20 @@ namespace Genome.Models
     {
         public IList<UserLoginInfo> CurrentLogins { get; set; }
         public IList<AuthenticationDescription> OtherLogins { get; set; }
+    }
+
+    public class VerifyBigDogAccountViewModel
+    {
+        [DefaultValue(false)]
+        public bool Verified { get; set; }
+
+        public string QuotaResult { get; set; }
+        public string QuotaRecommendation { get; set; }
+        public string PermissionsResult { get; set; }
+
+        [DefaultValue(false)]
+        public bool Success { get; set; }
+        public string Error { get; set; }
     }
 
     public class FactorViewModel

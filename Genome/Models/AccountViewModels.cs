@@ -64,6 +64,14 @@ namespace Genome.Models
         public bool RememberMe { get; set; }
     }
 
+    public class HomeViewModel
+    {
+        [DefaultValue(false)]
+        public bool ClusterAccountVerified { get; set; }
+
+        public string Error { get; set; }
+    }
+
     public class RegisterViewModel
     {
         [Required]

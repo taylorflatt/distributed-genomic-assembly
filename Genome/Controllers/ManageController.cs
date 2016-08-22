@@ -37,64 +37,72 @@ namespace Genome.Controllers
             }
         }
 
-        public ActionResult VerifyBigDogAccount()
+        public ActionResult VerifyBigDogAccount(VerifyBigDogAccountViewModel model)
         {
-            return View();
+            // Get the user.
+            ApplicationUser user = UserManager.FindById(User.Identity.GetUserId());
+            model.Verified = user.ClusterAccountVerified;
+
+            return View(model);
         }
 
         [HttpPost]
-        public async Task<ActionResult> VerifyBigDogAccount(string SSHUser, string SSHPass)
+        public async Task<ActionResult> VerifyBigDogAccount(VerifyBigDogAccountViewModel model, string SSHUser, string SSHPass)
         {
-            string permissionsError = "";
-            string quotaError = "";
-            ViewBag.RecQuota = Convert.ToString(Accessors.MINIMUM_QUOTA) + "Gb+";
-            //ViewBag.ShowResults = null; // Need to null this so if the user tries to check again in the SAME session and there is an error it won't display.
-
             // Make sure there is actually information. Otherwise we just return them to the form.
             if (!string.IsNullOrEmpty(SSHUser) && !string.IsNullOrEmpty(SSHPass))
             {
+                bool error = false;
+
+                model.QuotaRecommendation = Convert.ToString(Accessors.MINIMUM_QUOTA) + "Gb+";
+
                 // Check if they have sufficient permissions.
                 if (VerifyAccount.VerifyPermissions(SSHUser, SSHPass))
-                    ViewBag.PermissionsSuccess = "Your permissions validated successfully!";
+                    model.PermissionsResult = "Your permissions validated successfully!";
 
                 else
-                    ViewBag.PermissionsError = LinuxErrorHandling.error;
+                {
+                    model.PermissionsResult = ErrorHandling.error;
+                    error = true;
+                }
 
                 // Check if they have sufficient quota.
                 if (VerifyAccount.VerifyQuota(SSHUser, SSHPass))
-                {
-                    ViewBag.QuotaSuccess = "You have sufficient quota!";
-                    ViewBag.QuotaAmount = "OK";
-                }
+                    model.QuotaResult = "You have sufficient quota!";
 
                 else
                 {
-                    ViewBag.QuotaError = LinuxErrorHandling.error;
-                    ViewBag.QuotaAmount = "NO";
+                    model.QuotaResult = ErrorHandling.error;
+                    error = true;
                 }
 
                 // Get the user.
-                ApplicationUser Model = UserManager.FindById(User.Identity.GetUserId());
+                ApplicationUser user = UserManager.FindById(User.Identity.GetUserId());
 
                 // If there are no errors, the account is good to go.
-                if (string.IsNullOrEmpty(permissionsError) && string.IsNullOrEmpty(quotaError))
-                    Model.ClusterAccountVerified = true;
+                if (!string.IsNullOrEmpty(model.PermissionsResult) && !string.IsNullOrEmpty(model.QuotaResult))
+                {
+                    user.ClusterAccountVerified = true;
+                    model.Success = true;
+                }
 
                 else
-                    Model.ClusterAccountVerified = false;
+                    user.ClusterAccountVerified = false;
 
                 // Save the user information.
-                IdentityResult result = await UserManager.UpdateAsync(Model);
+                IdentityResult result = await UserManager.UpdateAsync(user);
 
-                ViewBag.ShowResults = "Show Results";
+                if (!ModelState.IsValid)
+                    throw new Exception("The model passed is not correct and must be investigated.");
 
-                return View();
+                return View(model);
             }
 
             else
             {
-                ViewBag.Error = "The username and password field cannot be blank.";
-                return View();
+                model.Error = "The username and password field cannot be blank.";
+
+                return View(model);
             }
         }
 

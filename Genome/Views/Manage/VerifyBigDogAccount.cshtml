@@ -1,165 +1,134 @@
-﻿@{
+﻿@using Genome.Models
+@model VerifyBigDogAccountViewModel
+@{
     ViewBag.Title = "Verify Account";
 }
 
 <h2>Verify Account</h2>
 
-@if (ViewBag.Error != null || ViewBag.PermissionsError != null || ViewBag.QuotaError != null)
+@if (!string.IsNullOrEmpty(Model.Error))
 {
     <p class="result result-background result-error" style="margin-left: 40px;">
-        @ViewBag.Error
+        @Model.Error
     </p>
 }
 
-@using (Html.BeginForm("VerifyBigDogAccount", "Manage", FormMethod.Post))
+@if (Model.Verified)
 {
-    @Html.AntiForgeryToken()
-
     <div class="form-horizontal">
-        <hr />
-
         <p>
-            Please enter your BigDog SSH credentials so we can check the following items on your account:
+            You have already successfully verified your account and can @Html.ActionLink("create a job", "Create", "GenomeAssembly") at your leisure.
         </p>
-
-        <ol>
-            <li>
-                <strong>Disk quota</strong>: How much space your account has to use. We want to make sure that you don't run out of space on your account in the middle of an assembly. (Recommend: @ViewBag.RecQuota)
-            </li>
-            <li>
-                <strong>Account Permissions</strong>: We want to make sure that you have the proper permissions to make files and directories in a certain location on BigDog. You will need these permissions for creating locations where job information is stored.
-            </li>
-        </ol>
-
-        <br />
-
-        <div class="form-group">
-            <label class="control-label col-md-2">
-                BigDog SSH Username:
-            </label>
-            <div class="col-md-10">
-                <div class="checkbox">
-                    @Html.TextBox("SSHUser")
-                </div>
-            </div>
-        </div>
-
-        <div class="form-group">
-            <label class="control-label col-md-2">
-                BigDog SSH Password:
-            </label>
-            <div class="col-md-10">
-                <div class="checkbox">
-                    @Html.Password("SSHPass")
-                </div>
-            </div>
-        </div>
-
-        @if (ViewBag.ShowResults != null)
-        {
-            <br />
-
-            <h3>
-                Your Account Information
-            </h3>
-            <hr />
-
-            if(ViewBag.PermissionsSuccess != null && ViewBag.QuotaSuccess != null)
-            {
-                <p>
-                    You have successfully verified your account. You may now @Html.ActionLink("Create a Job", "Create", "GenomeAssembly").
-                </p>
-            }
-
-            else
-            {
-                <p>
-                    Unfortunately, your account did not pass all the required tests. You will be <strong>unable</strong> to run assembly jobs until the errors are rectified.
-                </p>
-            }
-
-            if(ViewBag.PermissionsSuccess != null)
-            {
-                <p class="result result-background result-success" style="margin-left: 40px;">
-                    @ViewBag.PermissionsSuccess
-                </p>
-            }
-
-            else
-            {
-                <p class="result result-background result-error" style="margin-left: 40px;">
-                    @ViewBag.PermissionsError
-                </p>
-            }
-
-            if(ViewBag.QuotaSuccess != null)
-            {
-                <p class="result result-background result-success" style="margin-left: 40px;">
-                    @ViewBag.QuotaSuccess
-                </p>
-            }
-
-            else
-            {
-                <p class="result result-background result-error" style="margin-left: 40px;">
-                    @ViewBag.QuotaError
-                </p>
-            }
-
-            <div id="Results">
-                <div class="form-group">
-                    <label class="control-label col-md-2">
-                        Current Quota:
-                    </label>
-                    <div class="col-md-10">
-                        <div class="checkbox">
-                            @if(ViewBag.QuotaError != null)
-                            {
-                                <p style="color: #CE0D0D;">
-                                    @ViewBag.QuotaAmount
-                                </p>
-                            }
-
-                            else
-                            {
-                                <p style="color:#238438;">
-                                    @ViewBag.QuotaAmount
-                                </p>
-                            }
-
-                        </div>
-                    </div>
-
-                <label class="control-label col-md-2">
-                    Current Permissions:
-                </label>
-                <div class="col-md-10">
-                    <div class="checkbox">
-                        @if (ViewBag.PermissionsError != null)
-                        {
-                            <p style="color: #CE0D0D;">
-                                NO
-                            </p>
-                        }
-
-                        else
-                        {
-                            <p style="color: #238438;">
-                                OK
-                            </p>
-                        }
-                    </div>
-                </div>
-            </div>
-        </div>
-        }
-
-        <div class="col-md-offset-10 col-md-1">
-            <input type="submit" value="Submit" class="btn btn-default" onsubmit="ShowResults();"/>
-        </div>
-
     </div>
 }
 
-<br />
-<br />
+else
+{
+    using (Html.BeginForm("VerifyBigDogAccount", "Manage", FormMethod.Post))
+    {
+        @Html.AntiForgeryToken()
+
+        <div class="form-horizontal">
+            <hr />
+
+            <p>
+                Please enter your BigDog SSH credentials so we can check the following items on your account:
+            </p>
+
+            <ol>
+                <li>
+                    <strong>Disk quota</strong>: How much space your account has to use. We want to make sure that you don't run out of space on your account in the middle of an assembly. (Recommend: @Model.QuotaRecommendation)
+                </li>
+                <li>
+                    <strong>Account Permissions</strong>: We want to make sure that you have the proper permissions to make files and directories in a certain location on BigDog. You will need these permissions for creating locations where job information is stored.
+                </li>
+            </ol>
+
+            <br />
+
+            <div class="form-group">
+                <label class="control-label col-md-2">
+                    BigDog SSH Username:
+                </label>
+                <div class="col-md-10">
+                    <div class="checkbox">
+                        @Html.TextBox("SSHUser")
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="control-label col-md-2">
+                    BigDog SSH Password:
+                </label>
+                <div class="col-md-10">
+                    <div class="checkbox">
+                        @Html.Password("SSHPass")
+                    </div>
+                </div>
+            </div>
+
+            <br />
+
+            <!-- Only show this if the user has submitted data. Just picking a value to check. -->
+            @if (!string.IsNullOrEmpty(Model.PermissionsResult))
+            {
+                <h3>
+                    Your Account Information
+                </h3>
+
+                <hr />
+
+                if (Model.Success)
+                {
+                    <p>
+                        You have successfully verified your account. You may now @Html.ActionLink("Create a Job", "Create", "GenomeAssembly").
+                    </p>
+                }
+
+                else
+                {
+                    <p>
+                        Unfortunately, your account did not pass all the required tests. You will be <strong>unable</strong> to run assembly jobs until the errors are rectified.
+                    </p>
+                }
+
+                if (!string.IsNullOrEmpty(Model.PermissionsResult))
+                {
+                    <p class="result result-background result-success" style="margin-left: 40px;">
+                        @Model.PermissionsResult;
+                    </p>
+                }
+
+                else
+                {
+                    <p class="result result-background result-error" style="margin-left: 40px;">
+                        @Model.PermissionsResult;
+                    </p>
+                }
+
+                if (string.IsNullOrEmpty(Model.QuotaResult))
+                {
+                    <p class="result result-background result-success" style="margin-left: 40px;">
+                        @Model.QuotaResult
+                    </p>
+                }
+
+                else
+                {
+                    <p class="result result-background result-error" style="margin-left: 40px;">
+                        @Model.QuotaResult
+                    </p>
+                }
+            }
+
+        <div class="col-md-offset-10 col-md-1">
+            <input type="submit" value="Submit" class="btn btn-default" onsubmit="ShowResults();" />
+        </div>
+
+    </div>
+    }
+
+    <br />
+    <br />
+}
