@@ -80,14 +80,14 @@ namespace Genome.Controllers
                 ApplicationUser user = UserManager.FindById(User.Identity.GetUserId());
 
                 // If there are no errors, the account is good to go.
-                if (!string.IsNullOrEmpty(model.PermissionsResult) && !string.IsNullOrEmpty(model.QuotaResult))
+                if (error)
+                    user.ClusterAccountVerified = false;
+
+                else
                 {
                     user.ClusterAccountVerified = true;
                     model.Success = true;
                 }
-
-                else
-                    user.ClusterAccountVerified = false;
 
                 // Save the user information.
                 IdentityResult result = await UserManager.UpdateAsync(user);
