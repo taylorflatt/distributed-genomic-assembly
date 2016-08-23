@@ -5,89 +5,16 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 /// TODO: Need to consider changing the model to pass the assemblers to different tables rather than having 1 large table with all the data. I'm thinking of 
-/// spinning off the assemblers into their own models and then adding a navigation property into the genomeModel entity. That would involve changing how 
-/// a lot of my data management is done throughout code though.
+/// spinning off the assemblers into their own models and then adding a navigation property into the genomeModel entity. This will be done but in the second 
+/// release of the program. Leaving this comment here for posterity.
 namespace Genome.Models
 {
-    public class Assemblers
-    {
-        [ForeignKey("GenomeModel")]
-        [DisplayName("UUID")]
-        public int uuid { get; set; }
-
-        public virtual Masurca MasurcaAssembler { get; set; }
-        public Sga SgaAssember { get; set; }
-    }
-
-    public class Sga
-    {
-        [ForeignKey("GenomeModel")]
-        [DisplayName("UUID")]
-        public int uuid { get; set; }
-    }
-
-    public class Masurca
-    {
-        [ForeignKey("GenomeModel")]
-        [DisplayName("UUID")]
-        public int uuid { get; set; }
-
-        [Display(Name = "Masurca Assembler")]
-        public bool UseMasurca { get; set; }
-
-        [Display(Name = "Masurca Current Status")]
-        public string MasurcaStatus { get; set; }
-
-        [Display(Name = "Masurca Current Step")]
-        [DefaultValue(1)]
-        public int MasurcaCurrentStep { get; set; }
-
-        [Display(Name = "Masurca Mean")]
-        public int? MasurcaMean { get; set; }
-
-        [Display(Name = "Masurca Standard Deviation")]
-        public int? MasurcaStdev { get; set; }
-
-        [Display(Name = "Masurca Graph K-Mer Value")]
-        [Range(25, 101)]
-        public int? MasurcaGraphKMerValue { get; set; }
-
-        // Set this to 1 for Illumina-only assemblies and to 0 if you have 1x or more long (Sanger, 454) reads, you can also set this to 0 for large data sets with high jumping clone coverage, e.g. >50x
-        [Display(Name = "Illumina Data Only?")]
-        public bool MasurcaLinkingMates { get; set; }
-
-        [Display(Name = "Masurca Limit Jump Coverage")]
-        public bool MasurcaLimitJumpCoverage { get; set; }
-
-        // Set cgwErrorRate=0.25 for bacteria and 0.1<=cgwErrorRate<=0.15 for other organisms
-        [Display(Name = "Bacteria?")]
-        public bool MasurcaCAParameters { get; set; }
-
-        [Display(Name = "K-Mer count Threshold")]
-        [Range(1, 2)]
-        public int? MasurcaKMerErrorCount { get; set; }
-
-        [Display(Name = "Masurca CPU Thread Count")]
-        [Range(1, 20)]
-        public int? MasurcaThreadNum { get; set; }
-
-        [Required]
-        [Display(Name = "Masurca Jellyfish hash size (10x size of genome)")]
-        public int MasurcaJellyfishHashSize { get; set; }
-
-        // Must return 1 for true, or 0 for false
-        [Display(Name = "Homoplymer Trim")]
-        public bool HomoTrim { get; set; }
-    }
-
     [Serializable]
     public class GenomeModel
     {
         [Key]
         [DisplayName("UUID")]
         public int uuid { get; set; }
-
-        public virtual Assemblers Assemblers{ get; set; }
 
         /// <summary>
         /// This is different from the UUID. Unfortunately we cannot access UUID at creation of a job to know a unique value to 

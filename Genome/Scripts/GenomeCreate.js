@@ -13,6 +13,9 @@ var numTextboxSet = 0;
 // the step (true if it was checked and false if it was not). This is so we can manage how to go forward and backward dynamically.
 var wizardSteps = [];
 
+// List of assemblers possible and whether they have been chosen. Used to create the wizardSteps.
+var checkedAssemblers = [false, false, false]
+
 // The total number of wizard steps that can possibly be seen by a user. For instance, with 3 possible assemblers, that would be 4 + 3 = 7.
 var numWizardSteps = 7;
 
@@ -27,12 +30,57 @@ function ChangeStep(currentStep, nextStep) {
     if (typeof (nextStep) != "string")
         throw "NextStep must be a string.";
 
+    if (nextStep == "Step2") {
+        if (document.getElementById("PEReads").checked)
+        {
+            $("#PELength").show();
+
+            if (numTextboxSet == 0)
+            {
+                addURLBox(false);
+                addURLButtons();
+            }
+
+            // Hide everything else
+            $("#SequentialReadsGroup").hide();
+            $("#JumpReadsGroup").hide();
+        }
+            
+        else if (document.getElementById("JumpReads").checked)
+        {
+            $("#JumpLength").show();
+
+            if (numTextboxSet == 0) {
+                addURLBox(false);
+                addURLButtons();
+            }
+
+            // Hide everything else
+            $("#PEReadsGroup").hide();
+            $("#SequentialReadsGroup").hide();
+        }
+
+        else if (document.getElementById("SequentialReads").checked)
+        {
+            $("#SequentialLength").show();
+
+            if (numTextboxSet == 0) {
+                addURLBox(true);
+                addURLButtons();
+            }
+
+            // Hide everything else
+            $("#PEReadsGroup").hide();
+            $("#JumpReadsGroup").hide();
+        }
+    }
+
     document.getElementById(currentStep).style.display = "none"; // Hide the contents of the current step.
     document.getElementById(nextStep).style.display = "block"; // Display the contents of the next step.
 }
 
 // Clears the text of a div id of location.
-function ClearWarning(location) {
+function ClearData(location) {
     if (typeof (location) != "string")
         throw "Location must be a string.";
 
@@ -47,6 +95,19 @@ function AddWarning(location, message) {
         throw "Message must be a string.";
 
     document.getElementById(location).innerHTML = message;
+}
+
+// Exception for when assemblers are not chosen or something with their choosing went wrong.
+function AssemblerException(message) {
+    this.message = message;
+    this.name = "AssemblerException";
+}
+
+// Exception for when an array is not within expected bounds.
+function ArrayOutOfBoundsException(message)
+{
+    this.message = message;
+    this.name = "ArrayOutOfBoundsException";
 }
 
 // Checks if a string is empty. Returns true if it is null/undefined/empty.
@@ -88,12 +149,21 @@ function ChangeAssemblerStep(currentStep, forward) {
         throw "CurrentStep must be a string.";
 
     if (currentStep == "FinalStep") {
-        // Don't want to include the final step.
-        for (var i = wizardSteps.length - 2; i >= 0; i--) {
-            if (wizardSteps[i].value == true) {
-                ChangeStep("FinalStep", "Step" + wizardSteps[i].key); // Because of the offset, we must increment here.
-                break;
+        try {
+            CreateStepList();
+
+            // Don't want to include the final step.
+            for (var i = wizardSteps.length - 2; i >= 0; i--) {
+                if (wizardSteps[i].value == true) {
+                    ChangeStep("FinalStep", "Step" + wizardSteps[i].key); // Because of the offset, we must increment here.
+                    break;
+                }
             }
+        }
+
+        catch (e) {
+            if (e instanceof ArrayOutOfBoundsException)
+                AddWarning("WizardErrors", "Something went wrong when attempting to figure out which assemblers you chose. Please to create a new job or contact an administrator.");
         }
     }
 
@@ -192,7 +262,7 @@ function addURLButtons() {
 // Removes the url textbox set.
 function removeURLBox() {
     if (numTextboxSet > 1) {
-        ClearWarning("RemoveURLErrorMsg");
+        ClearData("RemoveURLErrorMsg");
         $("#lab_" + --numTextboxSet).remove();
         $("#row_" + numTextboxSet).remove();
         $("#col_" + numTextboxSet).remove();
@@ -346,12 +416,76 @@ $(function () {
     });
 });
 
+// Creates the step list for the wizard in order to use the back/next buttons.
+function CreateStepList() {
+    wizardSteps = []; // Clear out the array.
+
+    if (document.getElementById('UseMasurca').checked)
+        checkedAssemblers[0] = true;
+
+    if (document.getElementById('UseSGA').checked)
+        checkedAssemblers[1] = true;
+
+    if (document.getElementById('UseWGS').checked)
+        checkedAssemblers[2] = true;
+
+    if (checkedAssemblers.indexOf(true) === -1)
+        throw new AssemblerException("The number of assemblers chosen does not allow for this job to be added.");
+
+    else {
+        // Here dynamically create the wizard step list.
+        for (var i = 0; i < numWizardSteps; i++) {
+            // First three static steps.
+            if (i < 3) {
+                wizardSteps.push(
+                    {
+                        key: i + 1,
+                        value: true
+                    });
+            }
+
+                // Three assemblers steps.
+            else if (i >= 3 && i < numWizardSteps - 1) {
+                // Should look at 3 and setup a global/local variable to be the initial steps.
+                if (checkedAssemblers[i - 3]) {
+                    wizardSteps.push(
+                    {
+                        key: i + 1,
+                        value: true
+                    });
+                }
+
+                else {
+                    wizardSteps.push(
+                    {
+                        key: i + 1,
+                        value: false
+                    });
+                }
+            }
+
+                // Final step.
+            else {
+                wizardSteps.push(
+                {
+                    key: i + 1,
+                    value: true
+                });
+            }
+        }
+    }
+
+    if (wizardSteps.length == 0)
+        throw new ArrayOutOfBoundsException();
+}
+
 /////////////////////////
 // Step Verifications //
 ////////////////////////
 
 function VerifyStep2() {
     var dataInvalid = false;
+    ClearData("checkBoxError");
 
     // TODO: Reset ALL warning/error messages prior to running through this each time to make certain that old messages get removed.
 
@@ -368,7 +502,7 @@ function VerifyStep2() {
             }
 
             else
-                ClearWarning('DataSourceErrorMsg_0');
+                ClearData('DataSourceErrorMsg_0');
         }
 
         // We have other read types.
@@ -381,7 +515,7 @@ function VerifyStep2() {
                 }
 
                 else
-                    ClearWarning("DataSourceErrorMsg_" + i);
+                    ClearData("DataSourceErrorMsg_" + i);
             }
         }
     }
@@ -403,7 +537,7 @@ function VerifyStep2() {
         }
 
         else 
-            ClearWarning("PELengthErrorMsg");
+            ClearData("PELengthErrorMsg");
     }
 
     // Jump read validation is only done if Jump reads is checked.
@@ -422,7 +556,7 @@ function VerifyStep2() {
         }
 
         else
-            ClearWarning("JumpLengthErrorMsg");
+            ClearData("JumpLengthErrorMsg");
     }
 
     // Jump read validation is only done if Jump reads is checked.
@@ -441,7 +575,7 @@ function VerifyStep2() {
         }
 
         else
-            ClearWarning("SequentialLengthErrorMsg");
+            ClearData("SequentialLengthErrorMsg");
     }
 
         // If no box was checked, then we need to stop them from moving to the next step.
@@ -452,14 +586,15 @@ function VerifyStep2() {
 
     // Move to the next step only if all data is valid.
     if (!dataInvalid) {
-        ClearWarning("PELengthErrorMsg");
-        ClearWarning("JumpLengthErrorMsg");
-        ClearWarning("WizardErrors");
-        ClearWarning("RemoveURLErrorMsg");
-        ClearWarning("PEReadsErrorMsg");
-        ClearWarning("JumpReadsErrorMsg");
-        ClearWarning("SequentialReadsErrorMsg");
-        ClearWarning("SequentialLengthErrorMsg");
+        ClearData("PELengthErrorMsg");
+        ClearData("JumpLengthErrorMsg");
+        ClearData("WizardErrors");
+        ClearData("RemoveURLErrorMsg");
+        ClearData("PEReadsErrorMsg");
+        ClearData("JumpReadsErrorMsg");
+        ClearData("SequentialReadsErrorMsg");
+        ClearData("SequentialLengthErrorMsg");
+        ClearData("checkBoxError");
 
         ChangeStep('Step2', 'Step3');
     }
@@ -471,74 +606,22 @@ function VerifyStep2() {
 // Choose Assembler Step. Here we re-create the struct that contains the key-value pair corresponding to which steps are 
 // present in the runtime iteration. Re-creation of the list is crucial so the user is able to change the assemblers as
 // much as the user would like.
-function VerifyStep3() {
-    var checkedAssemblers = [false, false, false]
-    wizardSteps = []; // Clear out the array.
-
-    // Check if an assembler is checked.
-    if (document.getElementById('UseMasurca').checked)
-        checkedAssemblers[0] = true;
-
-    if (document.getElementById('UseSGA').checked)
-        checkedAssemblers[1] = true;
-
-    if (document.getElementById('UseWGS').checked)
-        checkedAssemblers[2] = true;
-
-    if (checkedAssemblers.indexOf(true) === -1)
-        AddWarning("AssemblerChoiceErrorMsg", "You must at least select a single assembler to run on the data!");
-
-    else
+function VerifyStep3()
+{
+    try
     {
-        // Here we dynamically create the wizard step list.
-        for (var i = 0; i < numWizardSteps; i++)
-        {
-            // First three static steps.
-            if (i < 3)
-            {
-                wizardSteps.push(
-                    {
-                        key: i + 1,
-                        value: true
-                    });
-            }
+        CreateStepList();
 
-            // Three assemblers steps.
-            else if (i >= 3 && i < numWizardSteps - 1)
-            {
-                // Should look at 3 and setup a global/local variable to be the initial steps.
-                if (checkedAssemblers[i - 3])
-                {
-                    wizardSteps.push(
-                    {
-                        key: i + 1,
-                        value: true
-                    });
-                }
-
-                else
-                {
-                    wizardSteps.push(
-                    {
-                        key: i + 1,
-                        value: false
-                    });
-                }
-            }
-
-            // Final step.
-            else
-            {
-                wizardSteps.push(
-                {
-                    key: i + 1,
-                    value: true
-                });
-            }
-        }
-
-        ClearWarning("AssemblerChoiceErrorMsg");
+        ClearData("AssemblerChoiceErrorMsg");
         ChangeAssemblerStep("Step3", true);
+    }
+
+    catch(e)
+    {
+        if (e instanceof AssemblerException)
+            AddWarning("AssemblerChoiceErrorMsg", "You must at least select a single assembler to run on the data!");
+        else if(e instanceof ArrayOutOfBoundsException)
+            AddWarning("WizardErrors", "Something went wrong when attempting to figure out which assemblers you chose. Please try again or contact an administrator.");
     }
 }
 
@@ -570,10 +653,10 @@ function VerifyMasurcaStep() {
     }
 
     if (!dataInvalid) {
-        ClearWarning("GraphKmerErrorMsg");
-        ClearWarning("KMerCountThresholdErrorMsg");
-        ClearWarning("ThreadNumErrorMsg");
-        ClearWarning("WizardErrors");
+        ClearData("GraphKmerErrorMsg");
+        ClearData("KMerCountThresholdErrorMsg");
+        ClearData("ThreadNumErrorMsg");
+        ClearData("WizardErrors");
 
         ChangeAssemblerStep("Step4", true);
     }
