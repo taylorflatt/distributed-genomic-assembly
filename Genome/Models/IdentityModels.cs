@@ -33,7 +33,11 @@ namespace Genome.Models
             return new GenomeAssemblyDbContext();
         }
 
-        public System.Data.Entity.DbSet<Genome.Models.GenomeModel> GenomeModels { get; set; }
+        public DbSet<GenomeModel> GenomeModels { get; set; }
+
+        /// These need to be added if I end up going with a relational model.
+        //public DbSet<Assemblers> Assemblers { get; set; }
+        //public DbSet<Masurca> Masurca { get; set; }
 
         //public System.Data.Entity.DbSet<Genome.Models.ApplicationUser> ApplicationUsers { get; set; }
     }

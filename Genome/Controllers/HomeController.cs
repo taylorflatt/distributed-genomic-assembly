@@ -28,7 +28,7 @@ namespace Genome.Controllers
                     return View(model);
             }
 
-            catch(InvalidOperationException e)
+            catch(InvalidOperationException)
             {
                 model.Error = "No user could be found when searching for a user to determine if their cluster account has been verified.";
             }
