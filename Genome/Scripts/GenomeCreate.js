@@ -2,6 +2,9 @@
     The purpose of this is to error check the data entered into the Create Job wizard.
 */
 
+/// TODO: Need to look into an alternative way of dealing with L/R URLs. When submitting the data and control goes to the controller, if an error is returned, 
+/// the URLs get nulled. They aren't in a format to redisplay easily. Might be able to force it by parsing out the DataSources parameter or maybe a different approach.
+
 ///////////////////////
 // Global Variables //
 //////////////////////

@@ -11,7 +11,6 @@
         protected internal static string USER_ROOT_JOB_DIRECTORY = "/share/scratch/bioinfo/" + HelperMethods.GetUsername();
         protected internal const string WEBSITE_IP = "131.230.63.114";
         protected internal const int BD_PORT = 22;
-        protected internal const string PUBLIC_KEY_PATH = "UNKNOWN";
         protected internal const string PRIVATE_KEY_PATH = @"C:\Connection Information\private-key-openssh-tf.ppk";
         protected internal const string UPDATE_ACCT = "tflatt"; // BigDog acct we use to update jobs.
         protected internal const string BD_IP = "login-0-0.research.siu.edu";
@@ -20,7 +19,7 @@
         protected internal static string ZIP_STORAGE_PATH = @"D:\AssemblerJobs\" + HelperMethods.GetUsername();
         protected internal const string FTP_URL = "ftp://" + WEBSITE_IP;
         protected internal const string VERIFY_PERMISSIONS_TEST_DIR = "/share/scratch/bioinfo/testPermissions";
-        protected internal const int MINIMUM_QUOTA = 500;
+        protected internal const int MINIMUM_QUOTA = 50;
         protected internal const string FTP_DEFAULT_DIRECTORY = FTP_URL + "/AssemblerJobs";
 
         /// <summary>

@@ -44,7 +44,7 @@ namespace Genome.Helpers
         {
             HashSet<Assembler> masurcaStepFiles = new HashSet<Assembler>();
             masurcaStepFiles.Add(new Assembler(1, "", "Queued"));
-            masurcaStepFiles.Add(new Assembler(2, "FILENAME2", "Description"));
+            masurcaStepFiles.Add(new Assembler(2, "pe.cor.fa", "Generated error corrected reads. (No quality scores)"));
             masurcaStepFiles.Add(new Assembler(3, "FILENAME3", "Description"));
             masurcaStepFiles.Add(new Assembler(4, "FILENAME4", "Description"));
             masurcaStepFiles.Add(new Assembler(5, "FILENAME5", "Description"));
