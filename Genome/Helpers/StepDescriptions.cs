@@ -44,11 +44,11 @@ namespace Genome.Helpers
         {
             HashSet<Assembler> masurcaStepFiles = new HashSet<Assembler>();
             masurcaStepFiles.Add(new Assembler(1, "", "Queued"));
-            masurcaStepFiles.Add(new Assembler(2, "pe.cor.fa", "Generated error corrected reads. (No quality scores)"));
-            masurcaStepFiles.Add(new Assembler(3, "FILENAME3", "Description"));
-            masurcaStepFiles.Add(new Assembler(4, "FILENAME4", "Description"));
-            masurcaStepFiles.Add(new Assembler(5, "FILENAME5", "Description"));
-            masurcaStepFiles.Add(new Assembler(6, "FILENAME6", "Description"));
+            masurcaStepFiles.Add(new Assembler(2, "MeanAndStdevByPrefix.txt", "Concatenation of fastq files"));
+            masurcaStepFiles.Add(new Assembler(3, "K_u_O", "Jellyfish hash Creation"));
+            masurcaStepFiles.Add(new Assembler(4, "super2.err", "Super Read Creation")); // This depends upon the type of input JUMP/PE. Alternative to this?
+            masurcaStepFiles.Add(new Assembler(5, "runCA1.out", "CABOG assembly of super reads"));
+            masurcaStepFiles.Add(new Assembler(6, "gapClose.err", "Scaffolding and Gap Closing"));
             masurcaStepFiles.Add(new Assembler(7, "masurca_finished.olog", "Complete"));
 
             return masurcaStepFiles;

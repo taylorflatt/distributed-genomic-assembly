@@ -139,13 +139,14 @@ namespace Genome.Controllers
         {
             try
             {
+                var user = await UserManager.FindByNameAsync(UserName);
+
                 // If we are trying to remove an admin and there is only a single admin left, we CANNOT remove that admin. We don't want to get locked out.
-                if (User.IsInRole(CustomRoles.Administrator) && AccountInfoHelper.NumberAdminsLeft() == 1)
+                if (user.Roles.First().Equals(CustomRoles.Administrator) && AccountInfoHelper.NumberAdminsLeft() == 1)
                     ViewBag.ResultMessageError = "Cannot delete " + UserName + " because they are the last admin. This action would result in a lockout.";
 
                 else
                 {
-                    var user = await UserManager.FindByNameAsync(UserName);
                     var logins = user.Logins;
 
                     // Remove the logins if any.
