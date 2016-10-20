@@ -157,7 +157,7 @@ namespace Genome.Controllers
 
                     var rolesForUser = await UserManager.GetRolesAsync(user.Id);
 
-                    // Remove the user roles if any.
+                    // Remove the user's role.
                     if (rolesForUser.Count() > 0)
                     {
                         foreach (var role in rolesForUser.ToList())

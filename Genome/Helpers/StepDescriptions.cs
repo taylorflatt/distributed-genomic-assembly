@@ -49,7 +49,7 @@ namespace Genome.Helpers
             masurcaStepFiles.Add(new Assembler(4, "super2.err", "Super Read Creation")); // This depends upon the type of input JUMP/PE. Alternative to this?
             masurcaStepFiles.Add(new Assembler(5, "runCA1.out", "CABOG assembly of super reads"));
             masurcaStepFiles.Add(new Assembler(6, "gapClose.err", "Scaffolding and Gap Closing"));
-            masurcaStepFiles.Add(new Assembler(7, "masurca_finished.olog", "Complete"));
+            masurcaStepFiles.Add(new Assembler(7, "masurca_finished.olog", "Masurca has Completed"));
 
             return masurcaStepFiles;
         }
