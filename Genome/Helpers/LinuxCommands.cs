@@ -425,13 +425,15 @@ namespace Genome.Helpers
         /// <returns>The load of the node specified in a double format unless there is an error which returns a -1.</returns>
         protected internal static double GetNodeLoad(SshClient client, string node)
         {
-            // qstat -f returns specific information about all nodes. We then grep for a single node and then print out the load of that node.
-            using (var cmd = client.CreateCommand("qstat -f | grep " + node + " | awk '{print $4;}'"))
+            // qstat -f returns specific information about all nodes.N We then grep for a single node and then print out the load of that node.
+            using (var cmd = client.CreateCommand("qstat -f | grep " + node + " | awk '{print $4;}' | head -n 1"))
             {
                 cmd.Execute();
 
+                var load = cmd.Result.Split('\n')[0];
+
                 if (ErrorHandling.CommandError(cmd) == false)
-                    return Convert.ToDouble(cmd.Result);
+                    return Convert.ToDouble(load);
 
                 else
                     return -1;

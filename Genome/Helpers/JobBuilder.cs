@@ -81,9 +81,11 @@ namespace Genome.Helpers
                 {
                     using (TextWriter tw = new StreamWriter(fullPath))
                     {
+                        tw.WriteLine("#!/bin/bash");
+
                         // If we have sequential reads there will be only a single URL:
                         if (dataSources.Count == 1)
-                            tw.WriteLine("wget -O sequentialData.fastq " + dataSources[0].ToString());
+                            tw.WriteLine("wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 10 -O sequentialData.fastq " + dataSources[0].ToString());
 
                         // If we have any other type of reads there will be at least a left and right read:
                         else
@@ -98,7 +100,7 @@ namespace Genome.Helpers
                             // Now add the wgets for the left reads URLs and rename them to leftData_[j]:
                             for (int j = 0; j < leftReads.Count; j++)
                             {
-                                tw.WriteLine("wget -O leftData_" + j + " " + leftReads[j].ToString());
+                                tw.WriteLine("wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 10 -O leftData_" + j + " " + leftReads[j].ToString());
                                 concatFiles = concatFiles + " leftData_" + j;
                             }
 
@@ -110,7 +112,7 @@ namespace Genome.Helpers
                             // Now add the wgets for the right reads URLs and rename them to rightData_[i]:
                             for (int i = 0; i < rightReads.Count; i++)
                             {
-                                tw.WriteLine("wget -O rightData_" + i + " " + rightReads[i].ToString());
+                                tw.WriteLine("wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 10 -O rightData_" + i + " " + rightReads[i].ToString());
                                 concatFiles = concatFiles + " rightData_" + i;
                             }
 
@@ -118,6 +120,10 @@ namespace Genome.Helpers
                             tw.WriteLine("cat " + concatFiles + " > rightReads.fastq");
                             tw.WriteLine("rm rightData_*");
                         }
+
+                        // Still need to add the actual masurca commands here (/path/to/masurca -g config.txt to assemble the assembler.sh and then run the assembler.sh).
+
+                        tw.WriteLine("#EOF");
 
                         InitConfigURL = Accessors.FTP_URL + urlPath + fileName;
                     }

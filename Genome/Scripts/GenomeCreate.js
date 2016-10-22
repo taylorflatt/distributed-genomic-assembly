@@ -529,13 +529,13 @@ function VerifyStep2() {
 
         // Nothing was entered into the textbox.
         if (IsEmpty(input)) {
-            AddWarning("PELengthErrorMsg", "The value you entered was invalid. You must enter a number from 0-100!");
+            AddWarning("PELengthErrorMsg", "The value you entered was invalid. You must enter a number from 0-1000!");
             dataInvalid = true;
         }
 
-        // Make sure the value of the box is between 0 and 100.
-        else if (input < 0 || input > 100) {
-            AddWarning("PELengthErrorMsg", "The value you entered was invalid. You may only enter numbers from 0-100!");
+        // Make sure the value of the box is between 0 and 1000.
+        else if (input < 0 || input > 1000) {
+            AddWarning("PELengthErrorMsg", "The value you entered was invalid. You may only enter numbers from 0-1000!");
             dataInvalid = true;
         }
 
@@ -548,13 +548,13 @@ function VerifyStep2() {
         var input = document.getElementById("JumpLengthInput").value;
 
         if (IsEmpty(input)) {
-            AddWarning("JumpLengthErrorMsg", "The value you entered was invalid. You must enter a number from 0-100!");
+            AddWarning("JumpLengthErrorMsg", "The value you entered was invalid. You must enter a number from 0-1000!");
             dataInvalid = true;
         }
 
             // Make sure the value of the box is between 0 and 100. (TEST - MAY REMOVE) (WORKS)
-        else if (input < 0 || input > 100) {
-            AddWarning("JumpLengthErrorMsg", "The value you entered was invalid. You may only enter numbers from 0-100!");
+        else if (input < 0 || input > 1000) {
+            AddWarning("JumpLengthErrorMsg", "The value you entered was invalid. You may only enter numbers from 0-1000!");
             dataInvalid = true;
         }
 
@@ -567,13 +567,13 @@ function VerifyStep2() {
         var input = document.getElementById("SequentialLengthInput").value;
 
         if (IsEmpty(input)) {
-            AddWarning("SequentialLengthErrorMsg", "The value you entered was invalid. You must enter a number from 0-100!");
+            AddWarning("SequentialLengthErrorMsg", "The value you entered was invalid. You must enter a number from 0-1000!");
             dataInvalid = true;
         }
 
-            // Make sure the value of the box is between 0 and 100. (TEST - MAY REMOVE) (WORKS)
-        else if (input < 0 || input > 100) {
-            AddWarning("SequentialLengthErrorMsg", "The value you entered was invalid. You may only enter numbers from 0-100!");
+            // Make sure the value of the box is between 0 and 1000. (TEST - MAY REMOVE) (WORKS)
+        else if (input < 0 || input > 1000) {
+            AddWarning("SequentialLengthErrorMsg", "The value you entered was invalid. You may only enter numbers from 0-1000!");
             dataInvalid = true;
         }
 
