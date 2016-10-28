@@ -21,6 +21,7 @@
         protected internal const string VERIFY_PERMISSIONS_TEST_DIR = "/share/scratch/bioinfo/testPermissions";
         protected internal const int MINIMUM_QUOTA = 50;
         protected internal const string FTP_DEFAULT_DIRECTORY = FTP_URL + "/AssemblerJobs";
+        protected internal const string MASURCA_SCRIPT = "masurca_config.txt";
 
         /// <summary>
         /// Gets the name of the job (or relative path to the job folder). 
@@ -41,7 +42,7 @@
         /// <returns>A string url to the init script.</returns>
         protected internal static string GetInitScriptPath(int seed, string username)
         {
-            return FTP_URL + FTP_DEFAULT_DIRECTORY + "/Job-" + username + seed + "/init_" + seed + ".sh";
+            return FTP_URL + FTP_DEFAULT_DIRECTORY + "/Job-" + username + seed + "/init.sh";
         }
 
         /// <summary>
@@ -52,7 +53,7 @@
         /// <returns>A string url to the masurca script.</returns>
         protected internal static string GetMasurcaScriptPath(int seed, string username)
         {
-            return FTP_URL + "AssemblerJobs/" + "Job-" + username + seed + "/" + "MasurcaConfig_" + seed + ".txt";
+            return FTP_URL + "AssemblerJobs/" + "Job-" + username + seed + "/" + MASURCA_SCRIPT;
         }
 
         /// <summary>
@@ -132,7 +133,7 @@
         /// <returns>Returns a string path to the masurca output directory.</returns>
         protected internal static string GetMasurcaOutputPath(int seed)
         {
-            return GetJobOutputPath(seed) + "/Masurca/";
+            return GetJobOutputPath(seed) + "Masurca/";
         }
 
         /// <summary>
@@ -185,6 +186,16 @@
         protected internal static string GetMasurcaFailureLogPath(int seed, bool errorLog = false)
         {
             return errorLog ? GetMasurcaOutputPath(seed) + "masurca_failure.elog" : GetMasurcaOutputPath(seed) + "masurca_failure.olog";
+        }
+
+        /// <summary>
+        /// Gets the masurca script path on BigDog.
+        /// </summary>
+        /// <param name="seed">The unique identifier for a particular job.</param>
+        /// <returns>Returns a string path to the masurca config.</returns>
+        protected internal static string GetMasurcaScriptPath(int seed)
+        {
+            return GetJobPath(seed) + "Config/masurca_config.txt"; 
         }
     }
 }

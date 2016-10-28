@@ -267,6 +267,10 @@
     <Compile Include="Migrations\201608212246290_AddedError.Designer.cs">
       <DependentUpon>201608212246290_AddedError.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201610272328196_mapsshuser.cs" />
+    <Compile Include="Migrations\201610272328196_mapsshuser.Designer.cs">
+      <DependentUpon>201610272328196_mapsshuser.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\AccountViewModels.cs" />
     <Compile Include="Models\GenomeModel.cs" />
@@ -396,6 +400,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201608212246290_AddedError.resx">
       <DependentUpon>201608212246290_AddedError.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201610272328196_mapsshuser.resx">
+      <DependentUpon>201610272328196_mapsshuser.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>

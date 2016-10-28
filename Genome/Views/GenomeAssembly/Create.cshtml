@@ -523,10 +523,10 @@
 
         </div>
         <!-- There has been an error on the last step so we need to display that to the user. -->
-        if (!string.IsNullOrEmpty(@Model.JobError))
-        {
+    if (!string.IsNullOrEmpty(@Model.JobError))
+    {
             <script type="text/javascript">
                 ChangeStep("Step1", "FinalStep");
             </script>
-        }
+    }
 }

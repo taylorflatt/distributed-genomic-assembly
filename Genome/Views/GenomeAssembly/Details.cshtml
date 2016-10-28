@@ -27,19 +27,26 @@
                         </thead>
                         <tbody>
                             <tr>
+                                <td>Unique Job Seed</td>
+                                <td>@Html.DisplayFor(model => model.Seed)</td>
+                            </tr>
+                            <tr>
                                 <td>Created </td>
                                 <td>@Html.DisplayFor(model => model.CreatedDate)</td>
                             </tr>
                             <tr>
                                 <td>Data Location</td>
                                 <td>
-                                    @{ 
+                                    @{
                                         var urls = Model.DataSource.Split(',');
+                                        <fieldset style="overflow: scroll; width: 200px; height: 200px; padding: 0px;">
+                                            @foreach (var source in urls)
+                                            {
+                                                @source
+                                                <br />
+                                            }
+                                        </fieldset>
 
-                                        foreach(var source in urls)
-                                        {
-                                            <p>@source</p>
-                                        }
                                     }
                                 </td>
                             </tr>
@@ -252,23 +259,26 @@
                 </td>
 
                 <td>
-                    @if (Model.UseMasurca.Equals(true))
-                    {
-                        var totalNumMasurcaSteps = 7;
-                        var currentStatusMasurca = (Model.MasurcaCurrentStep / totalNumMasurcaSteps) * 100;
-                        string barWidthMasurca = Convert.ToString(currentStatusMasurca) + "%";
+                        @if (Model.UseMasurca.Equals(true))
+                        {
+                            var totalNumMasurcaSteps = 7;
+                            double currentMasurcaStep = Model.MasurcaCurrentStep;
+                            double currentMasurcaPercentage = Math.Round((currentMasurcaStep / totalNumMasurcaSteps) * 100);
+                            string barWidthMasurca = Convert.ToString(currentMasurcaPercentage) + "%";
 
-                        <div class="progress-bar" role="progressbar" aria-valuenow="@currentStatusMasurca" aria-valuemin="0" aria-valuemax="100" style="width:@barWidthMasurca">
-                            <strong style="text-indent: 20px; color: #FFFFFF">@Model.MasurcaStatus (Step @Model.MasurcaCurrentStep of @totalNumMasurcaSteps)</strong>
-                        </div>
-                    }
+                            <div class="progress" style="background-color: grey;">
+                                <div class="progress-bar" role="progressbar" aria-valuenow="@currentMasurcaPercentage" aria-valuemin="0" aria-valuemax="100" style="width:@barWidthMasurca">
+                                    <strong style="text-indent: 20px; color: #FFFFFF">@Model.MasurcaStatus (Step @Model.MasurcaCurrentStep of @totalNumMasurcaSteps)</strong>
+                                </div>
+                            </div>
+                        }
 
-                    else
-                    {
-                        <p>
-                            Not Running
-                        </p>
-                    }
+                        else
+                        {
+                            <p>
+                                Not Running
+                            </p>
+                        }
                 </td>
             </tr>
 

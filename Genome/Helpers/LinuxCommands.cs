@@ -477,6 +477,23 @@ namespace Genome.Helpers
             }
         }
 
+        protected internal static bool JobRunningAlt(SshClient client, string bigDogUsername)
+        {
+            // Checks the state of the job under the user who submitted it.
+            //using (var cmd = client.CreateCommand("qstat -u " + bigDogUsername + " | awk '{print $5};' | grep 'r' | wc -l"))
+            using (var cmd = client.CreateCommand("qstat -u tflatt | awk '{print $5};' | grep 'r' | wc -l"))
+            {
+                cmd.Execute();
+
+                ErrorHandling.CommandError(cmd);
+
+                if (Convert.ToInt32(cmd.Result) == 1)
+                    return true;
+                else
+                    return false;
+            }
+        }
+
         /// <summary>
         /// Cancels the specified job in SGE.
         /// </summary>

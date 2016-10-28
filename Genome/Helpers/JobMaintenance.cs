@@ -43,8 +43,9 @@ namespace Genome.Helpers
                     using (GenomeAssemblyDbContext db = new GenomeAssemblyDbContext())
                     {
                         bool continueUpdate = true;     // Determines whether we will continue checking the job status.
-                        bool DEBUG_MODE = true;         // Debug mode to skip some assembler steps.
+                        bool DEBUG_MODE = false;         // Debug mode to skip some assembler steps.
                         bool outOfRange = false;        // If the overall step is out of bounds, then we set this to true to attempt a correction.
+                        ErrorHandling.error = "";       // Reset the errror flag.
 
                         while (continueUpdate && ErrorHandling.NoError())
                         {
@@ -61,7 +62,11 @@ namespace Genome.Helpers
                                     }
 
                                     if (LinuxCommands.IsProcessRunning(client, "conversionScript.sh"))
-                                    genomeModel.NextStep();
+                                        genomeModel.NextStep();
+
+                                    // If a conversion was never run or if we missed it, then check if the job has already started.
+                                    else if (LinuxCommands.JobRunningAlt(client, genomeModel.SSHUser))
+                                        genomeModel.NextStep();
 
                                     else
                                         continueUpdate = false;

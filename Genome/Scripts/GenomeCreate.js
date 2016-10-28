@@ -22,6 +22,19 @@ var checkedAssemblers = [false, false, false]
 // The total number of wizard steps that can possibly be seen by a user. For instance, with 3 possible assemblers, that would be 4 + 3 = 7.
 var numWizardSteps = 7;
 
+//////////////////////
+// Default Actions //
+/////////////////////
+function DisableEnterKey(event)
+{
+    // This will refresh the page and dump them back to step 1. Need to figure out an alternative to this to prevent the 
+    // enter key from submitting the form when a textbox is selected.
+    if (event.keyCode == 13)
+    {
+        return false;
+    }
+}
+
 /////////////////////
 // Helper Methods //
 ////////////////////

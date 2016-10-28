@@ -71,12 +71,12 @@ namespace Genome.Helpers
             Hashtable stepList = new Hashtable(6);
 
             stepList.Add(1, INITIAL_STEP);
-            stepList.Add(2, "Data Conversion");
+            stepList.Add(2, "Downloading/Converting Data");
             stepList.Add(3, "Running Assemblers");
             stepList.Add(4, "Data Analysis");
             stepList.Add(5, "Uploading Data to FTP");
             stepList.Add(6, "Completed");
-            stepList.Add(6, "Error");
+            //stepList.Add(6, "Error");
 
             return stepList;
         }
