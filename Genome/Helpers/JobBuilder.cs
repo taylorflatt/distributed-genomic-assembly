@@ -108,7 +108,16 @@ namespace Genome.Helpers
                             // Now add the wgets for the left reads URLs and rename them to leftData_[j]:
                             for (int j = 0; j < leftReads.Count; j++)
                             {
-                                tw.WriteLine("wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 5 -O " + jobDataDirectory + "leftData_" + j + " " + leftReads[j].ToString());
+                                string newDataName = "leftData_" + j;
+
+                                tw.WriteLine("wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 5 -O " + jobDataDirectory + newDataName + " " + leftReads[j].ToString());
+                                
+                                // If it is compressed, uncompress the data. Add additional and more concise checks here later.
+                                if(leftReads[j].ToString().Contains(".gz"))
+                                {
+                                    tw.WriteLine("gunzip " + newDataName);
+                                }
+
                                 concatFiles = concatFiles + " " + jobDataDirectory + "leftData_" + j;
                             }
 
@@ -120,7 +129,16 @@ namespace Genome.Helpers
                             // Now add the wgets for the right reads URLs and rename them to rightData_[i]:
                             for (int i = 0; i < rightReads.Count; i++)
                             {
-                                tw.WriteLine("wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 5 -O " + jobDataDirectory + "rightData_" + i + " " + rightReads[i].ToString());
+                                string newDataName = "rightData_" + i;
+
+                                tw.WriteLine("wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 5 -O " + jobDataDirectory + newDataName+ " " + rightReads[i].ToString());
+
+                                // If it is compressed, uncompress the data. Add additional and more concise checks here later.
+                                if (rightReads[i].ToString().Contains(".gz"))
+                                {
+                                    tw.WriteLine("gunzip " + newDataName);
+                                }
+
                                 concatFiles = concatFiles + " " + jobDataDirectory + "rightData_" + i;
                             }
 
